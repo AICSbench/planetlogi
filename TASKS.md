@@ -19,12 +19,12 @@
 | Phase | Name | Total Tasks | Done | Status |
 |---|---|---:|---:|---|
 | Phase 0 | Foundation & Architecture | 8 | 8 | Completed |
-| Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 0 | Ready to Start |
-| Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 0 | Not Started |
+| Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 12 | Completed |
+| Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 0 | Ready to Start |
 | Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 0 | Not Started |
 | Phase 4 | Brain Galaxy, School/Teacher Portal & CMS v2 | 9 | 0 | Not Started |
 | Phase 5 | Monetization, Security Audit, Performance & Launch | 7 | 0 | Not Started |
-| **Total** | | **59** | **8** | **13.6%** |
+| **Total** | | **59** | **20** | **33.9%** |
 
 ---
 
@@ -86,73 +86,73 @@
 
 > **Parallelism Note**: `P1-ENG-01`, `P1-BE-01`, `P1-BE-02`, `P1-BE-03`, `P1-BE-04`, and `P1-CNT-01..03` can run concurrently once Phase 0 core tasks finish.
 
-- [ ] **P1-ENG-01** `[ENGINE]` Build Server-Authoritative Question Engine, Evaluator & Procedural Generator (Go)
+- [x] **P1-ENG-01** `[ENGINE]` Build Server-Authoritative Question Engine, Evaluator & Procedural Generator (Go) *(Owner: agent-engine-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-01`, `P0-03`
   - **Spec**: `docs/03-question-engine-and-math-tools.md` §2–3
   - **Scope**: `apps/api/internal/mathengine/` — Bilingual question JSON schema (single numeric, multi-part numeric, letter/text, MCQ, fraction/mixed-number, drag-match, visual SVG diagram specs), deterministic seeded procedural generator (for infinite arithmetic/word-problem variants), equivalence answer grader (handles fractions, `.` and `,` decimals per locale, whitespace), and OpenAPI question response DTOs synced to `packages/api-client/`.
   - **Acceptance Criteria**: ≥20 procedural generator templates covering G1–G6 core operations pass deterministic Go snapshot tests in `en` and `id`; answer keys are never serialized in unsubmitted question payloads.
 
-- [ ] **P1-ENG-02** `[ENGINE]` Implement 4 Interactive On-Screen Math Working Tools
+- [x] **P1-ENG-02** `[ENGINE]` Implement 4 Interactive On-Screen Math Working Tools *(Owner: agent-engine-2 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-04`, `P0-03`
   - **Spec**: `docs/03-question-engine-and-math-tools.md` §4
   - **Scope**: `apps/web/src/components/question-player/tools/` — (1) **Star Sketchpad** (canvas pencil, highlighter, eraser, clear), (2) **Equation Working Pad** (step-by-step math expression editor + symbol pad), (3) **Bar Model Builder** (1–20 adjustable labeled units, split/combine/bracket labels), (4) **Column 4-Operations Grid** (`+`, `−`, `×`, `÷` up to 4 digits with carry/borrow).
   - **Acceptance Criteria**: All 4 tools work with mouse, touch, and Apple Pencil/stylus on tablet without scrolling interference; collapsible right-side drawer on desktop & bottom sheet on mobile.
 
-- [ ] **P1-ENG-03** `[ENGINE]` Build Unified Question Player UI (4 Mode Behaviors + TTS)
+- [x] **P1-ENG-03** `[ENGINE]` Build Unified Question Player UI (4 Mode Behaviors + TTS) *(Owner: agent-engine-2 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P1-ENG-01`, `P1-ENG-02`
   - **Spec**: `docs/03-question-engine-and-math-tools.md` §1, §5
   - **Scope**: `apps/web/src/components/question-player/` — Notebook/cosmic focus canvas, Skill Name + `?` info, Question ID, 5-level difficulty meter, collapsible Side Nav, **TTS Read-Aloud** (`en-US`/`en-GB` & `id-ID` with server TTS fallback), Video Tutorial modal, Confetti + Visual Worked Solution viewer, Feedback/Report modal, mode-specific behaviors (`DAILY_ORBIT`, `GALAXY_TRAINING`, `SPACE_ACADEMY`, `ASTRO_QUIZ`).
   - **Acceptance Criteria**: Each of the 4 mode behaviors passes E2E interaction tests (single-attempt lock vs Save/Try Again vs Timed/Print).
 
-- [ ] **P1-BE-01** `[BE]` Implement Daily Orbit API (10-Question Path, Tiers, 3x Change Question)
+- [x] **P1-BE-01** `[BE]` Implement Daily Orbit API (10-Question Path, Tiers, 3x Change Question) *(Owner: agent-be-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-02`, `P0-05`, `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §3, `docs/05-gamification-social-and-safety.md` §1–2
-  - **Scope**: `apps/api/internal/modules/daily-orbit/` — 06:00–22:00 window check, 10-question session generator (Q1–3: 1 SP, Q4–5: 1 SP, Q6–8: 2 SP, Q9–10: 3 SP, completion bonus: 5 AC), 4 difficulty tiers (Elementary, Intermediate @15 SP, Advanced @50 SP, Master @100 SP), active curriculum filter, max 3/day "Change Question" (easier/harder/topic), single-attempt HTTP 409/400 lock, Skip ("Show Answer" = 0 SP), Today's SP breakdown endpoint.
+  - **Scope**: `apps/api/internal/modules/dailyorbit/` — 06:00–22:00 window check, 10-question session generator (Q1–3: 1 SP, Q4–5: 1 SP, Q6–8: 2 SP, Q9–10: 3 SP, completion bonus: 5 AC), 4 difficulty tiers (Elementary, Intermediate @15 SP, Advanced @50 SP, Master @100 SP), active curriculum filter, max 3/day "Change Question" (easier/harder/topic), single-attempt HTTP 409/400 lock, Skip ("Show Answer" = 0 SP), Today's SP breakdown endpoint.
   - **Acceptance Criteria**: Full integration test suite verifies scoring, tier unlocks, duplicate submission rejection, 3-edit cap, and midnight reset.
 
-- [ ] **P1-BE-02** `[BE]` Implement Orbit Streak, Nova Pet Growth & Cryo Shield API
+- [x] **P1-BE-02** `[BE]` Implement Orbit Streak, Nova Pet Growth & Cryo Shield API *(Owner: agent-be-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-08`, `P1-BE-01`
   - **Spec**: `docs/02-features-student-portal.md` §4, `docs/05-gamification-social-and-safety.md` §2
   - **Scope**: `apps/api/internal/modules/streak/` — Daily milestone (5 correct Daily Orbit answers advances streak & Nova Pet stage), Cryo Shield inventory (max 3, automatic midnight consumption when a day is missed), monthly calendar endpoint, web push reminder subscription endpoint.
   - **Acceptance Criteria**: Time-travel unit tests verify streak increment, auto Cryo Shield protection, streak reset when 0 shields, and max-3 cap.
 
-- [ ] **P1-BE-03** `[BE]` Implement Galaxy Training, Multi-Curriculum & HOTS Wheel API
+- [x] **P1-BE-03** `[BE]` Implement Galaxy Training, Multi-Curriculum & HOTS Wheel API *(Owner: agent-be-2 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-02`, `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §6, `docs/04-curriculum-and-pedagogy.md` §1–3
   - **Scope**: `apps/api/internal/modules/training/` — Endpoints for 6 curriculum tracks (Kurikulum Merdeka, Singapore MOE P1–P6, Cambridge 0096, Challenging Maths, HOTS 4-Quadrant/9 Heuristics across 3 age bands 6–9/8–11/10–13, Real-World Explorer Series), 10-question practice sessions, star rating calculation, proficiency tier calculation + cached National Avg %.
   - **Acceptance Criteria**: Fast paginated skill lists (<150ms); accurate Proficiency % (Mastery/Competent/Beginning/Incomplete) and 3-star High Score updates.
 
-- [ ] **P1-BE-04** `[BE]` Implement Proficiency & High-Score Analytics Report API
+- [x] **P1-BE-04** `[BE]` Implement Proficiency & High-Score Analytics Report API *(Owner: agent-be-2 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P1-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §14, `docs/04-curriculum-and-pedagogy.md` §4
   - **Scope**: `apps/api/internal/modules/reports/` — Filterable Proficiency Report across all 6 curricula & Grades 1–6 (4 mastery buckets + per-topic skill grids) and High Score Report (star tiers 9–10, 6–8, 4–5, 1–3 out of 10).
   - **Acceptance Criteria**: Aggregations accurately reflect student attempts across Daily Orbit and Galaxy Training; response cached per student with instant invalidation on attempt.
 
-- [ ] **P1-FE-01** `[FE]` Build Student Dashboard (4-Pillar Hub) & Profile/XP Card
+- [x] **P1-FE-01** `[FE]` Build Student Dashboard (4-Pillar Hub) & Profile/XP Card *(Owner: agent-fe-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-06`, `P0-08`
   - **Spec**: `docs/02-features-student-portal.md` §2
   - **Scope**: `apps/web/src/routes/$locale/dashboard/` — Left Student Profile Card (Avatar, Name, Grade, Pilot XP Level badge → `/exp-level`), 4-pillar hub switcher (**Star Challenges**, **Galaxy Training**, **Space Academy**, **Cosmic Fun**), right-side Today's/Total SP & Astro Coins panel with tooltips, XP Level 1–100 progression page (`/exp-level`).
   - **Acceptance Criteria**: Smooth tab switching, live currency/XP hydration, fully responsive & bilingual.
 
-- [ ] **P1-FE-02** `[FE]` Build Daily Orbit & Orbit Streak Pages
+- [x] **P1-FE-02** `[FE]` Build Daily Orbit & Orbit Streak Pages *(Owner: agent-fe-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P1-ENG-03`, `P1-BE-01`, `P1-BE-02`
   - **Spec**: `docs/02-features-student-portal.md` §3–4
   - **Scope**: `apps/web/src/routes/$locale/daily-orbit/`, `apps/web/src/routes/$locale/streak/` — 10-question cosmic map path (circles, hexagons, stars), 4-tier difficulty modal, Curriculum Filter popover, Today's SP breakdown dropdown, Change Question modal, Skip confirmation dialog, Orbit Streak page (Nova Pet visual growth, Cryo Shield modal, monthly calendar, Push Reminder toggle).
   - **Acceptance Criteria**: End-to-end Daily Orbit completion awards SP, AC, XP, and advances streak on 5th correct answer.
 
-- [ ] **P1-FE-03** `[FE]` Build Galaxy Training, HOTS 4-Quadrant Wheel & Reports UI
+- [x] **P1-FE-03** `[FE]` Build Galaxy Training, HOTS 4-Quadrant Wheel & Reports UI *(Owner: agent-fe-2 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P1-ENG-03`, `P1-BE-03`, `P1-BE-04`
   - **Spec**: `docs/02-features-student-portal.md` §6, §14
   - **Scope**: `apps/web/src/routes/$locale/training/`, `apps/web/src/routes/$locale/report/` — 6-track curriculum launcher, Grade switcher (G1–G6), toggle between **High Score Mode** (3-star + difficulty meter) and **Proficiency % Mode** (4 color-coded tiers + National Avg %), interactive SVG **HOTS 4-Quadrant Heuristic Wheel** with 3 age bands, Real-World Explorer Series list, Proficiency & High-Score Report pages.
   - **Acceptance Criteria**: All 6 tracks render cleanly; HOTS wheel quadrants & 9 heuristics interactive on touch & mouse; reports filter accurately.
 
-- [ ] **P1-CNT-01** `[CONTENT]` Author Bilingual Curriculum Taxonomy (G1–G6, All 6 Tracks)
+- [x] **P1-CNT-01** `[CONTENT]` Author Bilingual Curriculum Taxonomy (G1–G6, All 6 Tracks) *(Owner: agent-content-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-02`, `P0-03`
   - **Spec**: `docs/04-curriculum-and-pedagogy.md` §1–3
   - **Scope**: `content/curricula/` — Structured JSON/YAML skill trees for Grades 1–6 across Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Challenging Maths, HOTS (9 heuristics × 3 age bands), and Real-World Explorer Series, with complete `en` & `id` titles, difficulty ratings, and cross-curriculum skill mapping.
   - **Acceptance Criteria**: Seed script imports all 6 curricula cleanly with zero broken IDs or missing translations.
 
-- [ ] **P1-CNT-02** `[CONTENT]` Seed Initial Bilingual Question Bank & Generator Packs (G1–G6)
+- [x] **P1-CNT-02** `[CONTENT]` Seed Initial Bilingual Question Bank & Generator Packs (G1–G6) *(Owner: agent-content-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P1-ENG-01`, `P1-CNT-01`
   - **Spec**: `docs/03-question-engine-and-math-tools.md` §2–3, `docs/09-business-roadmap-and-operations.md` §1
   - **Scope**: `content/questions/` — Minimum 60 parametric generator templates + 300 curated static word/HOTS problems (with visual diagrams & step-by-step worked solutions) spanning Grades 1–6 in both `en` and `id`.
@@ -424,5 +424,6 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
+| 2026-11-26T23:16Z | `agent-phase1` | `P1-ENG-01..P1-CNT-02` | `[x]` | Completed all 12 Phase 1 MVP tasks on branch `feat/p1-core-learning-mvp`: Go server-authoritative `mathengine` (24 deterministic bilingual G1–G6 procedural templates, dot/comma decimal & fraction equivalence grader, EN/ID TTS verbalizer), bilingual `content/curricula/` (6 tracks + HOTS 4 quadrants/9 heuristics) & `content/questions/` packs, Go APIs for Daily Orbit (`dailyorbit`: 10-Q tiered path, 4 tiers, 3x change question, 409 lock, skip, +5 AC bonus), Orbit Streak (`streak`: 5-correct milestone, Nova Pet, max-3 Cryo Shields midnight reconcile), Galaxy Training (`training`: 6 curricula, HOTS wheel, Proficiency % & High Score stars), Reports (`reports`), synced OpenAPI 3.1 → `@planetlogi/api-client`, 4 interactive on-screen Math Tools (`StarSketchpad`, `EquationPad`, `BarModelBuilder`, `ColumnOperationsGrid`), Unified `QuestionPlayer` (4 modes + TTS + SVG diagrams), and full Dashboard/Exp-Level/Daily Orbit/Streak/Training/HOTS/Reports UI in `en` & `id`. Verified: `go vet`, `go test -race` (all 9 packages), 3 Go binaries, `pnpm i18n:check` (6 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA all green. Phase 2 tasks unblocked. |
 | 2026-11-26T15:45Z | `agent-phase0` | `P0-01..P0-08` | `[x]` | Completed all 8 Phase 0 tasks: polyglot monorepo (`apps/web` Vite+React+TanStack Router+PWA for Cloudflare Pages, `apps/api` Go Chi/Huma+`asynq`+`/healthz`+`/readyz`+graceful shutdown, Docker/CI), multi-subject PostgreSQL 16 `goose` migration + seed CLI (`pilot1`/`planet123`), bilingual `@planetlogi/i18n` (`en`/`id` + CI parity script), `@planetlogi/ui` Galaxy Design System, Go Auth/RBAC/OTP module + OpenAPI→`@planetlogi/api-client`, atomic double-entry Economy Ledger + Timezone Operating-Window service, Login (Live SP feed) + Persistent App Shell, and Workbox PWA build (`dist/sw.js`, `manifest.webmanifest`, `_redirects`). Verified: `pnpm i18n:check`, `pnpm -r typecheck`, `pnpm -r lint`, `pnpm -r test`, `pnpm -r build`, `go vet ./...`, `go test -race ./...`, `pnpm api:gen` all green. Phase 1 tasks are now unblocked. |
 | 2026-11-26T07:45Z | `architect-planner` | `PLAN-INIT` | `[x]` | Created PlanetLogi A–Z Master Plan (`PLAN.md`), Multi-Agent Protocol (`AGENTS.md`), Task Board (`TASKS.md`), and modular specifications (`docs/01`–`09`). Ready for Phase 0 (`P0-01`) kickoff. |

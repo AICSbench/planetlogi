@@ -22,6 +22,282 @@
         ],
         "type": "object"
       },
+      "CalendarEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "status"
+        ],
+        "type": "object"
+      },
+      "CurriculumSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skillCount": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "description",
+          "skillCount"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-change-questionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-change-questionRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "easier",
+              "harder",
+              "topic"
+            ],
+            "type": "string"
+          },
+          "slotIndex": {
+            "format": "int64",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slotIndex",
+          "mode"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-change-questionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-change-questionResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionView"
+          },
+          "slot": {
+            "$ref": "#/components/schemas/SlotView"
+          }
+        },
+        "required": [
+          "slot",
+          "session"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-set-curriculaRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-set-curriculaRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "curricula": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "curricula"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-set-tierRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-set-tierRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "tier": {
+            "enum": [
+              "ELEMENTARY",
+              "INTERMEDIATE",
+              "ADVANCED",
+              "MASTER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-skipRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-skipRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "slotIndex": {
+            "format": "int64",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slotIndex"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-skipResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-skipResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionView"
+          },
+          "slot": {
+            "$ref": "#/components/schemas/SlotView"
+          }
+        },
+        "required": [
+          "slot",
+          "session"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-submitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-submitRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "slotIndex": {
+            "format": "int64",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slotIndex",
+          "answers"
+        ],
+        "type": "object"
+      },
+      "Daily-orbit-submitResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Daily-orbit-submitResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionView"
+          },
+          "slot": {
+            "$ref": "#/components/schemas/SlotView"
+          }
+        },
+        "required": [
+          "slot",
+          "session"
+        ],
+        "type": "object"
+      },
+      "DiagramSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "params": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "params"
+        ],
+        "type": "object"
+      },
       "ErrorDetail": {
         "additionalProperties": false,
         "properties": {
@@ -101,6 +377,174 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "GradeResult": {
+        "additionalProperties": false,
+        "properties": {
+          "correctAnswers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "workedSolution": {
+            "$ref": "#/components/schemas/WorkedSolution"
+          }
+        },
+        "required": [
+          "isCorrect",
+          "correctAnswers",
+          "workedSolution"
+        ],
+        "type": "object"
+      },
+      "HOTSQuadrant": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "heuristics": {
+            "items": {
+              "$ref": "#/components/schemas/HeuristicNode"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "heuristics"
+        ],
+        "type": "object"
+      },
+      "HeuristicNode": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skillCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "skillCount",
+          "skills"
+        ],
+        "type": "object"
+      },
+      "HighScoreBuckets": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/HighScoreBuckets.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "tier1To3": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tier4To5": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tier6To8": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tier9To10": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "unplayed": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "tier9To10",
+          "tier6To8",
+          "tier4To5",
+          "tier1To3",
+          "unplayed"
+        ],
+        "type": "object"
+      },
+      "InputPart": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "suffix": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
         "type": "object"
       },
       "LiveFeedItem": {
@@ -219,6 +663,22 @@
         ],
         "type": "object"
       },
+      "MCQOption": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ],
+        "type": "object"
+      },
       "OtpRequestOutputBody": {
         "additionalProperties": false,
         "properties": {
@@ -288,6 +748,60 @@
         ],
         "type": "object"
       },
+      "PracticeSession": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/PracticeSession.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answered": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "correct": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/RenderedQuestion"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "skillCode": {
+            "type": "string"
+          },
+          "skillName": {
+            "type": "string"
+          },
+          "starsEarned": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sessionId",
+          "skillCode",
+          "skillName",
+          "questions",
+          "answered",
+          "correct",
+          "starsEarned"
+        ],
+        "type": "object"
+      },
       "Principal": {
         "additionalProperties": false,
         "properties": {
@@ -342,6 +856,724 @@
           "totalSp",
           "astroCoins",
           "currentStreak"
+        ],
+        "type": "object"
+      },
+      "ProficiencySummary": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ProficiencySummary.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "beginningCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "competentCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "incompleteCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "masteryCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "masteryCount",
+          "competentCount",
+          "beginningCount",
+          "incompleteCount",
+          "skills"
+        ],
+        "type": "object"
+      },
+      "RenderedQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "curriculumCode": {
+            "type": "string"
+          },
+          "diagram": {
+            "$ref": "#/components/schemas/DiagramSpec"
+          },
+          "difficulty": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "heuristicCode": {
+            "type": "string"
+          },
+          "heuristicName": {
+            "type": "string"
+          },
+          "hints": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "inputType": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/MCQOption"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/InputPart"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "seed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skillCode": {
+            "type": "string"
+          },
+          "skillName": {
+            "type": "string"
+          },
+          "stem": {
+            "type": "string"
+          },
+          "templateCode": {
+            "type": "string"
+          },
+          "ttsText": {
+            "type": "string"
+          },
+          "videoTutorialId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "templateCode",
+          "seed",
+          "grade",
+          "skillCode",
+          "skillName",
+          "curriculumCode",
+          "difficulty",
+          "inputType",
+          "locale",
+          "stem",
+          "ttsText",
+          "hints"
+        ],
+        "type": "object"
+      },
+      "SPBreakdown": {
+        "additionalProperties": false,
+        "properties": {
+          "dailyOrbit": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "starDuels": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sundayMeteor": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalToday": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dailyOrbit",
+          "starDuels",
+          "sundayMeteor",
+          "totalToday"
+        ],
+        "type": "object"
+      },
+      "SessionView": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/SessionView.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "activeCurricula": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "changeQuestionLimit": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "changeQuestionUsed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "completedCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "completionBonusAwarded": {
+            "type": "boolean"
+          },
+          "correctCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isOpen": {
+            "type": "boolean"
+          },
+          "localDate": {
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/SlotView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "tier": {
+            "type": "string"
+          },
+          "todaySpBreakdown": {
+            "$ref": "#/components/schemas/SPBreakdown"
+          },
+          "totalSpEarned": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unlockedTiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "windowNotice": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "localDate",
+          "isOpen",
+          "tier",
+          "unlockedTiers",
+          "activeCurricula",
+          "changeQuestionUsed",
+          "changeQuestionLimit",
+          "correctCount",
+          "completedCount",
+          "totalSpEarned",
+          "completionBonusAwarded",
+          "todaySpBreakdown",
+          "slots"
+        ],
+        "type": "object"
+      },
+      "SkillView": {
+        "additionalProperties": false,
+        "properties": {
+          "ageBand": {
+            "type": "string"
+          },
+          "attemptsCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bestSessionScore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bestStars": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "category": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "correctCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "curricula": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "difficulty": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "heuristicCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nationalAvgPct": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "proficiencyPct": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "proficiencyTier": {
+            "type": "string"
+          },
+          "templateCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "grade",
+          "curricula",
+          "category",
+          "difficulty",
+          "templateCode",
+          "nationalAvgPct",
+          "attemptsCount",
+          "correctCount",
+          "proficiencyPct",
+          "proficiencyTier",
+          "bestSessionScore",
+          "bestStars"
+        ],
+        "type": "object"
+      },
+      "SlotView": {
+        "additionalProperties": false,
+        "properties": {
+          "earnedSp": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "index": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "nodeShape": {
+            "type": "string"
+          },
+          "question": {
+            "$ref": "#/components/schemas/RenderedQuestion"
+          },
+          "rewardSp": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "stageName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "submittedAnswer": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "workedSolution": {
+            "$ref": "#/components/schemas/WorkedSolution"
+          }
+        },
+        "required": [
+          "index",
+          "stageName",
+          "nodeShape",
+          "rewardSp",
+          "status",
+          "earnedSp",
+          "question"
+        ],
+        "type": "object"
+      },
+      "SolutionStep": {
+        "additionalProperties": false,
+        "properties": {
+          "diagram": {
+            "$ref": "#/components/schemas/DiagramSpec"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "Status": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Status.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "cryoShields": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "currentStreak": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "dailyMilestoneTarget": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastCompletedDate": {
+            "type": "string"
+          },
+          "longestStreak": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maxCryoShields": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "novaPetStage": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reminderEnabled": {
+            "type": "boolean"
+          },
+          "reminderTimeLocal": {
+            "type": "string"
+          },
+          "todayCorrectCount": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currentStreak",
+          "longestStreak",
+          "cryoShields",
+          "maxCryoShields",
+          "novaPetStage",
+          "todayCorrectCount",
+          "dailyMilestoneTarget",
+          "reminderEnabled"
+        ],
+        "type": "object"
+      },
+      "Streak-calendarResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Streak-calendarResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEntry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "days"
+        ],
+        "type": "object"
+      },
+      "Streak-reminderRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Streak-reminderRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "timeLocal": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "Training-curriculaResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-curriculaResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "curricula": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumSummary"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "curricula"
+        ],
+        "type": "object"
+      },
+      "Training-hots-wheelResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-hots-wheelResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "quadrants": {
+            "items": {
+              "$ref": "#/components/schemas/HOTSQuadrant"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "quadrants"
+        ],
+        "type": "object"
+      },
+      "Training-skillsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-skillsResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillView"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "skills"
+        ],
+        "type": "object"
+      },
+      "Training-start-sessionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-start-sessionRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "skillCode": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "skillCode"
+        ],
+        "type": "object"
+      },
+      "Training-submit-answerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-submit-answerRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "questionIndex": {
+            "format": "int64",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "sessionId": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "questionIndex",
+          "answers"
+        ],
+        "type": "object"
+      },
+      "Training-submit-answerResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Training-submit-answerResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/GradeResult"
+          },
+          "session": {
+            "$ref": "#/components/schemas/PracticeSession"
+          }
+        },
+        "required": [
+          "result",
+          "session"
+        ],
+        "type": "object"
+      },
+      "WorkedSolution": {
+        "additionalProperties": false,
+        "properties": {
+          "correctAnswers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/SolutionStep"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "correctAnswers",
+          "steps"
         ],
         "type": "object"
       }
@@ -728,6 +1960,776 @@
         "summary": "Rotate access and refresh cookies (one-time refresh token consumption)",
         "tags": [
           "Auth"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/change-question": {
+      "post": {
+        "operationId": "daily-orbit-change-question",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Daily-orbit-change-questionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Daily-orbit-change-questionResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Replace a pending Daily Orbit question (max 3 edits/day)",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/curricula": {
+      "patch": {
+        "operationId": "daily-orbit-set-curricula",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Daily-orbit-set-curriculaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Update active Daily Orbit curriculum pools",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/skip": {
+      "post": {
+        "operationId": "daily-orbit-skip",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Daily-orbit-skipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Daily-orbit-skipResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Skip a Daily Orbit question (0 SP) and reveal its worked solution",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/submit": {
+      "post": {
+        "operationId": "daily-orbit-submit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Daily-orbit-submitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Daily-orbit-submitResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Submit a single-attempt answer for a Daily Orbit slot",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/tier": {
+      "patch": {
+        "operationId": "daily-orbit-set-tier",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Daily-orbit-set-tierRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Switch unlocked Daily Orbit difficulty tier",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/daily-orbit/today": {
+      "get": {
+        "operationId": "daily-orbit-today",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get today's 10-question Daily Orbit progression path",
+        "tags": [
+          "DailyOrbit"
+        ]
+      }
+    },
+    "/api/v1/reports/high-score": {
+      "get": {
+        "operationId": "reports-high-score",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "curriculum",
+            "schema": {
+              "default": "ALL",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HighScoreBuckets"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get student High Score star-tier report (9-10, 6-8, 4-5, 1-3)",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/proficiency": {
+      "get": {
+        "operationId": "reports-proficiency",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "curriculum",
+            "schema": {
+              "default": "ALL",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProficiencySummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get student Proficiency % report across all 6 curricula and Grades 1-6",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/streak/calendar": {
+      "get": {
+        "operationId": "streak-calendar",
+        "parameters": [
+          {
+            "description": "YYYY-MM filter",
+            "explode": false,
+            "in": "query",
+            "name": "month",
+            "schema": {
+              "description": "YYYY-MM filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Streak-calendarResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get monthly Orbit Streak calendar days",
+        "tags": [
+          "Streak"
+        ]
+      }
+    },
+    "/api/v1/streak/reminder": {
+      "post": {
+        "operationId": "streak-reminder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Streak-reminderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Update Orbit Streak daily push reminder preference",
+        "tags": [
+          "Streak"
+        ]
+      }
+    },
+    "/api/v1/streak/status": {
+      "get": {
+        "operationId": "streak-status",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get student's Orbit Streak, Nova Pet stage, and Cryo Shields",
+        "tags": [
+          "Streak"
+        ]
+      }
+    },
+    "/api/v1/training/curricula": {
+      "get": {
+        "operationId": "training-curricula",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Training-curriculaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List all 6 Galaxy Training curriculum tracks",
+        "tags": [
+          "Training"
+        ]
+      }
+    },
+    "/api/v1/training/hots": {
+      "get": {
+        "operationId": "training-hots-wheel",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "ageBand",
+            "schema": {
+              "default": "ALL",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Training-hots-wheelResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get the 4-Quadrant / 9-Heuristic HOTS Constellation Wheel",
+        "tags": [
+          "Training"
+        ]
+      }
+    },
+    "/api/v1/training/sessions": {
+      "post": {
+        "operationId": "training-start-session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Training-start-sessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Start a 10-question Galaxy Training practice session for a skill",
+        "tags": [
+          "Training"
+        ]
+      }
+    },
+    "/api/v1/training/sessions/submit": {
+      "post": {
+        "operationId": "training-submit-answer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Training-submit-answerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Training-submit-answerResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Grade a Galaxy Training practice answer and update Proficiency % and stars",
+        "tags": [
+          "Training"
+        ]
+      }
+    },
+    "/api/v1/training/skills": {
+      "get": {
+        "operationId": "training-skills",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "curriculum",
+            "schema": {
+              "default": "SINGAPORE_MOE",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Training-skillsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List skills for a curriculum and grade with High Score stars and Proficiency %",
+        "tags": [
+          "Training"
         ]
       }
     }

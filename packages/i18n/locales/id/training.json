@@ -1,0 +1,36 @@
+{
+  "title": "Latihan Galaksi",
+  "subtitle": "Pilih dari 6 jalur kurikulum SD, kuasai strategi HOTS, dan kumpulkan bintang kemahiranmu.",
+  "gradeSelector": "Kelas {{grade}}",
+  "modeHighScore": "Mode Skor Tertinggi",
+  "modeProficiency": "Mode Kemahiran %",
+  "nationalAvg": "Rata-rata Nasional: {{pct}}%",
+  "yourProficiency": "Kemahiranmu: {{pct}}% ({{correct}}/{{attempts}})",
+  "practiceBtn": "Latihan",
+  "tutorialBtn": "Tutorial",
+  "hotsTitle": "Roda Konstelasi HOTS",
+  "hotsSubtitle": "Jelajahi 4 kuadran & 9 strategi pemecahan masalah berdasarkan rentang usia.",
+  "ageBandAll": "Semua Usia",
+  "ageBand": "Usia {{band}}",
+  "sessionProgress": "Soal {{current}} dari {{total}} — Selesaikan 10 soal untuk membuka hadiah!",
+  "backToSkills": "Kembali ke Daftar Materi",
+  "reports": {
+    "title": "Laporan Kemajuan",
+    "tabProficiency": "Laporan Kemahiran",
+    "tabHighScore": "Laporan Skor Tertinggi",
+    "allCurricula": "Semua 6 Kurikulum",
+    "allGrades": "Semua Kelas (1–6)",
+    "tier9To10": "3 Bintang (9–10 / 10)",
+    "tier6To8": "2 Bintang (6–8 / 10)",
+    "tier4To5": "1 Bintang (4–5 / 10)",
+    "tier1To3": "Perlu Latihan (1–3 / 10)",
+    "unplayed": "Belum Dikerjakan",
+    "practiceNow": "Latih Sekarang"
+  },
+  "expLevel": {
+    "title": "XP Pilot & Pangkat Kosmik",
+    "subtitle": "Kumpulkan XP dari setiap misi matematika untuk naik dari Level 1 hingga Level 100!",
+    "currentRank": "Pangkat Saat Ini",
+    "nextLevel": "Butuh {{xp}} XP lagi untuk Level {{next}}"
+  }
+}

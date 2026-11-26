@@ -1,0 +1,43 @@
+{
+  "readAloud": "Read Aloud",
+  "hint": "Hint",
+  "videoTutorial": "Video Tutorial",
+  "reportQuestion": "Feedback",
+  "submitAnswer": "Submit Answer",
+  "checkAnswer": "Check Answer",
+  "tryAgain": "Try Again",
+  "saveDraft": "Save",
+  "saved": "Saved",
+  "showAnswer": "Show Answer",
+  "skipConfirmTitle": "Skip this question?",
+  "skipConfirmBody": "Showing the answer now will lock this question and award 0 SP. Are you sure?",
+  "confirmSkip": "Yes, Show Answer (0 SP)",
+  "cancel": "Cancel",
+  "nextQuestion": "Next Question",
+  "correctBanner": "STAR SHOT! THAT'S RIGHT!",
+  "wrongBanner": "Nice try! Let's review the worked solution together.",
+  "workedSolution": "Worked Solution",
+  "yourAnswer": "Your Answer",
+  "correctAnswer": "Correct Answer",
+  "recommendedHeuristic": "Recommended Heuristic: {{name}}",
+  "tools": {
+    "title": "Math Tools",
+    "sketchpad": "Sketchpad",
+    "equationPad": "Add Working",
+    "barModel": "Bar Model",
+    "columnCalc": "4 Operations",
+    "pencil": "Pencil",
+    "highlighter": "Highlighter",
+    "eraser": "Eraser",
+    "clear": "Clear",
+    "addBar": "Add Bar",
+    "units": "Units",
+    "carryHint": "Manual column workspace (enter your own digits & carries)"
+  },
+  "feedbackModal": {
+    "title": "Report Question Feedback",
+    "placeholder": "Tell us if there is a typo, diagram issue, or translation improvement...",
+    "send": "Send Feedback",
+    "sent": "Thank you! Our mission team received your feedback."
+  }
+}

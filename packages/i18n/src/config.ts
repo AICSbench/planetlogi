@@ -3,7 +3,14 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE_NAME = "PLANETLOGI_LOCALE";
 
-export const I18N_NAMESPACES = ["common", "auth", "dashboard"] as const;
+export const I18N_NAMESPACES = [
+  "common",
+  "auth",
+  "dashboard",
+  "daily-orbit",
+  "training",
+  "player",
+] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 
 export function isSupportedLocale(value: string | undefined | null): value is Locale {

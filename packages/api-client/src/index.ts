@@ -31,6 +31,178 @@ export interface LiveFeedItem {
   submittedAt: string;
 }
 
+export interface InputPart {
+  key: string;
+  label?: string;
+  prefix?: string;
+  suffix?: string;
+}
+
+export interface MCQOption {
+  key: string;
+  label: string;
+}
+
+export interface DiagramSpec {
+  type: string;
+  params: Record<string, unknown>;
+}
+
+export interface SolutionStep {
+  text: string;
+  diagram?: DiagramSpec;
+}
+
+export interface RenderedQuestion {
+  id: string;
+  templateCode: string;
+  seed: number;
+  grade: number;
+  skillCode: string;
+  skillName: string;
+  curriculumCode: string;
+  difficulty: number;
+  heuristicCode?: string;
+  heuristicName?: string;
+  inputType: "single_numeric" | "multi_numeric" | "short_text" | "mcq" | "fraction";
+  locale: string;
+  stem: string;
+  ttsText: string;
+  hints: string[];
+  parts?: InputPart[];
+  options?: MCQOption[];
+  diagram?: DiagramSpec;
+  videoTutorialId?: string;
+}
+
+export interface WorkedSolution {
+  correctAnswers: Record<string, string>;
+  steps: SolutionStep[];
+}
+
+export interface GradeResult {
+  isCorrect: boolean;
+  correctAnswers: Record<string, string>;
+  workedSolution: WorkedSolution;
+}
+
+export type DailyOrbitTier = "ELEMENTARY" | "INTERMEDIATE" | "ADVANCED" | "MASTER";
+
+export interface DailyOrbitSlot {
+  index: number;
+  stageName: string;
+  nodeShape: "circle" | "hexagon" | "star";
+  rewardSp: number;
+  status: "PENDING" | "CORRECT" | "WRONG" | "SKIPPED";
+  earnedSp: number;
+  question: RenderedQuestion;
+  submittedAnswer?: Record<string, string>;
+  workedSolution?: WorkedSolution;
+}
+
+export interface DailyOrbitSession {
+  localDate: string;
+  isOpen: boolean;
+  windowNotice?: string;
+  tier: DailyOrbitTier;
+  unlockedTiers: DailyOrbitTier[];
+  activeCurricula: string[];
+  changeQuestionUsed: number;
+  changeQuestionLimit: number;
+  correctCount: number;
+  completedCount: number;
+  totalSpEarned: number;
+  completionBonusAwarded: boolean;
+  todaySpBreakdown: {
+    dailyOrbit: number;
+    starDuels: number;
+    sundayMeteor: number;
+    totalToday: number;
+  };
+  slots: DailyOrbitSlot[];
+}
+
+export interface StreakStatus {
+  currentStreak: number;
+  longestStreak: number;
+  cryoShields: number;
+  maxCryoShields: number;
+  novaPetStage: number;
+  todayCorrectCount: number;
+  dailyMilestoneTarget: number;
+  lastCompletedDate?: string;
+  reminderEnabled: boolean;
+  reminderTimeLocal?: string;
+}
+
+export interface StreakCalendarDay {
+  date: string;
+  status: "COMPLETED" | "FROZEN" | "MISSED";
+}
+
+export interface CurriculumSummary {
+  code: string;
+  name: string;
+  description: string;
+  skillCount: number;
+}
+
+export interface SkillView {
+  code: string;
+  name: string;
+  grade: number;
+  curricula: string[];
+  category: string;
+  difficulty: number;
+  heuristicCode?: string;
+  ageBand?: string;
+  templateCode: string;
+  nationalAvgPct: number;
+  attemptsCount: number;
+  correctCount: number;
+  proficiencyPct: number;
+  proficiencyTier: "INCOMPLETE" | "BEGINNING" | "COMPETENT" | "MASTERY";
+  bestSessionScore: number;
+  bestStars: number;
+}
+
+export interface HOTSQuadrant {
+  code: string;
+  name: string;
+  heuristics: Array<{
+    code: string;
+    name: string;
+    skillCount: number;
+    skills: SkillView[];
+  }>;
+}
+
+export interface PracticeSession {
+  sessionId: string;
+  skillCode: string;
+  skillName: string;
+  questions: RenderedQuestion[];
+  answered: number;
+  correct: number;
+  starsEarned: number;
+}
+
+export interface ProficiencyReport {
+  masteryCount: number;
+  competentCount: number;
+  beginningCount: number;
+  incompleteCount: number;
+  skills: SkillView[];
+}
+
+export interface HighScoreReport {
+  tier9To10: SkillView[];
+  tier6To8: SkillView[];
+  tier4To5: SkillView[];
+  tier1To3: SkillView[];
+  unplayed: SkillView[];
+}
+
 export class ApiError extends Error {
   status: number;
   detail?: string;
@@ -68,6 +240,7 @@ export function createApiClient(baseUrl: string) {
   }
 
   return {
+    // Auth
     login(identifier: string, password: string) {
       return request<{ user: Principal }>("/api/v1/auth/login", {
         method: "POST",
@@ -99,6 +272,100 @@ export function createApiClient(baseUrl: string) {
         method: "POST",
         body: JSON.stringify({ code }),
       });
+    },
+
+    // Daily Orbit
+    getDailyOrbitToday(locale: string, grade = 1) {
+      return request<DailyOrbitSession>(`/api/v1/daily-orbit/today?locale=${locale}&grade=${grade}`);
+    },
+    submitDailyOrbit(slotIndex: number, answers: Record<string, string>, locale: string, grade = 1) {
+      return request<{ slot: DailyOrbitSlot; session: DailyOrbitSession }>(
+        `/api/v1/daily-orbit/submit?locale=${locale}&grade=${grade}`,
+        { method: "POST", body: JSON.stringify({ slotIndex, answers }) }
+      );
+    },
+    skipDailyOrbit(slotIndex: number, locale: string, grade = 1) {
+      return request<{ slot: DailyOrbitSlot; session: DailyOrbitSession }>(
+        `/api/v1/daily-orbit/skip?locale=${locale}&grade=${grade}`,
+        { method: "POST", body: JSON.stringify({ slotIndex }) }
+      );
+    },
+    changeDailyOrbitQuestion(slotIndex: number, mode: "easier" | "harder" | "topic", locale: string, grade = 1) {
+      return request<{ slot: DailyOrbitSlot; session: DailyOrbitSession }>(
+        `/api/v1/daily-orbit/change-question?locale=${locale}&grade=${grade}`,
+        { method: "POST", body: JSON.stringify({ slotIndex, mode }) }
+      );
+    },
+    setDailyOrbitTier(tier: DailyOrbitTier, locale: string, grade = 1) {
+      return request<DailyOrbitSession>(
+        `/api/v1/daily-orbit/tier?locale=${locale}&grade=${grade}`,
+        { method: "PATCH", body: JSON.stringify({ tier }) }
+      );
+    },
+    setDailyOrbitCurricula(curricula: string[], locale: string, grade = 1) {
+      return request<DailyOrbitSession>(
+        `/api/v1/daily-orbit/curricula?locale=${locale}&grade=${grade}`,
+        { method: "PATCH", body: JSON.stringify({ curricula }) }
+      );
+    },
+
+    // Streak
+    getStreakStatus() {
+      return request<StreakStatus>("/api/v1/streak/status");
+    },
+    getStreakCalendar(month?: string) {
+      const q = month ? `?month=${encodeURIComponent(month)}` : "";
+      return request<{ days: StreakCalendarDay[] }>(`/api/v1/streak/calendar${q}`);
+    },
+    setStreakReminder(enabled: boolean, timeLocal?: string) {
+      return request<StreakStatus>("/api/v1/streak/reminder", {
+        method: "POST",
+        body: JSON.stringify({ enabled, timeLocal }),
+      });
+    },
+
+    // Galaxy Training
+    getCurricula(locale: string) {
+      return request<{ curricula: CurriculumSummary[] }>(`/api/v1/training/curricula?locale=${locale}`);
+    },
+    getSkills(curriculum: string, grade: number, locale: string) {
+      return request<{ skills: SkillView[] }>(
+        `/api/v1/training/skills?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}`
+      );
+    },
+    getHotsWheel(ageBand: string, locale: string) {
+      return request<{ quadrants: HOTSQuadrant[] }>(
+        `/api/v1/training/hots?ageBand=${encodeURIComponent(ageBand)}&locale=${locale}`
+      );
+    },
+    startPracticeSession(skillCode: string, locale: string) {
+      return request<PracticeSession>(`/api/v1/training/sessions?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ skillCode }),
+      });
+    },
+    submitPracticeAnswer(
+      sessionId: string,
+      questionIndex: number,
+      answers: Record<string, string>,
+      locale: string
+    ) {
+      return request<{ result: GradeResult; session: PracticeSession }>(
+        `/api/v1/training/sessions/submit?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ sessionId, questionIndex, answers }) }
+      );
+    },
+
+    // Reports
+    getProficiencyReport(curriculum: string, grade: number, locale: string) {
+      return request<ProficiencyReport>(
+        `/api/v1/reports/proficiency?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}`
+      );
+    },
+    getHighScoreReport(curriculum: string, grade: number, locale: string) {
+      return request<HighScoreReport>(
+        `/api/v1/reports/high-score?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}`
+      );
     },
   };
 }

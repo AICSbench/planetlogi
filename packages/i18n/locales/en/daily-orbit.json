@@ -1,0 +1,41 @@
+{
+  "title": "Daily Orbit",
+  "subtitle": "Complete 10 tiered questions between 6:00 AM and 10:00 PM to earn up to 17 SP + 5 Astro Coins.",
+  "closedTitle": "Our planets are recharging!",
+  "closedBody": "Daily Orbit is open 6:00 AM – 10:00 PM local time. Come back tomorrow morning!",
+  "tierButton": "Difficulty Tier",
+  "curriculaButton": "Curricula Filter",
+  "todayBreakdown": "Today's SP Breakdown",
+  "breakdownDaily": "Daily Orbit",
+  "breakdownDuels": "Star Duels",
+  "breakdownSunday": "Sunday Meteor",
+  "breakdownTotal": "Today's Total SP",
+  "changeQuestion": "Change Question",
+  "changeRemaining": "{{remaining}}/{{limit}} left today",
+  "changeEasier": "Make it easier",
+  "changeHarder": "Make it harder",
+  "changeTopic": "Change topic",
+  "completionBonus": "+5 Astro Coins Bonus Earned!",
+  "tiers": {
+    "ELEMENTARY": "Elementary",
+    "INTERMEDIATE": "Intermediate (15 SP)",
+    "ADVANCED": "Advanced (50 SP)",
+    "MASTER": "Master (100 SP)"
+  },
+  "streak": {
+    "title": "Orbit Streak & Nova Pet",
+    "subtitle": "Answer at least 5 Daily Orbit questions correctly each day to grow your Nova Pet!",
+    "currentDays": "{{count}} Day Streak",
+    "longestDays": "Longest: {{count}} days",
+    "todayProgress": "Today's Milestone: {{current}} / {{target}} correct",
+    "petStage": "Nova Pet Stage {{stage}} / 5",
+    "cryoTitle": "Cryo Shields (Streak Freeze)",
+    "cryoDesc": "Store up to 3 Cryo Shields. If you miss a day, 1 shield activates automatically at midnight to keep your streak safe.",
+    "calendarTitle": "Monthly Orbit Calendar",
+    "reminderOn": "Daily Reminder Active ({{time}})",
+    "reminderOff": "Turn on Daily Reminder",
+    "statusCompleted": "Completed",
+    "statusFrozen": "Cryo-Protected",
+    "statusMissed": "Missed"
+  }
+}

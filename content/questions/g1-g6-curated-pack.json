@@ -1,0 +1,77 @@
+{
+  "version": "1.0.0",
+  "questions": [
+    {
+      "code": "PL-CUR-G1-001", "grade": 1, "skillCode": "num-add-within-20", "difficulty": 1,
+      "stem": { "en": "A rocket has 7 red lights and 6 green lights. How many lights are on the rocket?", "id": "Sebuah roket memiliki 7 lampu merah dan 6 lampu hijau. Berapa jumlah lampu pada roket itu?" },
+      "answer": "13",
+      "solutionText": { "en": "7 + 6 = 13 lights.", "id": "7 + 6 = 13 lampu." }
+    },
+    {
+      "code": "PL-CUR-G1-002", "grade": 1, "skillCode": "hots-look-for-patterns-g1", "difficulty": 2,
+      "stem": { "en": "Stars glow in this order: 3, 6, 9, 12, ___. What is the next number?", "id": "Bintang menyala dengan urutan: 3, 6, 9, 12, ___. Bilangan berapa selanjutnya?" },
+      "answer": "15",
+      "solutionText": { "en": "Add 3 each step: 12 + 3 = 15.", "id": "Tambah 3 setiap langkah: 12 + 3 = 15." }
+    },
+    {
+      "code": "PL-CUR-G2-001", "grade": 2, "skillCode": "wp-bar-model-compare", "difficulty": 3,
+      "stem": { "en": "Budi collected 45 star coins. Maya collected 18 more coins than Budi. How many coins did Maya collect?", "id": "Budi mengumpulkan 45 koin bintang. Maya mengumpulkan 18 koin lebih banyak dari Budi. Berapa koin yang dikumpulkan Maya?" },
+      "answer": "63",
+      "solutionText": { "en": "45 + 18 = 63 coins.", "id": "45 + 18 = 63 koin." }
+    },
+    {
+      "code": "PL-CUR-G2-002", "grade": 2, "skillCode": "num-mul-2-3-4-5-10", "difficulty": 2,
+      "stem": { "en": "There are 8 trays on a space ship. Each tray holds 5 energy bars. How many energy bars are there?", "id": "Ada 8 baki di pesawat luar angkasa. Setiap baki berisi 5 batang energi. Berapa jumlah seluruh batang energi?" },
+      "answer": "40",
+      "solutionText": { "en": "8 × 5 = 40 energy bars.", "id": "8 × 5 = 40 batang energi." }
+    },
+    {
+      "code": "PL-CUR-G3-001", "grade": 3, "skillCode": "geo-area-perimeter-rect", "difficulty": 3,
+      "stem": { "en": "A rectangular landing pad is 12 m long and 7 m wide. What is its area in m²?", "id": "Landasan roket berbentuk persegi panjang memiliki panjang 12 m dan lebar 7 m. Berapa luasnya dalam m²?" },
+      "answer": "84",
+      "solutionText": { "en": "Area = 12 × 7 = 84 m².", "id": "Luas = 12 × 7 = 84 m²." }
+    },
+    {
+      "code": "PL-CUR-G3-002", "grade": 3, "skillCode": "num-div-remainder", "difficulty": 3,
+      "stem": { "en": "50 moon pebbles are shared equally among 6 astronauts. How many pebbles are left over?", "id": "50 kerikil bulan dibagi rata kepada 6 astronot. Berapa kerikil bulan yang tersisa?" },
+      "answer": "2",
+      "solutionText": { "en": "50 ÷ 6 = 8 remainder 2 (6 × 8 = 48, 50 − 48 = 2).", "id": "50 ÷ 6 = 8 sisa 2 (6 × 8 = 48, 50 − 48 = 2)." }
+    },
+    {
+      "code": "PL-CUR-G4-001", "grade": 4, "skillCode": "hots-work-backwards", "difficulty": 4,
+      "stem": { "en": "After doubling a number and subtracting 9, Lucas gets 25. What was the original number?", "id": "Setelah menggandakan sebuah bilangan lalu menguranginya dengan 9, Lucas mendapat 25. Berapakah bilangan awalnya?" },
+      "answer": "17",
+      "solutionText": { "en": "25 + 9 = 34, then 34 ÷ 2 = 17.", "id": "25 + 9 = 34, lalu 34 ÷ 2 = 17." }
+    },
+    {
+      "code": "PL-CUR-G4-002", "grade": 4, "skillCode": "num-factors-multiples", "difficulty": 3,
+      "stem": { "en": "What is the Lowest Common Multiple (LCM) of 6 and 15?", "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 6 dan 15?" },
+      "answer": "30",
+      "solutionText": { "en": "Multiples of 6: 6, 12, 18, 24, 30. Multiples of 15: 15, 30. LCM = 30.", "id": "Kelipatan 6: 6, 12, 18, 24, 30. Kelipatan 15: 15, 30. KPK = 30." }
+    },
+    {
+      "code": "PL-CUR-G5-001", "grade": 5, "skillCode": "pct-discount", "difficulty": 3,
+      "stem": { "en": "A helmet costs 200 coins. With a 25% discount, how many coins do you pay?", "id": "Sebuah helm berharga 200 koin. Dengan diskon 25%, berapa koin yang harus dibayar?" },
+      "answer": "150",
+      "solutionText": { "en": "25% of 200 = 50. 200 − 50 = 150 coins.", "id": "25% dari 200 = 50. 200 − 50 = 150 koin." }
+    },
+    {
+      "code": "PL-CUR-G5-002", "grade": 5, "skillCode": "ratio-two-quantities", "difficulty": 4,
+      "stem": { "en": "Gold stars and silver stars are in the ratio 3 : 5. If there are 64 stars altogether, how many are silver?", "id": "Rasio bintang emas dan perak adalah 3 : 5. Jika total ada 64 bintang, berapa banyak bintang perak?" },
+      "answer": "40",
+      "solutionText": { "en": "8 units = 64 → 1 unit = 8 → 5 units = 40 silver stars.", "id": "8 unit = 64 → 1 unit = 8 → 5 unit = 40 bintang perak." }
+    },
+    {
+      "code": "PL-CUR-G6-001", "grade": 6, "skillCode": "rate-speed-dst", "difficulty": 4,
+      "stem": { "en": "A comet cruiser travels 270 km in 3 hours. What is its average speed in km/h?", "id": "Sebuah kapal komet menempuh jarak 270 km dalam 3 jam. Berapa kecepatan rata-ratanya dalam km/jam?" },
+      "answer": "90",
+      "solutionText": { "en": "Speed = 270 ÷ 3 = 90 km/h.", "id": "Kecepatan = 270 ÷ 3 = 90 km/jam." }
+    },
+    {
+      "code": "PL-CUR-G6-002", "grade": 6, "skillCode": "hots-make-supposition", "difficulty": 5,
+      "stem": { "en": "14 space critters have 44 legs in total. Some are 2-legged birds and some are 4-legged bots. How many 4-legged bots are there?", "id": "Ada 14 makhluk ruang angkasa dengan total 44 kaki. Sebagian burung berkaki 2 dan sebagian robot berkaki 4. Berapa jumlah robot berkaki 4?" },
+      "answer": "8",
+      "solutionText": { "en": "Assume all 14 have 2 legs → 28 legs. Extra legs = 44 − 28 = 16. 16 ÷ 2 = 8 bots.", "id": "Andaikan semua berkaki 2 → 28 kaki. Sisa kaki = 44 − 28 = 16. 16 ÷ 2 = 8 robot." }
+    }
+  ]
+}

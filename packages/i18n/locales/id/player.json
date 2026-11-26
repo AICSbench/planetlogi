@@ -1,0 +1,43 @@
+{
+  "readAloud": "Bacakan Soal",
+  "hint": "Petunjuk",
+  "videoTutorial": "Video Tutorial",
+  "reportQuestion": "Lapor Soal",
+  "submitAnswer": "Kirim Jawaban",
+  "checkAnswer": "Periksa Jawaban",
+  "tryAgain": "Coba Lagi",
+  "saveDraft": "Simpan",
+  "saved": "Tersimpan",
+  "showAnswer": "Lihat Jawaban",
+  "skipConfirmTitle": "Lewati soal ini?",
+  "skipConfirmBody": "Melihat jawaban sekarang akan mengunci soal ini dan memberi 0 SP. Yakin ingin melanjutkan?",
+  "confirmSkip": "Ya, Lihat Jawaban (0 SP)",
+  "cancel": "Batal",
+  "nextQuestion": "Soal Berikutnya",
+  "correctBanner": "HEBAT! JAWABANMU BENAR!",
+  "wrongBanner": "Usaha bagus! Yuk pelajari langkah pembahasannya bersama.",
+  "workedSolution": "Langkah Pembahasan",
+  "yourAnswer": "Jawabanmu",
+  "correctAnswer": "Jawaban Benar",
+  "recommendedHeuristic": "Strategi Disarankan: {{name}}",
+  "tools": {
+    "title": "Alat Bantu Matematika",
+    "sketchpad": "Coretan",
+    "equationPad": "Langkah Hitung",
+    "barModel": "Model Batang",
+    "columnCalc": "Hitung Susun",
+    "pencil": "Pensil",
+    "highlighter": "Stabilo",
+    "eraser": "Penghapus",
+    "clear": "Hapus Semua",
+    "addBar": "Tambah Batang",
+    "units": "Unit",
+    "carryHint": "Papan hitung bersusun manual (isi angka & simpanan sendiri)"
+  },
+  "feedbackModal": {
+    "title": "Kirim Masukan Soal",
+    "placeholder": "Beri tahu jika ada salah ketik, gambar kurang jelas, atau terjemahan...",
+    "send": "Kirim Masukan",
+    "sent": "Terima kasih! Tim misi kami sudah menerima masukanmu."
+  }
+}
