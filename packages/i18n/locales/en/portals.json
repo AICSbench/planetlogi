@@ -1,0 +1,52 @@
+{
+  "assignments": {
+    "title": "My Assignments",
+    "subtitle": "Complete homework assigned by PlanetLogi, Parents, or Teachers to earn Astro Coins.",
+    "tabAll": "All",
+    "tabIncomplete": "Incomplete",
+    "tabComplete": "Complete",
+    "assignedByAll": "Assigned By: All",
+    "createCustomBtn": "Parent: Create Personalised Assignment",
+    "builderTitle": "Create Personalised Assignment",
+    "builderSubtitle": "Select skills based on your child's live Proficiency % to generate targeted practice.",
+    "titleLabel": "Assignment Title",
+    "titlePlaceholder": "e.g. Weekend Bar-Model Boost",
+    "dueDateLabel": "Due Date",
+    "assignNow": "Assign to Child",
+    "createdSuccess": "Custom assignment sent to your child!",
+    "dueLabel": "Due {{date}}"
+  },
+  "profile": {
+    "title": "Profile & Family Settings",
+    "parentCard": "Parent Account",
+    "childCard": "Child Pilot Profile",
+    "schoolLabel": "School",
+    "promotionNote": "Scheduled automatic grade promotion: {{date}}",
+    "settingsCard": "Parent Settings & Healthy Controls",
+    "otpToggle": "Parent OTP Account Security",
+    "otpHelp": "When enabled, sensitive settings require a 6-digit OTP verification code.",
+    "brainCapLabel": "Brain Galaxy Daily Limit (0–25 min)",
+    "saveSettings": "Save Settings",
+    "savedToast": "Family settings saved!",
+    "subscriptionCard": "My Subscription",
+    "featureFirstNotice": "All PlanetLogi features are 100% unlocked during Open Beta (Feature-First).",
+    "openParentPortal": "Open Parent Portal"
+  },
+  "parentPortal": {
+    "title": "Parent Mission Control",
+    "subtitle": "Track weekly habits, spot focus areas, and assign tailored practice in under 2 minutes.",
+    "topStrengths": "Top Strengths (Mastery)",
+    "focusAreas": "Focus Areas to Practice",
+    "quickAssignFocus": "Assign Practice on Focus Areas"
+  },
+  "help": {
+    "title": "PlanetLogi Help Center",
+    "subtitle": "Frequently asked questions for Elementary Students, Parents, and Schools.",
+    "q1": "What are Daily Orbit operating hours?",
+    "a1": "Daily Orbit opens 6:00 AM – 10:00 PM in your local timezone to encourage healthy daily study habits without late-night screen time.",
+    "q2": "How do Cryo Shields protect an Orbit Streak?",
+    "a2": "You can hold up to 3 Cryo Shields. If a day is missed, 1 shield automatically activates at midnight so your streak stays safe.",
+    "q3": "Can we switch between English and Bahasa Indonesia anytime?",
+    "a3": "Yes! Both UI and math questions support English and Indonesian side-by-side from the top bar or Parent Settings."
+  }
+}

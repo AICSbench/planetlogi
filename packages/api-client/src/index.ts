@@ -208,6 +208,149 @@ export interface HighScoreReport {
   unplayed: SkillView[];
 }
 
+export interface AcademyLessonSummary {
+  code: string;
+  title: string;
+  ageBand: string;
+  completionPct: number;
+  scrollEarned: boolean;
+  skillCode: string;
+}
+
+export interface AcademyTopicSummary {
+  code: string;
+  grade: number;
+  title: string;
+  ageBand: string;
+  scrollsEarned: number;
+  totalScrolls: number;
+  lessons: AcademyLessonSummary[];
+}
+
+export interface AcademyLessonDetail {
+  code: string;
+  topicCode: string;
+  title: string;
+  ageBand: string;
+  skillCode: string;
+  storyVideoTitle: string;
+  conceptVideoTitle: string;
+  completionPct: number;
+  scrollEarned: boolean;
+  doAndLearn: Array<{
+    index: number;
+    question: RenderedQuestion;
+    draftAnswer?: Record<string, string>;
+    solved: boolean;
+    lastWrong: boolean;
+    workedSolution?: WorkedSolution;
+  }>;
+  selfCheck: Array<{ key: string; label: string; checked: boolean }>;
+}
+
+export interface AstroQuizPaperSummary {
+  code: string;
+  grade: number;
+  category: "ESSENTIAL" | "TOP_SCHOOL" | "HOTS";
+  title: string;
+  questionCount: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "SUBMITTED";
+  bestScore: number;
+  weeklyDeadline: string;
+}
+
+export interface AstroQuizAttemptView {
+  paperCode: string;
+  title: string;
+  grade: number;
+  category: "ESSENTIAL" | "TOP_SCHOOL" | "HOTS";
+  status: "IN_PROGRESS" | "SUBMITTED";
+  elapsedSec: number;
+  score: number;
+  totalQuestions: number;
+  supplyPodAwarded: boolean;
+  supplyPodClaimedThisWeek: boolean;
+  questions: Array<{
+    index: number;
+    question: RenderedQuestion;
+    draftAnswer?: Record<string, string>;
+    isCorrect?: boolean;
+    workedSolution?: WorkedSolution;
+  }>;
+}
+
+export interface PrintablePaper {
+  paperCode: string;
+  title: string;
+  grade: number;
+  category: string;
+  questions: RenderedQuestion[];
+  answerKeys: Array<Record<string, string>>;
+}
+
+export interface AssignmentSummary {
+  id: string;
+  title: string;
+  assignedByRole: "SYSTEM" | "PARENT" | "TEACHER";
+  assignedByName: string;
+  academicYear: number;
+  dueDate: string;
+  status: "INCOMPLETE" | "COMPLETE";
+  questionCount: number;
+  completedCount: number;
+  score: number;
+  rewardAc: number;
+}
+
+export interface AssignmentDetail {
+  summary: AssignmentSummary;
+  questions: Array<{
+    index: number;
+    question: RenderedQuestion;
+    submittedAnswer?: Record<string, string>;
+    isCorrect?: boolean;
+    workedSolution?: WorkedSolution;
+  }>;
+}
+
+export interface ProfileBundle {
+  parent: { name: string; maskedEmail: string; maskedPhone: string };
+  child: {
+    studentId: string;
+    firstName: string;
+    grade: number;
+    schoolName: string;
+    nextPromotionDate: string;
+    birthday: string;
+    gender: string;
+    avatarItemId: string;
+  };
+  settings: {
+    otpEnabled: boolean;
+    language: "en" | "id";
+    dailyOrbitCurricula: string[];
+    starDuelCurricula: string[];
+    brainGalaxyDailyCapMin: number;
+    brainGalaxyWindowStart: string;
+    brainGalaxyWindowEnd: string;
+    subscriptionPlanName: string;
+    subscriptionValidUntil: string;
+    billingEnabled: boolean;
+  };
+}
+
+export interface ParentChildOverview {
+  child: ProfileBundle["child"];
+  streakDays: number;
+  cryoShields: number;
+  masteryCount: number;
+  competentCount: number;
+  beginningCount: number;
+  incompleteCount: number;
+  focusSkills: SkillView[];
+  strengthSkills: SkillView[];
+}
+
 export class ApiError extends Error {
   status: number;
   detail?: string;
@@ -385,6 +528,117 @@ export function createApiClient(baseUrl: string) {
       return request<HighScoreReport>(
         `/api/v1/reports/high-score?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}`
       );
+    },
+
+    // Space Academy
+    getAcademyTopics(grade: number, locale: string) {
+      return request<{ topics: AcademyTopicSummary[] }>(
+        `/api/v1/academy/topics?grade=${grade}&locale=${locale}`
+      );
+    },
+    getAcademyLesson(code: string, locale: string) {
+      return request<AcademyLessonDetail>(
+        `/api/v1/academy/lessons/${encodeURIComponent(code)}?locale=${locale}`
+      );
+    },
+    saveAcademyDraft(lessonCode: string, questionIndex: number, answers: Record<string, string>, locale: string) {
+      return request<AcademyLessonDetail>(`/api/v1/academy/do-learn/save?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ lessonCode, questionIndex, answers }),
+      });
+    },
+    checkAcademyAnswer(lessonCode: string, questionIndex: number, answers: Record<string, string>, locale: string) {
+      return request<{ result: GradeResult; lesson: AcademyLessonDetail }>(
+        `/api/v1/academy/do-learn/check?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ lessonCode, questionIndex, answers }) }
+      );
+    },
+    toggleAcademySelfCheck(lessonCode: string, itemKey: string, checked: boolean, locale: string) {
+      return request<AcademyLessonDetail>(`/api/v1/academy/self-check?locale=${locale}`, {
+        method: "PATCH",
+        body: JSON.stringify({ lessonCode, itemKey, checked }),
+      });
+    },
+
+    // AstroQuiz
+    getAstroQuizPapers(grade: number, category: string, locale: string) {
+      return request<{ papers: AstroQuizPaperSummary[]; supplyPodClaimedThisWeek: boolean }>(
+        `/api/v1/astro-quiz/papers?grade=${grade}&category=${encodeURIComponent(category)}&locale=${locale}`
+      );
+    },
+    openAstroQuizPaper(code: string, locale: string) {
+      return request<AstroQuizAttemptView>(
+        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}?locale=${locale}`
+      );
+    },
+    saveAstroQuizPaper(code: string, elapsedSec: number, drafts: Record<number, Record<string, string>>, locale: string) {
+      return request<AstroQuizAttemptView>(
+        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}/save?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ elapsedSec, drafts }) }
+      );
+    },
+    submitAstroQuizPaper(code: string, elapsedSec: number, drafts: Record<number, Record<string, string>>, locale: string) {
+      return request<AstroQuizAttemptView>(
+        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}/submit?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ elapsedSec, drafts }) }
+      );
+    },
+    getPrintablePaper(code: string, locale: string) {
+      return request<PrintablePaper>(
+        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}/print?locale=${locale}`
+      );
+    },
+
+    // Assignments
+    getAssignments(status = "ALL", assignedBy = "ALL", year = 0) {
+      return request<{ assignments: AssignmentSummary[] }>(
+        `/api/v1/assignments?status=${encodeURIComponent(status)}&assignedBy=${encodeURIComponent(assignedBy)}&year=${year}`
+      );
+    },
+    createCustomAssignment(payload: {
+      studentId?: string;
+      title: string;
+      dueDate?: string;
+      templateCodes: string[];
+    }) {
+      return request<AssignmentSummary>("/api/v1/assignments/custom", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+    getAssignmentDetail(id: string, locale: string) {
+      return request<AssignmentDetail>(
+        `/api/v1/assignments/${encodeURIComponent(id)}?locale=${locale}`
+      );
+    },
+    submitAssignmentQuestion(id: string, questionIndex: number, answers: Record<string, string>, locale: string) {
+      return request<{ result: GradeResult; assignment: AssignmentDetail }>(
+        `/api/v1/assignments/${encodeURIComponent(id)}/submit?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ questionIndex, answers }) }
+      );
+    },
+
+    // Profile & Parent Portal
+    getProfileBundle() {
+      return request<ProfileBundle>("/api/v1/profile/bundle");
+    },
+    updateProfileSettings(payload: {
+      otpEnabled?: boolean;
+      otpCode?: string;
+      language?: "en" | "id";
+      dailyOrbitCurricula?: string[];
+      starDuelCurricula?: string[];
+      brainGalaxyDailyCapMin?: number;
+      brainGalaxyWindowStart?: string;
+      brainGalaxyWindowEnd?: string;
+    }) {
+      return request<ProfileBundle>("/api/v1/profile/settings", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+    },
+    getParentOverview(locale: string) {
+      return request<ParentChildOverview>(`/api/v1/parent/overview?locale=${locale}`);
     },
   };
 }

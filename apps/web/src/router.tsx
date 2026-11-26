@@ -19,14 +19,16 @@ import { StreakPage } from "./routes/$locale/streak/StreakPage";
 import { TrainingPage } from "./routes/$locale/training/TrainingPage";
 import { ReportPage } from "./routes/$locale/report/ReportPage";
 import { ExpLevelPage } from "./routes/$locale/exp-level/ExpLevelPage";
+import { SpaceAcademyPage } from "./routes/$locale/academy/SpaceAcademyPage";
+import { AstroQuizPage } from "./routes/$locale/astro-quiz/AstroQuizPage";
+import { AstroQuizPrintPage } from "./routes/$locale/astro-quiz/AstroQuizPrintPage";
+import { AssignmentsPage } from "./routes/$locale/assignments/AssignmentsPage";
+import { ProfileSettingsPage } from "./routes/$locale/profile-settings/ProfileSettingsPage";
+import { ParentPortalPage } from "./routes/$locale/parent/ParentPortalPage";
+import { HelpPage } from "./routes/$locale/help/HelpPage";
 import { useAuthStore } from "./store/authStore";
 
 const FEATURE_META: Record<string, { titleKey: string; phase: number }> = {
-  academy: { titleKey: "apps.spaceAcademy", phase: 2 },
-  "astro-quiz": { titleKey: "apps.astroQuiz", phase: 2 },
-  assignments: { titleKey: "apps.assignments", phase: 2 },
-  "profile-settings": { titleKey: "nav.settings", phase: 2 },
-  help: { titleKey: "nav.help", phase: 2 },
   "super-nova": { titleKey: "apps.dailyOrbit", phase: 3 },
   stories: { titleKey: "apps.planetStories", phase: 3 },
   "star-duels": { titleKey: "apps.starDuels", phase: 3 },
@@ -69,7 +71,7 @@ function FeaturePlaceholderRoute() {
   const { _splat } = useParams({ from: "/$locale/shell/$" });
   const { t } = useTranslation("common");
   const slug = (_splat ?? "").split("/")[0] ?? "";
-  const meta = FEATURE_META[slug] ?? { titleKey: "brand", phase: 2 };
+  const meta = FEATURE_META[slug] ?? { titleKey: "brand", phase: 3 };
 
   return (
     <GalaxyCard className="mx-auto max-w-2xl text-center py-12 space-y-2">
@@ -102,6 +104,16 @@ const loginRoute = createRoute({
   component: function LoginRouteView() {
     const { locale } = useParams({ from: "/$locale/login" });
     return <LoginPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+// Dedicated chromeless A4 Print Worksheet Route (no dark Galaxy navbar!)
+const astroQuizPrintRoute = createRoute({
+  getParentRoute: () => localeRoute,
+  path: "/astro-quiz/print/$paperCode",
+  component: function AstroQuizPrintView() {
+    const { locale, paperCode } = useParams({ from: "/$locale/astro-quiz/print/$paperCode" });
+    return <AstroQuizPrintPage locale={normalizeLocale(locale)} paperCode={paperCode} />;
   },
 });
 
@@ -162,6 +174,57 @@ const expLevelRoute = createRoute({
   },
 });
 
+const academyRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/academy",
+  component: function AcademyRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/academy" });
+    return <SpaceAcademyPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const astroQuizRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/astro-quiz",
+  component: function AstroQuizRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/astro-quiz" });
+    return <AstroQuizPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const assignmentsRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/assignments",
+  component: function AssignmentsRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/assignments" });
+    return <AssignmentsPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const profileSettingsRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/profile-settings",
+  component: function ProfileSettingsRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/profile-settings" });
+    return <ProfileSettingsPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const parentPortalRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/parent",
+  component: function ParentPortalRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/parent" });
+    return <ParentPortalPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const helpRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/help",
+  component: HelpPage,
+});
+
 const featureSplatRoute = createRoute({
   getParentRoute: () => appShellRoute,
   path: "/$",
@@ -172,6 +235,7 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   localeRoute.addChildren([
     loginRoute,
+    astroQuizPrintRoute,
     appShellRoute.addChildren([
       dashboardRoute,
       dailyOrbitRoute,
@@ -179,6 +243,12 @@ const routeTree = rootRoute.addChildren([
       trainingRoute,
       reportRoute,
       expLevelRoute,
+      academyRoute,
+      astroQuizRoute,
+      assignmentsRoute,
+      profileSettingsRoute,
+      parentPortalRoute,
+      helpRoute,
       featureSplatRoute,
     ]),
   ]),

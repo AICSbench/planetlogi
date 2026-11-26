@@ -14,8 +14,12 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/academy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/assignments"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/astroquiz"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/profile"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
@@ -60,6 +64,11 @@ func main() {
 	dailyOrbitSvc := dailyorbit.NewServiceWithPG(pool, ledger, streakSvc)
 	trainingSvc := training.NewServiceWithPG(pool, ledger)
 	dailyOrbitSvc.SetAttemptRecorder(trainingSvc)
+	reportsH := reports.NewHandler(trainingSvc, authSvc)
+	academySvc := academy.NewService(ledger)
+	quizSvc := astroquiz.NewService(ledger)
+	assignSvc := assignments.NewService(ledger)
+	profileSvc := profile.NewService(reportsH, streakSvc, authSvc, cfg.BillingEnabled)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,
@@ -71,7 +80,11 @@ func main() {
 			streak.NewHandler(streakSvc, authSvc).RegisterRoutes,
 			dailyorbit.NewHandler(dailyOrbitSvc, authSvc).RegisterRoutes,
 			training.NewHandler(trainingSvc, authSvc).RegisterRoutes,
-			reports.NewHandler(trainingSvc, authSvc).RegisterRoutes,
+			reportsH.RegisterRoutes,
+			academy.NewHandler(academySvc, authSvc).RegisterRoutes,
+			astroquiz.NewHandler(quizSvc, authSvc).RegisterRoutes,
+			assignments.NewHandler(assignSvc, authSvc).RegisterRoutes,
+			profile.NewHandler(profileSvc, authSvc).RegisterRoutes,
 		},
 	})
 

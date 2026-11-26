@@ -1,0 +1,28 @@
+{
+  "title": "AstroQuiz & Exam Papers",
+  "subtitle": "Timed revision papers, top school year-end mocks, HOTS papers, and A4 printable worksheets.",
+  "supplyPodBanner": "Complete any paper this week to claim 1 Weekly Supply Pod (+5 Astro Coins)!",
+  "supplyPodClaimed": "Weekly Supply Pod claimed (+5 AC) — great job!",
+  "categories": {
+    "ALL": "All Categories",
+    "ESSENTIAL": "Essential Skills",
+    "TOP_SCHOOL": "Top School Year-End",
+    "HOTS": "HOTS Papers"
+  },
+  "openPaper": "Start / Resume",
+  "printWorksheet": "Print A4",
+  "backToPapers": "Back to Papers",
+  "elapsedTimer": "Elapsed Time",
+  "savePaper": "Save Progress",
+  "submitPaper": "Submit Paper to See Solutions",
+  "scoreBanner": "Paper Submitted! Score: {{score}} / {{total}}",
+  "print": {
+    "studentName": "Student Name",
+    "className": "Class",
+    "date": "Date",
+    "scoreBox": "Score",
+    "workingSpace": "Show your working:",
+    "toggleAnswerKey": "Include Answer Key",
+    "printNow": "Print / Save as PDF"
+  }
+}

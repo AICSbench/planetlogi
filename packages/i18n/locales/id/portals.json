@@ -1,0 +1,52 @@
+{
+  "assignments": {
+    "title": "Tugas Saya",
+    "subtitle": "Selesaikan tugas dari PlanetLogi, Orang Tua, atau Guru untuk meraih Koin Astro.",
+    "tabAll": "Semua",
+    "tabIncomplete": "Belum Selesai",
+    "tabComplete": "Selesai",
+    "assignedByAll": "Pemberi Tugas: Semua",
+    "createCustomBtn": "Orang Tua: Buat Tugas Personalisasi",
+    "builderTitle": "Buat Tugas Personalisasi",
+    "builderSubtitle": "Pilih materi berdasarkan Kemahiran % anak secara langsung untuk latihan terarah.",
+    "titleLabel": "Judul Tugas",
+    "titlePlaceholder": "cth. Latihan Model Batang Akhir Pekan",
+    "dueDateLabel": "Batas Waktu",
+    "assignNow": "Kirim Tugas ke Anak",
+    "createdSuccess": "Tugas personalisasi berhasil dikirim ke anak!",
+    "dueLabel": "Tenggat {{date}}"
+  },
+  "profile": {
+    "title": "Profil & Pengaturan Keluarga",
+    "parentCard": "Akun Orang Tua",
+    "childCard": "Profil Pilot Anak",
+    "schoolLabel": "Sekolah",
+    "promotionNote": "Jadwal kenaikan kelas otomatis: {{date}}",
+    "settingsCard": "Pengaturan Orang Tua & Batas Sehat",
+    "otpToggle": "Keamanan OTP Orang Tua",
+    "otpHelp": "Saat aktif, perubahan pengaturan sensitif membutuhkan kode verifikasi OTP 6 digit.",
+    "brainCapLabel": "Batas Harian Galaksi Otak (0–25 menit)",
+    "saveSettings": "Simpan Pengaturan",
+    "savedToast": "Pengaturan keluarga tersimpan!",
+    "subscriptionCard": "Langganan Saya",
+    "featureFirstNotice": "Seluruh fitur PlanetLogi terbuka 100% selama Open Beta (Feature-First).",
+    "openParentPortal": "Buka Portal Orang Tua"
+  },
+  "parentPortal": {
+    "title": "Pusat Pantau Orang Tua",
+    "subtitle": "Pantau kebiasaan belajar mingguan, kenali area fokus, dan kirim latihan khusus dalam 2 menit.",
+    "topStrengths": "Keunggulan Utama (Mahir)",
+    "focusAreas": "Area Fokus untuk Dilatih",
+    "quickAssignFocus": "Buat Tugas pada Area Fokus"
+  },
+  "help": {
+    "title": "Pusat Bantuan PlanetLogi",
+    "subtitle": "Pertanyaan yang sering diajukan oleh Siswa SD, Orang Tua, dan Sekolah.",
+    "q1": "Kapan jam buka Orbit Harian?",
+    "a1": "Orbit Harian buka pukul 06.00 – 22.00 waktu lokal untuk membangun kebiasaan belajar sehat tanpa begadang.",
+    "q2": "Bagaimana cara kerja Perisai Krio untuk menjaga Streak?",
+    "a2": "Kamu dapat menyimpan hingga 3 Perisai Krio. Jika terlewat 1 hari, 1 perisai aktif otomatis saat tengah malam agar streak tetap aman.",
+    "q3": "Apakah bahasa Inggris dan Indonesia bisa diganti kapan saja?",
+    "a3": "Ya! Baik antarmuka maupun soal matematika mendukung Bahasa Inggris dan Bahasa Indonesia secara penuh."
+  }
+}

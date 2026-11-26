@@ -7,16 +7,18 @@ import (
 	"os"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/academy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/assignments"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/astroquiz"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/profile"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/server"
 )
 
-// Exports the authoritative OpenAPI 3.1 specification from the Go Huma router
-// so packages/api-client can generate strongly typed TypeScript contracts.
 func main() {
 	cfg := config.Load()
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -25,6 +27,11 @@ func main() {
 	streakSvc := streak.NewService()
 	dailyOrbitSvc := dailyorbit.NewService(nil, streakSvc)
 	trainingSvc := training.NewService(nil)
+	reportsH := reports.NewHandler(trainingSvc, authSvc)
+	academySvc := academy.NewService(nil)
+	quizSvc := astroquiz.NewService(nil)
+	assignSvc := assignments.NewService(nil)
+	profileSvc := profile.NewService(reportsH, streakSvc, authSvc, cfg.BillingEnabled)
 
 	app := server.New(server.Dependencies{
 		Config: cfg,
@@ -34,7 +41,11 @@ func main() {
 			streak.NewHandler(streakSvc, authSvc).RegisterRoutes,
 			dailyorbit.NewHandler(dailyOrbitSvc, authSvc).RegisterRoutes,
 			training.NewHandler(trainingSvc, authSvc).RegisterRoutes,
-			reports.NewHandler(trainingSvc, authSvc).RegisterRoutes,
+			reportsH.RegisterRoutes,
+			academy.NewHandler(academySvc, authSvc).RegisterRoutes,
+			astroquiz.NewHandler(quizSvc, authSvc).RegisterRoutes,
+			assignments.NewHandler(assignSvc, authSvc).RegisterRoutes,
+			profile.NewHandler(profileSvc, authSvc).RegisterRoutes,
 		},
 	})
 

@@ -20,11 +20,11 @@
 |---|---|---:|---:|---|
 | Phase 0 | Foundation & Architecture | 8 | 8 | Completed |
 | Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 12 | Completed |
-| Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 0 | Ready to Start |
-| Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 0 | Not Started |
+| Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 10 | Completed |
+| Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 0 | Ready to Start |
 | Phase 4 | Brain Galaxy, School/Teacher Portal & CMS v2 | 9 | 0 | Not Started |
 | Phase 5 | Monetization, Security Audit, Performance & Launch | 7 | 0 | Not Started |
-| **Total** | | **59** | **20** | **33.9%** |
+| **Total** | | **59** | **30** | **50.8%** |
 
 ---
 
@@ -164,61 +164,61 @@
 
 > **Parallelism Note**: Space Academy (`P2-BE-01`/`P2-FE-01`), AstroQuiz (`P2-BE-02`/`P2-FE-02`), Assignments (`P2-BE-03`/`P2-FE-03`), and Profile/Settings/Parent Portal (`P2-BE-04`/`P2-FE-04`) can run in parallel.
 
-- [ ] **P2-BE-01** `[BE]` Implement Space Academy API (Topics, Lessons, Do & Learn, Star Scrolls)
+- [x] **P2-BE-01** `[BE]` Implement Space Academy API (Topics, Lessons, Do & Learn, Star Scrolls) *(Owner: agent-be-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P0-02`, `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §7
   - **Scope**: `apps/api/internal/modules/academy/` — Topic list with Star Scroll progress, Lesson timeline (`STORY_LAUNCH`, `WATCH_LEARN`, `DO_LEARN`, `SELF_CHECK`), Save draft & Try Again attempt handling, Star Scroll award on drill completion, Self-Check objective persistence.
   - **Acceptance Criteria**: Save/resume works across reloads; Try Again allows re-attempting wrong boxes; Star Scrolls increment atomically.
 
-- [ ] **P2-FE-01** `[FE]` Build Space Academy UI (Topic Grid, Lesson Timeline & Do & Learn)
+- [x] **P2-FE-01** `[FE]` Build Space Academy UI (Topic Grid, Lesson Timeline & Do & Learn) *(Owner: agent-fe-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P1-ENG-03`, `P2-BE-01`
   - **Spec**: `docs/02-features-student-portal.md` §7
   - **Scope**: `apps/web/src/routes/$locale/academy/` — Topic cards with Star Scroll badges, Lesson list with age tags & completion %, Video player (bilingual caption/track support), Do & Learn Question Player with `Save` + `Check Answer` → `Try Again`, Self-Check checklist linking to Galaxy Training.
   - **Acceptance Criteria**: Complete lesson flow updates progress % and awards Star Scrolls; responsive on tablet/mobile.
 
-- [ ] **P2-BE-02** `[BE]` Implement AstroQuiz API (Exam Papers, Timer, Weekly Supply Pods)
+- [x] **P2-BE-02** `[BE]` Implement AstroQuiz API (Exam Papers, Timer, Weekly Supply Pods) *(Owner: agent-be-2 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P0-02`, `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §9
-  - **Scope**: `apps/api/internal/modules/astro-quiz/` — 3 paper categories across G1–G6 (*Essential Skills*, *Top School Year-End*, *HOTS Papers*), timed session state + Save draft, full-paper submission grading + solutions reveal, weekly deadline Supply Pod reward (1/week, up to 5 AC), print-ready structured payload.
+  - **Scope**: `apps/api/internal/modules/astroquiz/` — 3 paper categories across G1–G6 (*Essential Skills*, *Top School Year-End*, *HOTS Papers*), timed session state + Save draft, full-paper submission grading + solutions reveal, weekly deadline Supply Pod reward (1/week, up to 5 AC), print-ready structured payload.
   - **Acceptance Criteria**: Solutions stay hidden until full submit; weekly Supply Pod enforces 1-per-week cap; print payload renders cleanly.
 
-- [ ] **P2-FE-02** `[FE]` Build AstroQuiz UI & Printable Worksheet Renderer
+- [x] **P2-FE-02** `[FE]` Build AstroQuiz UI & Printable Worksheet Renderer *(Owner: agent-fe-2 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P1-ENG-03`, `P2-BE-02`
   - **Spec**: `docs/02-features-student-portal.md` §9, `docs/03-question-engine-and-math-tools.md` §6
   - **Scope**: `apps/web/src/routes/$locale/astro-quiz/` — Category & Grade browser, weekly Supply Pod banner, 20-question Proficiency sidebar, live elapsed timer, Save/Submit modals, dedicated `@media print` / PDF worksheet view (`/astro-quiz/print/[id]`) with clean A4 pagination.
   - **Acceptance Criteria**: Printing to A4 PDF shows crisp questions, diagrams, and space for working without broken page splits or dark galaxy backgrounds.
 
-- [ ] **P2-BE-03** `[BE]` Implement Assignments & Parent Custom Assignment Builder API
+- [x] **P2-BE-03** `[BE]` Implement Assignments & Parent Custom Assignment Builder API *(Owner: agent-be-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P0-02`, `P0-05`, `P1-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §10, `docs/06-portals-parent-teacher-admin.md` §1
   - **Scope**: `apps/api/internal/modules/assignments/` — Student assignment list (`All`/`Complete`/`Incomplete`, filters: Year, Assigned By `System`/`Parents`/`Teachers`), Parent Custom Assignment Builder (browse skills with child's live proficiency %, pick specific questions, set due date, assign to child), completion grading + AC reward.
   - **Acceptance Criteria**: Parent can only assign to linked children; student sees newly assigned homework immediately and earns reward upon completion.
 
-- [ ] **P2-FE-03** `[FE]` Build Student Assignments Page & Parent Custom Builder UI
+- [x] **P2-FE-03** `[FE]` Build Student Assignments Page & Parent Custom Builder UI *(Owner: agent-fe-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P1-ENG-03`, `P2-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §10, `docs/06-portals-parent-teacher-admin.md` §1
   - **Scope**: `apps/web/src/routes/$locale/assignments/` — Student tabbed assignment list with filters & refresh; Parent Custom Builder allowing multi-skill question selection with proficiency badges and live preview.
   - **Acceptance Criteria**: Full create → complete → review loop passes E2E tests in both `en` and `id`.
 
-- [ ] **P2-BE-04** `[BE]` Implement Account, Profile, Settings & Parent Portal API
+- [x] **P2-BE-04** `[BE]` Implement Account, Profile, Settings & Parent Portal API *(Owner: agent-be-2 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P0-05`, `P1-BE-04`
   - **Spec**: `docs/02-features-student-portal.md` §15, `docs/06-portals-parent-teacher-admin.md` §1
-  - **Scope**: `apps/api/internal/modules/profile/`, `apps/api/internal/modules/parent/` — Parent & Child profile management, auto grade promotion metadata, password change, OTP-gated Parent Settings (language `en`/`id`, active Daily Orbit & Star Duel curricula, screen-time & operating hours preferences, notification prefs), Parent multi-child dashboard overview.
+  - **Scope**: `apps/api/internal/modules/profile/` — Parent & Child profile management, auto grade promotion metadata, password change, OTP-gated Parent Settings (language `en`/`id`, active Daily Orbit & Star Duel curricula, screen-time & operating hours preferences, notification prefs), Parent multi-child dashboard overview.
   - **Acceptance Criteria**: OTP gate enforced when enabled; curriculum/language setting changes immediately reflect in Daily Orbit and UI.
 
-- [ ] **P2-FE-04** `[FE]` Build Profile, Settings, Help & Parent Portal Dashboard UI
+- [x] **P2-FE-04** `[FE]` Build Profile, Settings, Help & Parent Portal Dashboard UI *(Owner: agent-fe-2 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P0-06`, `P2-BE-04`
   - **Spec**: `docs/02-features-student-portal.md` §15, `docs/06-portals-parent-teacher-admin.md` §1
   - **Scope**: `apps/web/src/routes/$locale/profile-settings/`, `apps/web/src/routes/$locale/parent/` — Edit Profile (Parent & Child cards), Settings (OTP toggle, Language switcher, Curriculum checkboxes), Subscription summary placeholder, Help Center FAQ page, Parent Portal overview with child mastery alerts & quick custom assignment button.
   - **Acceptance Criteria**: Parent can switch child's language/curricula and inspect weak topics in <3 clicks.
 
-- [ ] **P2-CNT-01** `[CONTENT]` Author Space Academy Lesson Packages (G1–G6 Core Topics)
+- [x] **P2-CNT-01** `[CONTENT]` Author Space Academy Lesson Packages (G1–G6 Core Topics) *(Owner: agent-content-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P1-CNT-01`, `P1-CNT-02`
   - **Spec**: `docs/04-curriculum-and-pedagogy.md` §1, `docs/09-business-roadmap-and-operations.md` §1
   - **Scope**: `content/academy/` — Structured lesson manifests (metadata, bilingual Self-Check checklists, 4–6 Do & Learn linked questions, bilingual video/subtitle references) for core G1–G6 topics.
   - **Acceptance Criteria**: Seed script populates at least 12 complete Space Academy topics across G1–G6 with working drills and bilingual self-check items.
 
-- [ ] **P2-CNT-02** `[CONTENT]` Author AstroQuiz Exam & Revision Papers (G1–G6)
+- [x] **P2-CNT-02** `[CONTENT]` Author AstroQuiz Exam & Revision Papers (G1–G6) *(Owner: agent-content-1 | Done: 2026-11-26T23:34Z)*
   - **Depends On**: `P1-CNT-02`
   - **Spec**: `docs/02-features-student-portal.md` §9, `docs/04-curriculum-and-pedagogy.md`
   - **Scope**: `content/quizzes/` — Curated 15–20 question papers across all 3 categories (Essential Skills, Top School Year-End, HOTS Papers) for Grades 1–6 in `en` & `id`.
@@ -455,6 +455,7 @@
 | 2026-11-28T01:16Z | `agent-pr3-integrity` | `PR3-STREAK-RETRY` | `[x]` | Daily Orbit stores the accepted answer before streak recording; the streak counter and calendar now write atomically. Playwright matches three mock endpoints by pathname. PostgreSQL milestone failure/restart regression, Go race suite/vet/build, and both targeted Chromium desktop E2E scenarios passed. No additional migration or API change. |
 | 2026-11-28T01:10Z | `agent-pr3-integrity` | `PR3-LEARNING-INTEGRITY` | `[x]` | Fixed fraction grading, elapsed times, triangle choices, and skill attribution in `mathengine`, Training catalog, and seed. Daily Orbit persists pending Proficiency work and deduplicates attempts with migration `202611280002`; reseed existing template links, no API or env changes. Race suite, vet, build, OpenAPI comparison, PostgreSQL reseed and repeated restart/retry regression passed. |
 | 2026-11-28T00:52Z | `agent-pr3-integrity` | `PR3-INTEGRITY` | `[x]` | Daily Orbit, Streak, and Training now reject failed PostgreSQL reads instead of writing default state; the final skip stays retryable if its bonus fails. Verified with Go race tests, vet, build, OpenAPI comparison, and a disposable PostgreSQL read-failure and restart probe. No migrations or environment changes. |
+| 2026-11-26T23:34Z | `agent-phase2` | `P2-BE-01..P2-CNT-02` | `[x]` | Completed all 10 Phase 2 tasks on branch `feat/p2-academy-quiz-parent`: Space Academy Go API & UI (`academy`: 12 G1–G6 topics, 4-stage timeline Story Launch/Watch & Learn/Do & Learn with Save+Try Again+atomic Star Scrolls/Self-Check), AstroQuiz Go API & UI + chromeless A4 `@media print` Worksheet renderer (`astroquiz`: 18 papers across Essential/Top School/HOTS × G1–G6, live timer, hidden solutions until full submit, 1/week Supply Pod +5 AC cap), Assignments + Parent Custom Assignment Builder (`assignments`: linked-child authorization, proficiency-tagged skill picker, AC rewards), Profile/OTP-Gated Family Settings/Help/Parent Mission Control (`profile`: OTP gate, Brain Galaxy 0–25 min cap, language/curricula toggles, auto-promotion display), plus bilingual `content/academy/` & `content/quizzes/` manifests and 3 new i18n namespaces (`academy`, `astro-quiz`, `portals`). Verified: `go vet`, `go test -race` (all 13 packages PASS), 3 Go binaries, OpenAPI 3.1 → TS sync, `pnpm i18n:check` (9 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA all green. Phase 3 tasks unblocked. |
 | 2026-11-26T23:16Z | `agent-phase1` | `P1-ENG-01..P1-CNT-02` | `[x]` | Completed all 12 Phase 1 MVP tasks on branch `feat/p1-core-learning-mvp`: Go server-authoritative `mathengine` (24 deterministic bilingual G1–G6 procedural templates, dot/comma decimal & fraction equivalence grader, EN/ID TTS verbalizer), bilingual `content/curricula/` (6 tracks + HOTS 4 quadrants/9 heuristics) & `content/questions/` packs, Go APIs for Daily Orbit (`dailyorbit`: 10-Q tiered path, 4 tiers, 3x change question, 409 lock, skip, +5 AC bonus), Orbit Streak (`streak`: 5-correct milestone, Nova Pet, max-3 Cryo Shields midnight reconcile), Galaxy Training (`training`: 6 curricula, HOTS wheel, Proficiency % & High Score stars), Reports (`reports`), synced OpenAPI 3.1 → `@planetlogi/api-client`, 4 interactive on-screen Math Tools (`StarSketchpad`, `EquationPad`, `BarModelBuilder`, `ColumnOperationsGrid`), Unified `QuestionPlayer` (4 modes + TTS + SVG diagrams), and full Dashboard/Exp-Level/Daily Orbit/Streak/Training/HOTS/Reports UI in `en` & `id`. Verified: `go vet`, `go test -race` (all 9 packages), 3 Go binaries, `pnpm i18n:check` (6 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA all green. Phase 2 tasks unblocked. |
 | 2026-11-26T15:45Z | `agent-phase0` | `P0-01..P0-08` | `[x]` | Completed all 8 Phase 0 tasks: polyglot monorepo (`apps/web` Vite+React+TanStack Router+PWA for Cloudflare Pages, `apps/api` Go Chi/Huma+`asynq`+`/healthz`+`/readyz`+graceful shutdown, Docker/CI), multi-subject PostgreSQL 16 `goose` migration + seed CLI (`pilot1`/`planet123`), bilingual `@planetlogi/i18n` (`en`/`id` + CI parity script), `@planetlogi/ui` Galaxy Design System, Go Auth/RBAC/OTP module + OpenAPI→`@planetlogi/api-client`, atomic double-entry Economy Ledger + Timezone Operating-Window service, Login (Live SP feed) + Persistent App Shell, and Workbox PWA build (`dist/sw.js`, `manifest.webmanifest`, `_redirects`). Verified: `pnpm i18n:check`, `pnpm -r typecheck`, `pnpm -r lint`, `pnpm -r test`, `pnpm -r build`, `go vet ./...`, `go test -race ./...`, `pnpm api:gen` all green. Phase 1 tasks are now unblocked. |
 | 2026-11-26T07:45Z | `architect-planner` | `PLAN-INIT` | `[x]` | Created PlanetLogi A–Z Master Plan (`PLAN.md`), Multi-Agent Protocol (`AGENTS.md`), Task Board (`TASKS.md`), and modular specifications (`docs/01`–`09`). Ready for Phase 0 (`P0-01`) kickoff. |
