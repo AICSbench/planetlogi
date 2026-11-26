@@ -1,0 +1,4 @@
+{
+  "extends": "@planetlogi/config/tsconfig/react",
+  "include": ["src"]
+}

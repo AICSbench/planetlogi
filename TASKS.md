@@ -18,13 +18,13 @@
 
 | Phase | Name | Total Tasks | Done | Status |
 |---|---|---:|---:|---|
-| Phase 0 | Foundation & Architecture | 8 | 0 | Not Started |
-| Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 0 | Not Started |
+| Phase 0 | Foundation & Architecture | 8 | 8 | Completed |
+| Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 0 | Ready to Start |
 | Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 0 | Not Started |
 | Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 0 | Not Started |
 | Phase 4 | Brain Galaxy, School/Teacher Portal & CMS v2 | 9 | 0 | Not Started |
 | Phase 5 | Monetization, Security Audit, Performance & Launch | 7 | 0 | Not Started |
-| **Total** | | **59** | **0** | **0%** |
+| **Total** | | **59** | **8** | **13.6%** |
 
 ---
 
@@ -32,49 +32,49 @@
 
 > **Parallelism Note**: Once `P0-01` (Monorepo Bootstrap) is `[x]`, tasks `P0-02` through `P0-08` can run largely in parallel across `INFRA`, `DB`, `SHARED`, `UI`, and `BE` agents.
 
-- [ ] **P0-01** `[INFRA]` Bootstrap Monorepo, Tooling, Dockerfiles & CI Pipeline
+- [x] **P0-01** `[INFRA]` Bootstrap Monorepo, Tooling, Dockerfiles & CI Pipeline *(Owner: agent-infra-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: None
   - **Spec**: `docs/08-technical-architecture-and-database.md` §1–2, §5, §7
   - **Scope**: Root `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `Makefile`, `apps/web` (Vite + React 19 + TypeScript + TanStack Router + Tailwind CSS + Cloudflare Pages `_redirects`), `apps/api` (Go 1.23+ module with Chi + Huma OpenAPI 3.1 + `GET /healthz` & `GET /readyz` + graceful `SIGTERM` shutdown + `sqlc.yaml` + `asynq` worker entrypoint + multi-stage distroless Dockerfile for Coolify), `packages/{api-client,ui,i18n,brain-games,config}`, `.github/workflows/ci.yml`, `docker/docker-compose.yml` (PostgreSQL 16 + Redis 7 + MinIO S3).
   - **Acceptance Criteria**: `pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `go vet ./...`, `go test ./...`, and `docker compose up -d` succeed cleanly; `/healthz` & `/readyz` respond properly; OpenAPI client codegen (`pnpm api:gen`) runs cleanly.
 
-- [ ] **P0-02** `[DB]` Design & Migrate Core Database Schema (v1, `goose` + `sqlc`)
+- [x] **P0-02** `[DB]` Design & Migrate Core Database Schema (v1, `goose` + `sqlc`) *(Owner: agent-db-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-01`
   - **Spec**: `docs/08-technical-architecture-and-database.md` §3
   - **Scope**: `apps/api/db/migrations/` (`goose` SQL migrations), `apps/api/db/queries/` (`sqlc`), `apps/api/internal/db/` (generated), `apps/api/cmd/seed/` — Multi-subject-ready PostgreSQL 16 schema (`subjects` table with `math` active first + `subject_id` scoping) covering Accounts (Parent, Student, Teacher, Admin), Schools/Classes, Curricula, Topics/Skills, Questions & Templates, Attempts, Daily Orbit Sessions, Streaks, Currencies/Ledgers, Assignments, Stories, Quizzes, Badges, Avatars/Astro Buddies, Duels, Crews, Events, Brain Galaxy Sessions, Subscriptions.
   - **Acceptance Criteria**: `goose up` runs cleanly against PostgreSQL 16; `sqlc generate` compiles with zero errors; Go seed CLI populates demo school, parent, G1–G6 test student, and 6 curriculum shells.
 
-- [ ] **P0-03** `[SHARED]` Build Multi-Language i18n Framework (`en` & `id`, `i18next`)
+- [x] **P0-03** `[SHARED]` Build Multi-Language i18n Framework (`en` & `id`, `i18next`) *(Owner: agent-shared-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-01`
   - **Spec**: `docs/07-i18n-multilanguage-architecture.md`
   - **Scope**: `packages/i18n/`, `apps/web/src/i18n/` — Locale prefix routing (`/en/...`, `/id/...` via TanStack Router), `i18next` + `react-i18next` namespaced JSON loaders, typed translation hooks, math/date/currency formatters, fallback resolver, CI missing-key checker script.
   - **Acceptance Criteria**: Switching between `en` and `id` persists in cookie + user profile; missing-key check script passes in CI; localized number formatting verified by unit tests.
 
-- [ ] **P0-04** `[UI]` Create PlanetLogi Galaxy Design System & Component Library
+- [x] **P0-04** `[UI]` Create PlanetLogi Galaxy Design System & Component Library *(Owner: agent-ui-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-01`
   - **Spec**: `docs/01-product-vision-and-theme.md` §4–6
   - **Scope**: `packages/ui/` — Galaxy color palette (deep space navy, nebula indigo, starlight gold, aurora cyan, solar coral, light notebook canvas for question focus), typography scale, kid-friendly `>=44px` buttons, cards, modals, progress bars, 5-chili/flame difficulty meter, star ratings, confetti celebration primitive, responsive breakpoints.
   - **Acceptance Criteria**: Component showcase/Storybook builds cleanly; WCAG AA contrast verified for text & math canvas; dark-space chrome + high-contrast crisp reading surface for questions.
 
-- [ ] **P0-05** `[BE]` Implement Authentication, RBAC & Child-Safe Session System
+- [x] **P0-05** `[BE]` Implement Authentication, RBAC & Child-Safe Session System *(Owner: agent-be-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-02`
   - **Spec**: `docs/02-features-student-portal.md` §1, `docs/05-gamification-social-and-safety.md` §6, `docs/08-technical-architecture-and-database.md` §4
   - **Scope**: `apps/api/internal/modules/auth/` — Student Login ID + password auth, Parent email/phone auth, JWT + HttpOnly refresh cookies, RBAC guards (`STUDENT`, `PARENT`, `TEACHER`, `ADMIN`), Parent OTP security toggle & verification service, rate limiting.
   - **Acceptance Criteria**: Login/logout/refresh/OTP flows covered by integration tests; student cannot access parent/teacher/admin endpoints.
 
-- [ ] **P0-06** `[FE]` Build Login Page (with Live Star Points Feed) & Persistent App Shell
+- [x] **P0-06** `[FE]` Build Login Page (with Live Star Points Feed) & Persistent App Shell *(Owner: agent-fe-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-03`, `P0-04`, `P0-05`
   - **Spec**: `docs/02-features-student-portal.md` §1–2
   - **Scope**: `apps/web/src/routes/$locale/(auth)/login/`, `apps/web/src/components/shell/` — Split login screen (live recent Star Points ticker on left, Login ID/Password with Show toggle on right), persistent responsive top nav bar (PlanetLogi logo, Subject/Plan switcher, Home, Report, Leaderboard, Achievement, Events, Streak counter, Bonus Gift, Notification Bell, 9-Dot App Launcher, Account dropdown, overflow menu on `<1440px`).
   - **Acceptance Criteria**: Fully responsive at 375px, 768px, 1024px, 1440px+; both `en` & `id` work; keyboard-accessible menus.
 
-- [ ] **P0-07** `[INFRA]` Configure Static PWA (`vite-plugin-pwa`), Cloudflare Pages & Offline Shell
+- [x] **P0-07** `[INFRA]` Configure Static PWA (`vite-plugin-pwa`), Cloudflare Pages & Offline Shell *(Owner: agent-infra-1 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-04`, `P0-06`
   - **Spec**: `docs/01-product-vision-and-theme.md` §5, `docs/08-technical-architecture-and-database.md` §5–6
   - **Scope**: `apps/web/vite.config.ts` (`vite-plugin-pwa` / Workbox), `apps/web/public/_redirects` (Cloudflare Pages SPA fallback), galaxy app icons, service worker precaching strategy (app shell, static assets, offline fallback screen, IndexedDB draft backup).
   - **Acceptance Criteria**: Static `dist/` deploys cleanly to Cloudflare Pages; Lighthouse PWA installability check passes on iPadOS Safari, Chrome Desktop, and Android Chrome.
 
-- [ ] **P0-08** `[BE]` Build Timezone, Operating-Hours & Currency Ledger Core Services (Go)
+- [x] **P0-08** `[BE]` Build Timezone, Operating-Hours & Currency Ledger Core Services (Go) *(Owner: agent-be-2 | Done: 2026-11-26T15:45Z)*
   - **Depends On**: `P0-02`
   - **Spec**: `docs/05-gamification-social-and-safety.md` §1, §4
   - **Scope**: `apps/api/internal/platform/economy/`, `apps/api/internal/platform/timewindow/` — Atomic PostgreSQL `SELECT ... FOR UPDATE` double-entry ledger for **Star Points (SP)**, **Astro Coins (AC)**, **Pilot XP (Lvl 1–100 curve)**, and **Star Scrolls**; IANA timezone-aware operating window validator (e.g., 06:00–22:00).
@@ -424,4 +424,5 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
+| 2026-11-26T15:45Z | `agent-phase0` | `P0-01..P0-08` | `[x]` | Completed all 8 Phase 0 tasks: polyglot monorepo (`apps/web` Vite+React+TanStack Router+PWA for Cloudflare Pages, `apps/api` Go Chi/Huma+`asynq`+`/healthz`+`/readyz`+graceful shutdown, Docker/CI), multi-subject PostgreSQL 16 `goose` migration + seed CLI (`pilot1`/`planet123`), bilingual `@planetlogi/i18n` (`en`/`id` + CI parity script), `@planetlogi/ui` Galaxy Design System, Go Auth/RBAC/OTP module + OpenAPI→`@planetlogi/api-client`, atomic double-entry Economy Ledger + Timezone Operating-Window service, Login (Live SP feed) + Persistent App Shell, and Workbox PWA build (`dist/sw.js`, `manifest.webmanifest`, `_redirects`). Verified: `pnpm i18n:check`, `pnpm -r typecheck`, `pnpm -r lint`, `pnpm -r test`, `pnpm -r build`, `go vet ./...`, `go test -race ./...`, `pnpm api:gen` all green. Phase 1 tasks are now unblocked. |
 | 2026-11-26T07:45Z | `architect-planner` | `PLAN-INIT` | `[x]` | Created PlanetLogi A–Z Master Plan (`PLAN.md`), Multi-Agent Protocol (`AGENTS.md`), Task Board (`TASKS.md`), and modular specifications (`docs/01`–`09`). Ready for Phase 0 (`P0-01`) kickoff. |

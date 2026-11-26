@@ -1,0 +1,35 @@
+{
+  "welcome": "Welcome back, {{name}}!",
+  "planetLabel": "Current Planet: {{planet}}",
+  "pillars": {
+    "challenges": "Star Challenges",
+    "training": "Galaxy Training",
+    "academy": "Space Academy",
+    "fun": "Cosmic Fun"
+  },
+  "cards": {
+    "dailyOrbitTitle": "Daily Orbit",
+    "dailyOrbitDesc": "Complete 10 tiered math questions between 6:00 AM and 10:00 PM to earn up to 17 SP + 5 AC.",
+    "superNovaTitle": "Super Nova Challenge",
+    "superNovaDesc": "Sharpen speed and visual focus in Super Sight and Super Warp sprints.",
+    "starDuelsTitle": "Star Duels",
+    "starDuelsDesc": "Challenge classmates, your Star Crew, or a random pilot with 3 energy cells per day.",
+    "galaxyTrainingTitle": "6-Track Galaxy Training",
+    "galaxyTrainingDesc": "Master Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Challenging Maths, and HOTS.",
+    "spaceAcademyTitle": "Space Academy",
+    "spaceAcademyDesc": "Learn step-by-step with videos, guided Do & Learn drills, and Star Scrolls.",
+    "planetStoriesTitle": "Planet Stories",
+    "planetStoriesDesc": "Explore 6 grade planets and unlock 20-page illustrated math storybooks with Astro Coins.",
+    "brainGalaxyTitle": "Brain Galaxy",
+    "brainGalaxyDesc": "Train Memory, Flexibility, Speed, Problem Solving, and Adventure (25 min/day healthy cap)."
+  },
+  "wallet": {
+    "todaySp": "Today's SP",
+    "totalSp": "Total SP",
+    "astroCoins": "Astro Coins",
+    "cryoShields": "Cryo Shields"
+  },
+  "status": {
+    "foundationReady": "Phase 0 Galaxy Shell Active — Feature modules unlock in Phases 1–4."
+  }
+}

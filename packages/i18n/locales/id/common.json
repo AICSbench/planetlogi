@@ -1,0 +1,66 @@
+{
+  "brand": "PlanetLogi",
+  "tagline": "Petualangan Matematika Galaksi untuk SD Kelas 1–6",
+  "nav": {
+    "home": "Beranda",
+    "report": "Laporan",
+    "leaderboard": "Papan Peringkat",
+    "achievement": "Pencapaian",
+    "events": "Event",
+    "subjectMath": "Matematika Galaksi",
+    "subjectComingSoon": "Segera Hadir",
+    "streak": "Streak Orbit",
+    "bonusGift": "Hadiah Bonus",
+    "notifications": "Notifikasi",
+    "noNotifications": "Belum ada notifikasi baru!",
+    "appLauncher": "Aplikasi Galaksi",
+    "moreMenu": "Menu Lainnya",
+    "editAvatar": "Ubah Avatar",
+    "editProfile": "Ubah Profil",
+    "settings": "Pengaturan",
+    "mySubscription": "Langganan Saya",
+    "help": "Bantuan",
+    "logout": "Keluar"
+  },
+  "apps": {
+    "spaceAcademy": "Akademi Antariksa",
+    "starDuels": "Duel Bintang",
+    "dailyOrbit": "Orbit Harian",
+    "sundayMeteor": "Meteor Minggu",
+    "astroQuiz": "Kuis Astro",
+    "assignments": "Tugas",
+    "brainGalaxy": "Galaksi Otak",
+    "planetStories": "Cerita Planet",
+    "galaxyTraining": "Latihan Galaksi"
+  },
+  "currencies": {
+    "sp": "SP",
+    "spFull": "Poin Bintang",
+    "ac": "AC",
+    "acFull": "Koin Astro",
+    "xp": "XP",
+    "scrolls": "Gulungan Bintang"
+  },
+  "proficiency": {
+    "mastery": "Mahir",
+    "competent": "Cakap",
+    "beginning": "Pemula",
+    "incomplete": "Belum Lengkap"
+  },
+  "language": {
+    "label": "Bahasa",
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  },
+  "pwa": {
+    "offlineTitle": "Kamu sedang terbang offline!",
+    "offlineBody": "Sambungkan kembali internet untuk mengirim misi baru. Draf jawabanmu tetap tersimpan aman di perangkat ini.",
+    "retry": "Coba Sambungkan Lagi"
+  },
+  "common": {
+    "grade": "Kelas {{grade}}",
+    "level": "Lvl {{level}}",
+    "loading": "Menyiapkan landasan roket...",
+    "comingInPhase": "Hadir di Phase {{phase}}"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@planetlogi/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "gen": "openapi-typescript ./openapi.json -o ./src/schema.d.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@planetlogi/config": "workspace:*",
+    "openapi-typescript": "^7.6.1",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}

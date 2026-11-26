@@ -1,0 +1,4 @@
+{
+  "extends": "@planetlogi/config/tsconfig/base",
+  "include": ["src"]
+}
