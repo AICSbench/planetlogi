@@ -7,7 +7,7 @@
 
 ## 1. Bilingual Content Production Strategy (Grades 1–6)
 
-Content is the heartbeat of AlgiPlanet. Using a **hybrid Procedural + Curated pipeline** dramatically reduces authoring cost while maximizing pedagogical richness:
+Content is the heartbeat of PlanetLogi. Using a **hybrid Procedural + Curated pipeline** dramatically reduces authoring cost while maximizing pedagogical richness:
 
 | Content Asset | MVP Target (Phase 1–2) | Full Launch Target (Phase 4–5) | Production Approach |
 |---|---|---|---|
@@ -23,12 +23,12 @@ Content is the heartbeat of AlgiPlanet. Using a **hybrid Procedural + Curated pi
 
 ## 2. Monetization & Entitlement Model (Deferred to Phase 5 — Feature-First)
 
-> **Build Order Policy**: AlgiPlanet follows a strict **Feature-First** rollout. Throughout **Phases 0–4**, every student, parent, teacher, story, quiz, and Brain Galaxy feature ships **100% unlocked** (zero paywalls, `BILLING_ENABLED=false`). Monetization (`P5-BE-01`, `P5-FE-01`) is activated ONLY in **Phase 5** once all core features are complete and validated.
+> **Build Order Policy**: PlanetLogi follows a strict **Feature-First** rollout. Throughout **Phases 0–4**, every student, parent, teacher, story, quiz, and Brain Galaxy feature ships **100% unlocked** (zero paywalls, `BILLING_ENABLED=false`). Monetization (`P5-BE-01`, `P5-FE-01`) is activated ONLY in **Phase 5** once all core features are complete and validated.
 
-When enabled in Phase 5, AlgiPlanet introduces a generous, child-friendly **Freemium B2C** model (parent-gated checkout only) alongside **School B2B** licenses.
+When enabled in Phase 5, PlanetLogi introduces a generous, child-friendly **Freemium B2C** model (parent-gated checkout only) alongside **School B2B** licenses.
 
 ### 2.1 Plan Comparison
-| Feature | Free Explorer (B2C) | AlgiPlanet Galaxy Premium (B2C) | School Fleet License (B2B) |
+| Feature | Free Explorer (B2C) | PlanetLogi Galaxy Premium (B2C) | School Fleet License (B2B) |
 |---|---|---|---|
 | **Daily Orbit (10 Qs/day)** | Included (Elementary & Intermediate) | Full (All 4 Tiers + All 6 Curricula) | Full + School Curriculum Sync |
 | **Orbit Streak & Cryo Shields** | Included | Included + Bonus Monthly Cryo Shield | Included |
@@ -51,11 +51,11 @@ When enabled in Phase 5, AlgiPlanet introduces a generous, child-friendly **Free
 All tasks below map 1-to-1 to Task IDs in [`TASKS.md`](./TASKS.md).
 
 ### Phase 0 — Foundation & Architecture (Weeks 1–2)
-- **Objective**: Stand up monorepo, PostgreSQL/Redis infrastructure, full DB schema v1, `en`/`id` i18n framework, AlgiPlanet Galaxy Design System, Auth/RBAC, Persistent App Shell, PWA manifest, and Economy Ledger core.
+- **Objective**: Stand up monorepo, PostgreSQL/Redis infrastructure, full DB schema v1, `en`/`id` i18n framework, PlanetLogi Galaxy Design System, Auth/RBAC, Persistent App Shell, PWA manifest, and Economy Ledger core.
 - **Milestone Gate**: A test student can log in on mobile/tablet/desktop, toggle English/Indonesian, see the Galaxy shell, and install the PWA.
 
 ### Phase 1 — Core Learning Engine & Daily Orbit MVP (Weeks 3–6)
-- **Objective**: Ship the heart of AlgiPlanet — Unified Question Player, 4 Interactive Math Tools, Procedural Generator, Daily Orbit (10-Q path, 4 tiers, 3x Change Question), Orbit Streak + Nova Pet + Cryo Shields, Galaxy Training (6 curricula + HOTS 4-Quadrant Wheel), and Proficiency/High-Score Reports.
+- **Objective**: Ship the heart of PlanetLogi — Unified Question Player, 4 Interactive Math Tools, Procedural Generator, Daily Orbit (10-Q path, 4 tiers, 3x Change Question), Orbit Streak + Nova Pet + Cryo Shields, Galaxy Training (6 curricula + HOTS 4-Quadrant Wheel), and Proficiency/High-Score Reports.
 - **Milestone Gate**: Internal dogfooding with Grades 1–6 students completing Daily Orbit, solving word problems with Bar Model Builder, and viewing accurate Proficiency % reports.
 
 ### Phase 2 — Space Academy, AstroQuiz, Assignments & Parent Portal (Weeks 7–10)

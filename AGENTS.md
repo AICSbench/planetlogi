@@ -1,6 +1,6 @@
-# AlgiPlanet — Multi-Agent Execution & Coordination Protocol
+# PlanetLogi — Multi-Agent Execution & Coordination Protocol
 
-This file defines the mandatory workflow for all AI coding agents and human contributors working on **AlgiPlanet** in parallel. Every agent MUST follow these rules strictly to avoid merge conflicts, duplicate work, broken dependencies, or inconsistent conventions.
+This file defines the mandatory workflow for all AI coding agents and human contributors working on **PlanetLogi** in parallel. Every agent MUST follow these rules strictly to avoid merge conflicts, duplicate work, broken dependencies, or inconsistent conventions.
 
 ---
 
@@ -67,7 +67,7 @@ To allow 4–8 agents to work simultaneously without file conflicts, the monorep
 ## 3. Non-Negotiable Engineering & Product Guardrails
 
 1. **Original Branding Only**:
-   - Every string, comment, code identifier, asset filename, CSS token, and doc must use **AlgiPlanet** galaxy terminology. Never reference external competitor brand names anywhere in code, docs, tests, or git history.
+   - Every string, comment, code identifier, asset filename, CSS token, and doc must use **PlanetLogi** galaxy terminology. Never reference external competitor brand names anywhere in code, docs, tests, or git history.
 2. **Grades 1–6 Scope**:
    - Design all UI, curricula, and content for **Elementary School Grades 1–6 (Primary 1–6, ages 6–12)**.
 3. **Bilingual Parity (`en` & `id`)**:

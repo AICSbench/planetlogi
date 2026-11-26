@@ -7,7 +7,7 @@
 
 ## 1. Unified Question Player — 4 Mode Behaviors
 
-AlgiPlanet uses **one modular Question Player architecture** (`apps/web/src/components/question-player/`) whose rules and UI chrome adapt cleanly via a `mode` prop so there is zero duplicated rendering logic:
+PlanetLogi uses **one modular Question Player architecture** (`apps/web/src/components/question-player/`) whose rules and UI chrome adapt cleanly via a `mode` prop so there is zero duplicated rendering logic:
 
 | Capability | `DAILY_ORBIT` | `GALAXY_TRAINING` (incl. HOTS) | `SPACE_ACADEMY` (*Do & Learn*) | `ASTRO_QUIZ` |
 |---|---|---|---|---|
@@ -24,7 +24,7 @@ AlgiPlanet uses **one modular Question Player architecture** (`apps/web/src/comp
 | **HOTS Heuristic Tag** | Shown if HOTS question | Shown (e.g., *Draw a Diagram*) | N/A | Shown on HOTS papers |
 
 ### Shared Chrome Elements on the Question Canvas
-- **Header Strip**: Skill Name + `?` Skill Info tooltip, Question ID (e.g., `AP-G3-FRAC-0142`), **5-Level Difficulty Meter**, **TTS Speaker** button, and **Report / Feedback** button (opens quick modal: *Typo*, *Wrong Answer*, *Unclear Diagram*, *Translation Issue*).
+- **Header Strip**: Skill Name + `?` Skill Info tooltip, Question ID (e.g., `PL-G3-FRAC-0142`), **5-Level Difficulty Meter**, **TTS Speaker** button, and **Report / Feedback** button (opens quick modal: *Typo*, *Wrong Answer*, *Unclear Diagram*, *Translation Issue*).
 - **Collapsible Left Side Nav**: Lists question nodes (`Q1`–`Q10` or `Q1`–`Q20`), status icons (unanswered, current, correct `✓`, wrong `✕`, skipped), and stage names in Daily Orbit.
 - **Feedback Micro-Interactions**:
   - **Correct**: Friendly cosmic celebration (*"STAR SHOT! THAT'S RIGHT!"* / *"HEBAT! JAWABANMU BENAR!"*), lightweight confetti burst, and auto-expanded visual worked solution.
@@ -46,7 +46,7 @@ All question types MUST work seamlessly with mouse, keyboard, and tablet touchsc
 ### Canonical Bilingual Question JSON Schema (`apps/api/internal/mathengine`)
 ```json
 {
-  "id": "AP-G1-ADD-0042",
+  "id": "PL-G1-ADD-0042",
   "version": 1,
   "grade": 1,
   "skillId": "sg-p1-add-within-20",
@@ -153,6 +153,6 @@ Docked as a sleek right-side vertical toolbar on tablets/desktops (and slide-up 
 - Route: `/[locale]/astro-quiz/print/[paperId]`
 - Dedicated print stylesheet (`@media print`) and optional server-side PDF export:
   - Strips all dark galaxy backgrounds, nav bars, and interactive buttons.
-  - Renders crisp black-on-white A4 header (AlgiPlanet light logo, Student Name, Class, Date, Paper Title, Score Box `___ / 20`).
+  - Renders crisp black-on-white A4 header (PlanetLogi light logo, Student Name, Class, Date, Paper Title, Score Box `___ / 20`).
   - Uses `break-inside: avoid` on every question card so diagrams never split across pages.
   - Reserves clean lined/blank working space beneath each question and includes an optional parent/teacher **Answer Key** toggle on the final page.

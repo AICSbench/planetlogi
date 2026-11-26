@@ -1,12 +1,12 @@
-# AlgiPlanet — Master Engineering & Product Plan (A–Z)
+# PlanetLogi — Master Engineering & Product Plan (A–Z)
 
-> **AlgiPlanet** is a galaxy-themed, gamified, bilingual (**English & Indonesian**) elementary mathematics learning platform for **Grades 1–6 (Primary 1–6 / SD Kelas 1–6, ages 6–12)**, built **Responsive Web + PWA first** (optimized for tablets/iPads, laptops, and mobile devices) with an API-first backend ready for future native mobile apps.
+> **PlanetLogi** is a galaxy-themed, gamified, bilingual (**English & Indonesian**) elementary mathematics learning platform for **Grades 1–6 (Primary 1–6 / SD Kelas 1–6, ages 6–12)**, built **Responsive Web + PWA first** (optimized for tablets/iPads, laptops, and mobile devices) with an API-first backend ready for future native mobile apps.
 
 ---
 
 ## 1. Executive Summary
 
-AlgiPlanet transforms daily elementary math practice into an engaging cosmic expedition across six themed planets (Grades 1–6). Students build consistent daily study habits through short, tiered challenges, structured video-and-practice lessons, interactive Singapore-style problem-solving tools, illustrated math storybooks, healthy screen-time-capped cognitive mini-games, and safe peer competition — while parents and teachers gain real-time skill proficiency analytics and personalized assignment controls.
+PlanetLogi transforms daily elementary math practice into an engaging cosmic expedition across six themed planets (Grades 1–6). Students build consistent daily study habits through short, tiered challenges, structured video-and-practice lessons, interactive Singapore-style problem-solving tools, illustrated math storybooks, healthy screen-time-capped cognitive mini-games, and safe peer competition — while parents and teachers gain real-time skill proficiency analytics and personalized assignment controls.
 
 ### Core Product Pillars
 1. **Star Challenges** — Daily Orbit (10-question tiered daily challenge), Orbit Streak & Cryo Shields, Super Nova Challenges (Visual & Speed sprints), Star Duels (1v1 Peer Challenge), and Cosmic Events (Sunday Meteor & Quarterly Creator Challenge).
@@ -22,13 +22,13 @@ AlgiPlanet transforms daily elementary math practice into an engaging cosmic exp
 
 ---
 
-## 2. AlgiPlanet Galaxy Theme & Naming Glossary
+## 2. PlanetLogi Galaxy Theme & Naming Glossary
 
-All UI copy, code identifiers, database models, and assets MUST use **AlgiPlanet**'s original galaxy terminology:
+All UI copy, code identifiers, database models, and assets MUST use **PlanetLogi**'s original galaxy terminology:
 
-| Domain Concept | AlgiPlanet Official Name (EN) | AlgiPlanet Official Name (ID) |
+| Domain Concept | PlanetLogi Official Name (EN) | PlanetLogi Official Name (ID) |
 |---|---|---|
-| Platform Name | **AlgiPlanet** | **AlgiPlanet** |
+| Platform Name | **PlanetLogi** | **PlanetLogi** |
 | Daily Challenge | **Daily Orbit** | **Orbit Harian** |
 | Competitive Points | **Star Points (SP)** | **Poin Bintang (SP)** |
 | Spendable Currency | **Astro Coins (AC)** | **Koin Astro (AC)** |

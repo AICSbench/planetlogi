@@ -1,13 +1,13 @@
 # 01 — Product Vision, Personas & Galaxy Design System
 
 > **Owner Tracks**: `UI`, `FE`, `PRODUCT`  
-> **Scope**: Product identity, target elementary personas (Grades 1–6), AlgiPlanet Galaxy theme & visual design system, responsive/PWA rules, and accessibility standards.
+> **Scope**: Product identity, target elementary personas (Grades 1–6), PlanetLogi Galaxy theme & visual design system, responsive/PWA rules, and accessibility standards.
 
 ---
 
 ## 1. Product Vision & Mission
 
-**AlgiPlanet** empowers every elementary school student (**Grades 1–6 / Primary 1–6, ages 6–12**) to develop lasting mathematical fluency, visual problem-solving intuition, and higher-order thinking skills through **20 minutes of joyful daily practice** — guided by a rich **Planet & Galaxy expedition theme** and built natively for **English (`en`)** and **Indonesian (`id`)** learners.
+**PlanetLogi** empowers every elementary school student (**Grades 1–6 / Primary 1–6, ages 6–12**) to develop lasting mathematical fluency, visual problem-solving intuition, and higher-order thinking skills through **20 minutes of joyful daily practice** — guided by a rich **Planet & Galaxy expedition theme** and built natively for **English (`en`)** and **Indonesian (`id`)** learners.
 
 ### Core Product Principles
 1. **Habit Over Cramming**: Short daily challenges (*Daily Orbit*) with gentle streak mechanics (*Nova Pet* & *Cryo Shields*) build intrinsic daily study habits.
@@ -38,9 +38,9 @@
 
 ---
 
-## 3. AlgiPlanet Galaxy World & Theme Architecture
+## 3. PlanetLogi Galaxy World & Theme Architecture
 
-Each elementary grade corresponds to a distinct **Planet** in the AlgiPlanet solar system, unifying Storybooks (*Planet Stories*), Dashboard banners, Badges, and Progression milestones:
+Each elementary grade corresponds to a distinct **Planet** in the PlanetLogi solar system, unifying Storybooks (*Planet Stories*), Dashboard banners, Badges, and Progression milestones:
 
 | Grade | Planet Name (EN) | Planet Name (ID) | Visual Motif & Palette Accent |
 |---|---|---|---|
@@ -63,7 +63,7 @@ Each elementary grade corresponds to a distinct **Planet** in the AlgiPlanet sol
 ## 4. Visual Design System & Tokens
 
 ### 4.1 Color System (Dual-Surface Strategy)
-AlgiPlanet uses a **Cosmic Chrome + Crisp Study Surface** dual strategy: rich deep-space surfaces for exploration/gamification, and high-contrast light/warm-paper surfaces inside the Question Player to minimize eye strain during math reading and scratchpad drawing.
+PlanetLogi uses a **Cosmic Chrome + Crisp Study Surface** dual strategy: rich deep-space surfaces for exploration/gamification, and high-contrast light/warm-paper surfaces inside the Question Player to minimize eye strain during math reading and scratchpad drawing.
 
 | Token | Hex | Usage |
 |---|---|---|

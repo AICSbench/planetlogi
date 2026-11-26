@@ -1,13 +1,13 @@
 # 04 — Curriculum Taxonomy, Pedagogy & Mastery Algorithms (Grades 1–6)
 
 > **Owner Tracks**: `CONTENT`, `BE`, `ANALYTICS`  
-> **Scope**: Complete elementary mathematics syllabus mapping across all 6 AlgiPlanet curriculum tracks (Grades 1–6), HOTS 4-Quadrant Heuristic framework, Real-World Explorer Series, Mastery/Proficiency & High-Score calculations, and automatic annual grade promotion.
+> **Scope**: Complete elementary mathematics syllabus mapping across all 6 PlanetLogi curriculum tracks (Grades 1–6), HOTS 4-Quadrant Heuristic framework, Real-World Explorer Series, Mastery/Proficiency & High-Score calculations, and automatic annual grade promotion.
 
 ---
 
 ## 1. Multi-Curriculum Architecture (6 Tracks)
 
-AlgiPlanet organizes skills using a **Canonical Skill Graph** underneath **6 selectable Curriculum Tracks**. A single underlying mathematical skill (e.g., *2-digit addition with regrouping*) can be mapped into multiple curricula so a student's mastery transfers intelligently while respecting each syllabus's exact grade placement and terminology.
+PlanetLogi organizes skills using a **Canonical Skill Graph** underneath **6 selectable Curriculum Tracks**. A single underlying mathematical skill (e.g., *2-digit addition with regrouping*) can be mapped into multiple curricula so a student's mastery transfers intelligently while respecting each syllabus's exact grade placement and terminology.
 
 ### Track Overview
 | # | Track Code | Display Name (EN) | Display Name (ID) | Grade Scope | Purpose |

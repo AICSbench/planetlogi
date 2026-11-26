@@ -7,7 +7,7 @@
 
 ## 1. Dual-Currency & Progression Economy
 
-AlgiPlanet separates **competitive recognition** from **spendable rewards** so spending coins on stories or games NEVER lowers a student's leaderboard ranking.
+PlanetLogi separates **competitive recognition** from **spendable rewards** so spending coins on stories or games NEVER lowers a student's leaderboard ranking.
 
 ### 1.1 Currencies & Tokens
 | Asset | Code | Spendable? | How Earned | How Used |
@@ -29,7 +29,7 @@ AlgiPlanet separates **competitive recognition** from **spendable rewards** so s
   - Lvl 20–29: *Comet Pilot / Pilot Komet*
   - ...
   - Lvl 90–99: *Nebula Admiral / Laksamana Nebula*
-  - Lvl 100: *AlgiPlanet Grand Commander / Panglima Besar AlgiPlanet*
+  - Lvl 100: *PlanetLogi Grand Commander / Panglima Besar PlanetLogi*
 
 ### 1.3 Ledger Integrity Rules
 - Every SP, AC, XP, or Scroll mutation writes an immutable `CurrencyTransaction` row with a unique `idempotencyKey` (e.g., `daily_orbit:2026-11-26:student_123:q9` or `story_unlock:planet_1:ch_2:student_123`).

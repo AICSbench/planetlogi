@@ -7,10 +7,10 @@
 
 ## 1. System Architecture & Monorepo Layout
 
-AlgiPlanet combines a **static edge-deployed React SPA/PWA** (zero frontend server cost, sub-20ms edge loads across Indonesia & SEA via **Cloudflare Pages**) with a **high-concurrency Golang backend** (REST API + SSE/WebSocket + `asynq` Redis workers + authoritative Math Engine) running in lightweight Docker containers.
+PlanetLogi combines a **static edge-deployed React SPA/PWA** (zero frontend server cost, sub-20ms edge loads across Indonesia & SEA via **Cloudflare Pages**) with a **high-concurrency Golang backend** (REST API + SSE/WebSocket + `asynq` Redis workers + authoritative Math Engine) running in lightweight Docker containers.
 
 ```text
-algiplanet/
+planetlogi/
 ├── apps/
 │   ├── web/                     # Vite + React 19 + TypeScript + TanStack Router + Tailwind + i18next + vite-plugin-pwa (Static → Cloudflare Pages)
 │   └── api/                     # Go 1.23+ (Chi + Huma OpenAPI 3.1 + pgx/v5 + sqlc + goose + go-redis + asynq)
@@ -28,7 +28,7 @@ algiplanet/
 │           └── modules/         # Isolated per-feature packages (daily_orbit, streak, training, academy, stories, social, brain_galaxy, ...)
 ├── packages/
 │   ├── api-client/              # Auto-generated TypeScript types & typed fetch client from Go OpenAPI 3.1 (`openapi-typescript`)
-│   ├── ui/                      # AlgiPlanet Galaxy Design System components (Radix UI + Tailwind)
+│   ├── ui/                      # PlanetLogi Galaxy Design System components (Radix UI + Tailwind)
 │   ├── i18n/                    # Namespaced EN/ID locale JSONs + CI key parity checker
 │   ├── brain-games/             # 5-Zone HTML5 Canvas/SVG cognitive mini-games bundle
 │   └── config/                  # Shared ESLint, Prettier, TypeScript configs
@@ -41,16 +41,16 @@ algiplanet/
 ```mermaid
 flowchart LR
     Client["Student / Parent / Teacher Browser & PWA (Tablet / Laptop / Mobile)"]
-    CFPages["Cloudflare Pages (Static Vite+React SPA/PWA — algiplanet.com)"]
+    CFPages["Cloudflare Pages (Static Vite+React SPA/PWA — planetlogi.com)"]
     CFR2["Cloudflare R2 + CDN (Stories, TTS Audio, Videos, DB Backups — $0 Egress)"]
-    GoAPI["Go API Container (Chi/Huma + Auth + MathEngine + SSE/WS — api.algiplanet.com)"]
+    GoAPI["Go API Container (Chi/Huma + Auth + MathEngine + SSE/WS — api.planetlogi.com)"]
     GoWorker["Go Worker Container (asynq: Leaderboards 5m, Midnight Streak, Rollover, Emails)"]
     PG[("PostgreSQL 16 (Primary Data + ACID Ledger + JSONB)")]
     Redis[("Redis 7 (Leaderboard ZSET, 25m Brain Timers, Rate Limit, asynq Queue)")]
 
     Client -->|"Static HTML/JS/CSS (<20ms Edge)"| CFPages
     Client -->|"Illustrations / TTS / Video"| CFR2
-    Client -->|"REST / SSE / WS (HttpOnly Cookie .algiplanet.com)"| GoAPI
+    Client -->|"REST / SSE / WS (HttpOnly Cookie .planetlogi.com)"| GoAPI
     GoAPI --> PG
     GoAPI --> Redis
     GoAPI --> CFR2
@@ -130,9 +130,9 @@ Managed via timestamped **`goose` SQL migrations** with type-safe Go queries gen
 
 - **Conventions**: Versioned REST JSON (`/api/v1/...`), RFC 9457 / standardized error envelope `{ code, messageKey, details }`, cursor pagination on lists, OpenAPI 3.1 auto-exported from Go (`Huma`) → `packages/api-client/`.
 - **Same-Root-Domain Auth**:
-  - Frontend: `https://algiplanet.com` (Cloudflare Pages)
-  - Backend API: `https://api.algiplanet.com` (Go API)
-  - Auth uses **`HttpOnly; Secure; SameSite=Lax; Domain=.algiplanet.com`** cookies + CSRF double-submit/Origin validation — eliminating `localStorage` token XSS exposure cleanly across static frontend & Go backend.
+  - Frontend: `https://planetlogi.com` (Cloudflare Pages)
+  - Backend API: `https://api.planetlogi.com` (Go API)
+  - Auth uses **`HttpOnly; Secure; SameSite=Lax; Domain=.planetlogi.com`** cookies + CSRF double-submit/Origin validation — eliminating `localStorage` token XSS exposure cleanly across static frontend & Go backend.
 - **Key Route Groups**:
   - `/auth/*` — login, refresh, logout, OTP request/verify
   - `/dashboard` — single aggregated bootstrap payload (profile, wallet, streak, active notifications count, pillar summaries)
@@ -157,9 +157,9 @@ Managed via timestamped **`goose` SQL migrations** with type-safe Go queries gen
 ### Primary Target (Phase 0–4 — Lean, Ultra-Fast, Zero Lock-In)
 | Component | Hosting Target | Region & Cost Profile |
 |---|---|---|
-| **Static Frontend & PWA (`apps/web`)** | **Cloudflare Pages** (`algiplanet.com`) | Global Edge incl. Jakarta & Singapore PoPs — **`$0`/mo**, unlimited bandwidth, `_redirects` SPA fallback, build-time prerendered `/en` & `/id` marketing routes |
+| **Static Frontend & PWA (`apps/web`)** | **Cloudflare Pages** (`planetlogi.com`) | Global Edge incl. Jakarta & Singapore PoPs — **`$0`/mo**, unlimited bandwidth, `_redirects` SPA fallback, build-time prerendered `/en` & `/id` marketing routes |
 | **Go API + Go `asynq` Worker + PostgreSQL 16 + Redis 7** | **VPS + Coolify (Docker Compose)** *(or **Railway / Fly.io** if preferring zero-VPS managed PaaS)* | **Singapore (`sin`) or Jakarta (`cgk`)** — ~\$15–\$35/mo on VPS (4–8 GB RAM handles 5,000+ CCU easily in Go!) |
-| **Media, Stories, TTS & Daily DB Backups** | **Cloudflare R2 + Cloudflare CDN** (`assets.algiplanet.com`) | **`$0` egress**, automated encrypted daily `pg_dump` uploaded via Coolify/cron to R2 |
+| **Media, Stories, TTS & Daily DB Backups** | **Cloudflare R2 + Cloudflare CDN** (`assets.planetlogi.com`) | **`$0` egress**, automated encrypted daily `pg_dump` uploaded via Coolify/cron to R2 |
 | **DNS, TLS & DDoS Protection** | **Cloudflare DNS + Proxy** | Automatic SSL, WAF rate-limit rules, bot filtering |
 
 ### Enterprise Scale-Up Path (Phase 5+ / School B2B Data Residency)

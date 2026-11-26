@@ -1,7 +1,7 @@
 # 06 — Parent Portal, Teacher/School Portal & Admin Content CMS
 
 > **Owner Tracks**: `BE`, `FE`, `ADMIN_CMS`  
-> **Scope**: Complete functional specifications for the three supporting portals that power the AlgiPlanet ecosystem alongside the Student Portal.
+> **Scope**: Complete functional specifications for the three supporting portals that power the PlanetLogi ecosystem alongside the Student Portal.
 
 ---
 
@@ -40,7 +40,7 @@ Designed for busy parents on both **mobile phones** and desktops to monitor prog
 
 ## 2. Teacher & School Portal (`/teacher/*` — Phase 4 B2B)
 
-Enables elementary schools (SD / Primary Schools) to deploy AlgiPlanet across classes Grades 1–6.
+Enables elementary schools (SD / Primary Schools) to deploy PlanetLogi across classes Grades 1–6.
 
 ### 2.1 School & Class Management (`/teacher/classes`)
 - **Role Hierarchy**: `SCHOOL_ADMIN` (manages all grades/teachers/licenses in school) and `TEACHER` (manages assigned classes).
@@ -64,7 +64,7 @@ Enables elementary schools (SD / Primary Schools) to deploy AlgiPlanet across cl
 
 ## 3. Admin & Bilingual Content CMS (`/admin/*`)
 
-Internal operations portal (`ADMIN` & `CONTENT_EDITOR` roles) allowing non-engineers to scale AlgiPlanet's bilingual library and live operations safely.
+Internal operations portal (`ADMIN` & `CONTENT_EDITOR` roles) allowing non-engineers to scale PlanetLogi's bilingual library and live operations safely.
 
 ### 3.1 Bilingual Question & Procedural Template Studio (`/admin/questions`)
 - **Side-by-Side `en` / `id` Editor**: Edit stem, hints, TTS pronunciation overrides, input boxes, and step-by-step worked solutions simultaneously.

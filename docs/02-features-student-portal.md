@@ -1,7 +1,7 @@
 # 02 — Student Portal Complete Functional Specification (A–Z)
 
 > **Owner Tracks**: `FE`, `BE`, `QA`  
-> **Scope**: Exhaustive screen-by-screen and flow-by-flow functional specification of the **AlgiPlanet Student Portal** for Elementary Grades 1–6.
+> **Scope**: Exhaustive screen-by-screen and flow-by-flow functional specification of the **PlanetLogi Student Portal** for Elementary Grades 1–6.
 
 ---
 
@@ -11,7 +11,7 @@
 - **Split-Screen Galaxy Layout** (stacks vertically on mobile):
   - **Left Panel — Live Galaxy Activity Feed**: Displays anonymized real-time *"Latest Star Points Submitted"* stream (e.g., masked name + Avatar/Astro Buddy + Grade + `+3 SP earned in Daily Orbit`, refreshed via SSE or polling every 15s) to create an active community feel.
   - **Right Panel — Sign-In Card**:
-    - AlgiPlanet Logo & Language Toggle (`EN` / `ID`).
+    - PlanetLogi Logo & Language Toggle (`EN` / `ID`).
     - **Login ID** input (student username or parent email).
     - **Password** input with **Show / Hide** toggle button.
     - **Sign In** CTA, *Forgot Password* link (routes to parent email/OTP recovery), and *Parent / Teacher Login* notice.
@@ -23,7 +23,7 @@
 
 ### 2.1 Persistent Top Navigation Bar
 - **Left Cluster**:
-  1. **AlgiPlanet Logo** (links to `/dashboard`).
+  1. **PlanetLogi Logo** (links to `/dashboard`).
   2. **Subject & Plan Switcher Dropdown** (e.g., `Galaxy Math Premium ▾`): Launches with **Math** active; architecture supports future expansion subjects (Science, English, etc.) cleanly via feature flags.
 - **Primary Navigation Links**:
   1. **Home** (`/dashboard`)
@@ -57,7 +57,7 @@
 - **Left Column — Student Profile Card**:
   - Current **Avatar** (clickable → Edit Avatar), Student **First Name**, **Grade Badge** (`Grade 1`–`Grade 6`), and **Pilot XP Level Pill** (`Lvl 1`–`Lvl 100`, clickable → `/exp-level` showing full XP curve, next milestone rewards, and rank title).
   - **My Astro Buddy** preview widget linking to `/astro-buddy`.
-  - **AlgiPlanet Live Classes / Academy Info** tooltip/card (optional future live tutoring info).
+  - **PlanetLogi Live Classes / Academy Info** tooltip/card (optional future live tutoring info).
 - **Center Area — 4-Pillar Navigation Tabs**:
   1. **Star Challenges**: Cards for *Daily Orbit*, *Super Nova Challenge*, *Star Duels*, and *Sunday Meteor*.
   2. **Galaxy Training**: Quick launch to *Missions (6 Curricula)*, *HOTS Constellation Wheel*, *AstroQuiz*, and *Assignments*.
@@ -187,7 +187,7 @@ Structured video-and-guided-practice curriculum designed for first-time concept 
   - Subsequent story arcs (**Prologue / Chapter 1 / Chapter 2 / ...**) unlock for **20 Astro Coins (AC)** each.
 - **Illustrated Digital Storybook Viewer (`/stories/[planetId]/viewer/[chapterId]`)**:
   - ~20-page illustrated picture book with swipe/arrow page navigation, bottom page-thumbnail strip, fullscreen toggle, bilingual text switch (`EN`/`ID`), and optional TTS narration.
-  - Links to **AlgiPlanet Book Club** reading challenges.
+  - Links to **PlanetLogi Book Club** reading challenges.
 
 ---
 
@@ -208,7 +208,7 @@ Structured exam and revision paper hub across **Grades 1–6**:
 
 - **My Assignments (`/assignments`)**:
   - Tabs: **All**, **Complete**, **Incomplete**.
-  - Filters: **Assigned Year** (e.g., `2026`), **Assigned By** (`All`, `AlgiPlanet`, `Parents`, `Teachers`), and **Refresh** button.
+  - Filters: **Assigned Year** (e.g., `2026`), **Assigned By** (`All`, `PlanetLogi`, `Parents`, `Teachers`), and **Refresh** button.
   - Shows due date, progress (`X/Y questions`), assigned by badge, and reward (`AC` + `XP`).
 - **Create Personalised Assignment (`/assignments/parent-assign`)**:
   - Parent-accessible builder (gated when accessed by child or opened directly from Parent Portal) allowing selection of specific questions per skill with live child proficiency tags to generate targeted practice homework.
@@ -295,7 +295,7 @@ Structured exam and revision paper hub across **Grades 1–6**:
 
 ## 15. Account, Profile, Settings, Subscription & Help (`/profile-settings/*`)
 
-- **Edit Avatar (`/profile-settings/avatar`)**: 8 illustrated cosmic & kid theme packs (*Space Pets*, *Cosmic Sea Creatures*, *Frost Explorers*, *Star Royals*, *Astro Dinos*, *Algi Crew*, *Mini Bots*, *Mecha Pilots*).
+- **Edit Avatar (`/profile-settings/avatar`)**: 8 illustrated cosmic & kid theme packs (*Space Pets*, *Cosmic Sea Creatures*, *Frost Explorers*, *Star Royals*, *Astro Dinos*, *Logi Crew*, *Mini Bots*, *Mecha Pilots*).
 - **Edit Profile (`/profile-settings/profile`)**:
   - **Parent Profile**: Parent Name, Phone Number, Email (masked).
   - **Child Profile**: Avatar, First Name, School Name (with visible note of scheduled automatic grade promotion, e.g., *"Auto-promotes to Grade 2 on 1 Jul 2027"*), Current Grade, Birthday, Gender, Change Password, and link to Parent Portal.
@@ -304,5 +304,5 @@ Structured exam and revision paper hub across **Grades 1–6**:
   - **Language Switcher**: **English (`en`)** and **Bahasa Indonesia (`id`)** (architecture extensible to additional languages).
   - Active **Daily Orbit Curriculum(s)** & **Star Duel Curriculum(s)** checkboxes.
   - Healthy screen-time & reminder preferences.
-- **My Subscription (`/profile-settings/subscription`)**: Active plan name (e.g., *AlgiPlanet Math Premium*), validity dates, billing history, and *Manage Subscription* CTA (Parent-gated).
+- **My Subscription (`/profile-settings/subscription`)**: Active plan name (e.g., *PlanetLogi Math Premium*), validity dates, billing history, and *Manage Subscription* CTA (Parent-gated).
 - **Help (`/help`)**: Bilingual Help Center with searchable FAQs, video walkthroughs, and parent support contact form.

@@ -7,7 +7,7 @@
 
 ## 1. Localization Pillars
 
-AlgiPlanet treats localization across **5 distinct layers** — UI translation alone is not enough for an elementary math platform:
+PlanetLogi treats localization across **5 distinct layers** — UI translation alone is not enough for an elementary math platform:
 
 1. **UI Chrome & Copy**: Navigation, buttons, modals, tooltips, error messages, notifications, emails, and gamification labels.
 2. **Curriculum & Math Content**: Topic titles, skill names, question stems, hints, step-by-step worked solutions, HOTS heuristic names, and Self-Check objectives.

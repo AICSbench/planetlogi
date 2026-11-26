@@ -1,4 +1,4 @@
-# AlgiPlanet — Master Parallel Task Board
+# PlanetLogi — Master Parallel Task Board
 
 > **INSTRUCTIONS FOR AGENTS (MANDATORY)**
 > 1. Read [`AGENTS.md`](./AGENTS.md) before claiming any task.
@@ -50,7 +50,7 @@
   - **Scope**: `packages/i18n/`, `apps/web/src/i18n/` — Locale prefix routing (`/en/...`, `/id/...` via TanStack Router), `i18next` + `react-i18next` namespaced JSON loaders, typed translation hooks, math/date/currency formatters, fallback resolver, CI missing-key checker script.
   - **Acceptance Criteria**: Switching between `en` and `id` persists in cookie + user profile; missing-key check script passes in CI; localized number formatting verified by unit tests.
 
-- [ ] **P0-04** `[UI]` Create AlgiPlanet Galaxy Design System & Component Library
+- [ ] **P0-04** `[UI]` Create PlanetLogi Galaxy Design System & Component Library
   - **Depends On**: `P0-01`
   - **Spec**: `docs/01-product-vision-and-theme.md` §4–6
   - **Scope**: `packages/ui/` — Galaxy color palette (deep space navy, nebula indigo, starlight gold, aurora cyan, solar coral, light notebook canvas for question focus), typography scale, kid-friendly `>=44px` buttons, cards, modals, progress bars, 5-chili/flame difficulty meter, star ratings, confetti celebration primitive, responsive breakpoints.
@@ -65,7 +65,7 @@
 - [ ] **P0-06** `[FE]` Build Login Page (with Live Star Points Feed) & Persistent App Shell
   - **Depends On**: `P0-03`, `P0-04`, `P0-05`
   - **Spec**: `docs/02-features-student-portal.md` §1–2
-  - **Scope**: `apps/web/src/routes/$locale/(auth)/login/`, `apps/web/src/components/shell/` — Split login screen (live recent Star Points ticker on left, Login ID/Password with Show toggle on right), persistent responsive top nav bar (AlgiPlanet logo, Subject/Plan switcher, Home, Report, Leaderboard, Achievement, Events, Streak counter, Bonus Gift, Notification Bell, 9-Dot App Launcher, Account dropdown, overflow menu on `<1440px`).
+  - **Scope**: `apps/web/src/routes/$locale/(auth)/login/`, `apps/web/src/components/shell/` — Split login screen (live recent Star Points ticker on left, Login ID/Password with Show toggle on right), persistent responsive top nav bar (PlanetLogi logo, Subject/Plan switcher, Home, Report, Leaderboard, Achievement, Events, Streak counter, Bonus Gift, Notification Bell, 9-Dot App Launcher, Account dropdown, overflow menu on `<1440px`).
   - **Acceptance Criteria**: Fully responsive at 375px, 768px, 1024px, 1440px+; both `en` & `id` work; keyboard-accessible menus.
 
 - [ ] **P0-07** `[INFRA]` Configure Static PWA (`vite-plugin-pwa`), Cloudflare Pages & Offline Shell
@@ -424,4 +424,4 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
-| 2026-11-26T07:45Z | `architect-planner` | `PLAN-INIT` | `[x]` | Created AlgiPlanet A–Z Master Plan (`PLAN.md`), Multi-Agent Protocol (`AGENTS.md`), Task Board (`TASKS.md`), and modular specifications (`docs/01`–`09`). Ready for Phase 0 (`P0-01`) kickoff. |
+| 2026-11-26T07:45Z | `architect-planner` | `PLAN-INIT` | `[x]` | Created PlanetLogi A–Z Master Plan (`PLAN.md`), Multi-Agent Protocol (`AGENTS.md`), Task Board (`TASKS.md`), and modular specifications (`docs/01`–`09`). Ready for Phase 0 (`P0-01`) kickoff. |
