@@ -162,6 +162,17 @@ Managed via timestamped **`goose` SQL migrations** with type-safe Go queries gen
 | **Media, Stories, TTS & Daily DB Backups** | **Cloudflare R2 + Cloudflare CDN** (`assets.planetlogi.com`) | **`$0` egress**, automated encrypted daily `pg_dump` uploaded via Coolify/cron to R2 |
 | **DNS, TLS & DDoS Protection** | **Cloudflare DNS + Proxy** | Automatic SSL, WAF rate-limit rules, bot filtering |
 
+### High Availability, Load Balancing & Automatic Failover (Multi-VPS Ready)
+- **Frontend & Media (`planetlogi.com`, `assets.planetlogi.com`)**: Inherently multi-region HA via **Cloudflare Pages** and **Cloudflare R2** (unaffected if any VPS goes down).
+- **Multi-VPS Active-Active / Failover Topology** (activate seamlessly when scaling beyond 1 VPS):
+  - **Load Balancer**: **Cloudflare Load Balancing** (or VPC Cloud Load Balancer) in front of `VPS-1` (Singapore) and `VPS-2` (Singapore/Jakarta), polling `GET /readyz` every 15–60s and routing traffic away automatically on failure. Managed from a single **Coolify Multi-Server** dashboard.
+  - **HA Data Layer Requirement**: For true zero-downtime failover when `VPS-1` goes down, **PostgreSQL** and **Redis** MUST be decoupled from application VPS nodes onto **Managed HA** (primary + automatic standby failover, e.g., Managed PostgreSQL HA + Managed Redis HA) rather than colocated on `VPS-1`.
+- **4 Mandatory HA-Ready Engineering Rules (Enforced from `P0-01`)**:
+  1. **Health & Readiness Endpoints**: Go API exposes `GET /healthz` (process liveness) and `GET /readyz` (verifies PostgreSQL `SELECT 1` + Redis `PING`, returning `503` on dependency outage so the load balancer ejects unhealthy nodes immediately).
+  2. **100% Stateless Go API**: Never store sessions, uploaded media, or mutable business state in local VPS RAM or local disk; all state lives in PostgreSQL, Redis, or Cloudflare R2.
+  3. **Redis Pub/Sub for Cross-Node Real-Time**: SSE and WebSocket events (live SP feed, Star Duel invites, notification bell) MUST fan out via **Redis Pub/Sub** so students connected to `VPS-2` receive events triggered on `VPS-1`.
+  4. **Distributed-Safe Workers & Graceful Shutdown**: `asynq` workers rely on Redis distributed locks (safe to run across multiple VPS nodes without duplicate job execution), and both `server` and `worker` binaries handle `SIGINT`/`SIGTERM` cleanly to drain in-flight requests before container exit.
+
 ### Enterprise Scale-Up Path (Phase 5+ / School B2B Data Residency)
 - Because `apps/api` and `worker` are stateless multi-stage **distroless Go Docker images (~20 MB)** using standard PostgreSQL + Redis + S3-compatible R2, migrating to **GCP Jakarta (`asia-southeast2` — Cloud Run + Cloud SQL + Memorystore)** or **AWS Jakarta (`ap-southeast-3` — ECS Fargate + RDS + ElastiCache)** for strict Indonesia data residency requires **zero application code changes**.
 

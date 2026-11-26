@@ -35,8 +35,8 @@
 - [ ] **P0-01** `[INFRA]` Bootstrap Monorepo, Tooling, Dockerfiles & CI Pipeline
   - **Depends On**: None
   - **Spec**: `docs/08-technical-architecture-and-database.md` §1–2, §5, §7
-  - **Scope**: Root `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `Makefile`, `apps/web` (Vite + React 19 + TypeScript + TanStack Router + Tailwind CSS + Cloudflare Pages `_redirects`), `apps/api` (Go 1.23+ module with Chi + Huma OpenAPI 3.1 + `sqlc.yaml` + `asynq` worker entrypoint + multi-stage distroless Dockerfile for Coolify), `packages/{api-client,ui,i18n,brain-games,config}`, `.github/workflows/ci.yml`, `docker/docker-compose.yml` (PostgreSQL 16 + Redis 7 + MinIO S3).
-  - **Acceptance Criteria**: `pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `go vet ./...`, `go test ./...`, and `docker compose up -d` succeed cleanly; OpenAPI client codegen (`pnpm api:gen`) runs cleanly.
+  - **Scope**: Root `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `Makefile`, `apps/web` (Vite + React 19 + TypeScript + TanStack Router + Tailwind CSS + Cloudflare Pages `_redirects`), `apps/api` (Go 1.23+ module with Chi + Huma OpenAPI 3.1 + `GET /healthz` & `GET /readyz` + graceful `SIGTERM` shutdown + `sqlc.yaml` + `asynq` worker entrypoint + multi-stage distroless Dockerfile for Coolify), `packages/{api-client,ui,i18n,brain-games,config}`, `.github/workflows/ci.yml`, `docker/docker-compose.yml` (PostgreSQL 16 + Redis 7 + MinIO S3).
+  - **Acceptance Criteria**: `pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm build`, `go vet ./...`, `go test ./...`, and `docker compose up -d` succeed cleanly; `/healthz` & `/readyz` respond properly; OpenAPI client codegen (`pnpm api:gen`) runs cleanly.
 
 - [ ] **P0-02** `[DB]` Design & Migrate Core Database Schema (v1, `goose` + `sqlc`)
   - **Depends On**: `P0-01`
