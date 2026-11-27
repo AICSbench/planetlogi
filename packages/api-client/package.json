@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@planetlogi/config": "workspace:*",
-    "openapi-typescript": "^7.6.1",
-    "typescript": "^5.8.2",
-    "vitest": "^3.0.8"
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.2"
   }
 }
