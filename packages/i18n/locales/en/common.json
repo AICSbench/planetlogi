@@ -1,0 +1,73 @@
+{
+  "brand": "PlanetLogi",
+  "tagline": "Cosmic Math Adventures for Grades 1–6",
+  "nav": {
+    "home": "Home",
+    "report": "Report",
+    "leaderboard": "Leaderboard",
+    "achievement": "Achievement",
+    "events": "Events",
+    "subjectMath": "Galaxy Math",
+    "subjectScience": "Science",
+    "subjectEnglish": "English",
+    "subjectActive": "Active",
+    "subjectComingSoon": "Coming Soon",
+    "streak": "Orbit Streak",
+    "bonusGift": "Bonus Gift",
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications!",
+    "appLauncher": "Galaxy Apps",
+    "moreMenu": "More Options",
+    "editAvatar": "Edit Avatar",
+    "editProfile": "Edit Profile",
+    "settings": "Settings",
+    "mySubscription": "My Subscription",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "apps": {
+    "spaceAcademy": "Space Academy",
+    "starDuels": "Star Duels",
+    "dailyOrbit": "Daily Orbit",
+    "sundayMeteor": "Sunday Meteor",
+    "astroQuiz": "AstroQuiz",
+    "assignments": "Assignments",
+    "brainGalaxy": "Brain Galaxy",
+    "planetStories": "Planet Stories",
+    "galaxyTraining": "Galaxy Training"
+  },
+  "currencies": {
+    "sp": "SP",
+    "spFull": "Star Points",
+    "ac": "AC",
+    "acFull": "Astro Coins",
+    "xp": "XP",
+    "scrolls": "Star Scrolls"
+  },
+  "proficiency": {
+    "mastery": "Mastery",
+    "competent": "Competent",
+    "beginning": "Beginning",
+    "incomplete": "Incomplete"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  },
+  "pwa": {
+    "offlineTitle": "You are flying offline!",
+    "offlineBody": "Reconnect to the galaxy network to submit new missions. Your saved drafts stay safe on this device.",
+    "retry": "Retry Connection"
+  },
+  "common": {
+    "grade": "Grade {{grade}}",
+    "level": "Lvl {{level}}",
+    "loading": "Preparing launchpad...",
+    "comingInPhase": "Arriving in Phase {{phase}}"
+  },
+  "a11y": {
+    "stars": "{{stars}} of 3 stars",
+    "difficulty": "Difficulty {{level}} of 5"
+  }
+}

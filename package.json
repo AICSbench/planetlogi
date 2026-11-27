@@ -1,0 +1,23 @@
+{
+  "name": "planetlogi",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "i18n:check": "pnpm --filter @planetlogi/i18n check",
+    "api:gen": "pnpm --filter @planetlogi/api-client gen",
+    "clean": "turbo run clean && node -e \"require('node:fs').rmSync('node_modules', { recursive: true, force: true })\""
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  }
+}

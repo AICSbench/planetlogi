@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-api:
+    name: Go API & Workers
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: apps/api/go.sum
+      - name: Go Vet
+        run: go vet ./...
+      - name: Go Test (Race)
+        run: go test -race ./...
+      - name: Build Binaries
+        run: |
+          go build ./cmd/server
+          go build ./cmd/worker
+          go build ./cmd/seed
+          go build ./cmd/openapi
+
+  web-packages:
+    name: Web PWA & TS Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check i18n Key Parity (en & id)
+        run: pnpm i18n:check
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit Tests
+        run: pnpm test
+      - name: Build Static Cloudflare Pages Bundle
+        run: pnpm build

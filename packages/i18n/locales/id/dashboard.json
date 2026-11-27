@@ -1,0 +1,36 @@
+{
+  "welcome": "Selamat datang kembali, {{name}}!",
+  "planetLabel": "Planet Saat Ini: {{planet}}",
+  "pillarsLabel": "Pilar PlanetLogi",
+  "pillars": {
+    "challenges": "Tantangan Bintang",
+    "training": "Latihan Galaksi",
+    "academy": "Akademi Antariksa",
+    "fun": "Dunia Kosmik"
+  },
+  "cards": {
+    "dailyOrbitTitle": "Orbit Harian",
+    "dailyOrbitDesc": "Selesaikan 10 soal matematika berjenjang pukul 06.00–22.00 untuk meraih hingga 17 SP + 5 AC.",
+    "superNovaTitle": "Tantangan Super Nova",
+    "superNovaDesc": "Asah kecepatan dan ketelitian dalam Penglihatan Super dan Kecepatan Warp.",
+    "starDuelsTitle": "Duel Bintang",
+    "starDuelsDesc": "Tantang teman sekelas, Kru Bintang, atau pilot acak dengan 3 sel energi per hari.",
+    "galaxyTrainingTitle": "Latihan Galaksi 6 Kurikulum",
+    "galaxyTrainingDesc": "Kuasai Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Matematika Tantangan, HOTS, dan Seri Eksplorasi Dunia Nyata.",
+    "spaceAcademyTitle": "Akademi Antariksa",
+    "spaceAcademyDesc": "Belajar terstruktur lewat video konsep, latihan terbimbing, dan Gulungan Bintang.",
+    "planetStoriesTitle": "Cerita Planet",
+    "planetStoriesDesc": "Jelajahi 6 planet kelas dan buka buku cerita matematika bergambar 20 halaman dengan Koin Astro.",
+    "brainGalaxyTitle": "Galaksi Otak",
+    "brainGalaxyDesc": "Latih Memori, Fleksibilitas, Kecepatan, Pemecahan Masalah, dan Petualangan (batas sehat 25 mnt/hari)."
+  },
+  "wallet": {
+    "todaySp": "SP Hari Ini",
+    "totalSp": "Total SP",
+    "astroCoins": "Koin Astro",
+    "cryoShields": "Perisai Krio"
+  },
+  "status": {
+    "foundationReady": "Shell Galaksi Phase 0 Aktif — Modul fitur akan hadir di Phase 1–4."
+  }
+}

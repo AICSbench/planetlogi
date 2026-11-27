@@ -1,0 +1,43 @@
+:root {
+  /* PlanetLogi Galaxy Design Tokens (docs/01-product-vision-and-theme.md) */
+  --space-950: #0b1026;
+  --space-900: #131b3a;
+  --space-800: #1e2a55;
+  --space-700: #2a3a73;
+
+  --nebula-500: #6366f1;
+  --nebula-400: #818cf8;
+  --aurora-400: #22d3ee;
+  --starlight-400: #fbbf24;
+  --nova-500: #f97316;
+
+  /* Crisp Study Surface for Math Focus (>14:1 contrast) */
+  --canvas-paper: #fafbfd;
+  --canvas-ink: #111827;
+
+  /* Color-blind-safe Mastery & Status Tokens */
+  --status-mastery: #10b981;
+  --status-competent: #3b82f6;
+  --status-beginning: #f59e0b;
+  --status-error: #ef4444;
+  --status-incomplete: #94a3b8;
+}
+
+.planetlogi-galaxy-bg {
+  background-color: var(--space-950);
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(99, 102, 241, 0.28), transparent 36%),
+    radial-gradient(circle at 82% 18%, rgba(34, 211, 238, 0.18), transparent 34%),
+    radial-gradient(circle at 50% 88%, rgba(251, 191, 36, 0.12), transparent 40%);
+}
+
+.planetlogi-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planetlogi-motion {
+    animation: none !important;
+    transition: none !important;
+  }
+}
