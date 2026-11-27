@@ -1,0 +1,67 @@
+name: Deploy API to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (defaults to main)"
+        required: false
+        default: "main"
+
+concurrency:
+  group: deploy-api-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy-api-vps:
+    name: Deploy Go API & Workers to VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check VPS deploy secrets
+        id: check
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -n "$VPS_HOST" ] && [ -n "$VPS_USER" ] && [ -n "$VPS_SSH_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "VPS deploy secrets not configured; skipping deploy."
+          fi
+
+      - name: Deploy via SSH + Docker Compose
+        if: steps.check.outputs.configured == 'true'
+        uses: appleboy/ssh-action@v1
+        env:
+          TARGET_REF: ${{ inputs.ref || 'main' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: TARGET_REF
+          script_stop: true
+          script: |
+            set -euo pipefail
+            if ! [[ "$TARGET_REF" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$TARGET_REF" == -* ]]; then
+              echo "Invalid TARGET_REF: $TARGET_REF" >&2
+              exit 1
+            fi
+            cd /opt/planetlogi
+            git fetch origin -- "$TARGET_REF"
+            git reset --hard FETCH_HEAD
+            docker compose --env-file .env.prod -f docker/docker-compose.prod.yml up -d --build api worker
+            docker compose --env-file .env.prod -f docker/docker-compose.prod.yml run --rm --build seed
+            for i in $(seq 1 20); do
+              if curl -fsS http://127.0.0.1:18080/readyz >/dev/null; then
+                echo "API readyz OK"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "API readyz check failed" >&2
+            exit 1

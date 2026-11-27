@@ -22,6 +22,7 @@ type Config struct {
 	AllowedOrigins   []string
 	CookieDomain     string
 	CookieSecure     bool
+	CookieSameSite   string
 	DatabaseURL      string
 	RedisAddr        string
 	RedisPassword    string
@@ -54,6 +55,7 @@ func Load() Config {
 		AllowedOrigins:   origins,
 		CookieDomain:     getEnv("COOKIE_DOMAIN", ""),
 		CookieSecure:     getEnvBool("COOKIE_SECURE", isProd),
+		CookieSameSite:   strings.ToLower(getEnv("COOKIE_SAME_SITE", "lax")),
 		DatabaseURL:      getEnv("DATABASE_URL", "postgres://planetlogi:planetlogi_dev@localhost:5432/planetlogi?sslmode=disable"),
 		RedisAddr:        getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword:    getEnv("REDIS_PASSWORD", ""),
@@ -69,6 +71,9 @@ func Load() Config {
 
 // ValidateForServer rejects insecure default or identical JWT secrets when running in production.
 func (c Config) ValidateForServer() error {
+	if strings.EqualFold(c.CookieSameSite, "none") && !c.CookieSecure {
+		return errors.New("COOKIE_SAME_SITE=none requires COOKIE_SECURE=true")
+	}
 	if !strings.EqualFold(c.AppEnv, "production") {
 		return nil
 	}
