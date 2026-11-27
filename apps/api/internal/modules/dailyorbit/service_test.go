@@ -41,8 +41,11 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 	ctx := context.Background()
 	refreshed := svc.GetToday("stu-1", 1, "Asia/Jakarta", "en")
 	for _, sl := range refreshed.Slots {
+		if sl.Question.Seed <= 0 || sl.Question.Seed > 9007199254740991 {
+			t.Fatalf("slot %d seed %d outside JS Number.MAX_SAFE_INTEGER", sl.Index, sl.Question.Seed)
+		}
 		prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
-		resSlot, _, err := svc.SubmitAnswer(ctx, "stu-1", 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers)
+		resSlot, _, err := svc.SubmitAnswer(ctx, "stu-1", 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed)
 		if err != nil {
 			t.Fatalf("slot %d submit error: %v", sl.Index, err)
 		}
@@ -52,7 +55,7 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 	}
 
 	// Duplicate submission on locked slot 1 MUST return ErrAlreadyAnswered
-	if _, _, err := svc.SubmitAnswer(ctx, "stu-1", 1, "Asia/Jakarta", "en", 1, map[string]string{"answer": "0"}); err != ErrAlreadyAnswered {
+	if _, _, err := svc.SubmitAnswer(ctx, "stu-1", 1, "Asia/Jakarta", "en", 1, map[string]string{"answer": "0"}, "", 0); err != ErrAlreadyAnswered {
 		t.Fatalf("expected ErrAlreadyAnswered, got %v", err)
 	}
 

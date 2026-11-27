@@ -78,7 +78,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const curriculaMutation = useMutation({
     mutationFn: (curricula: string[]) => apiClient.setDailyOrbitCurricula(curricula, locale, grade),
     onSuccess: (session) => {
-      queryClient.setQueryData(["daily-orbit-today", locale, grade], session);
+      queryClient.setQueryData(sessionCacheKey, session);
     },
   });
 
