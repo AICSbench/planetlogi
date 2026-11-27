@@ -42,14 +42,26 @@ export function MathToolsDrawer() {
         ))}
       </div>
 
-      {active ? (
-        <div className="rounded-xl bg-[#FAFBFD] p-3 text-[#111827] border border-slate-200">
-          {active === "sketchpad" ? <StarSketchpad /> : null}
-          {active === "equationPad" ? <EquationPad /> : null}
-          {active === "barModel" ? <BarModelBuilder /> : null}
-          {active === "columnCalc" ? <ColumnOperationsGrid /> : null}
+      <div
+        className={
+          active
+            ? "rounded-xl bg-[#FAFBFD] p-3 text-[#111827] border border-slate-200"
+            : "hidden"
+        }
+      >
+        <div className={active === "sketchpad" ? "block" : "hidden"}>
+          <StarSketchpad />
         </div>
-      ) : null}
+        <div className={active === "equationPad" ? "block" : "hidden"}>
+          <EquationPad />
+        </div>
+        <div className={active === "barModel" ? "block" : "hidden"}>
+          <BarModelBuilder />
+        </div>
+        <div className={active === "columnCalc" ? "block" : "hidden"}>
+          <ColumnOperationsGrid />
+        </div>
+      </div>
     </div>
   );
 }

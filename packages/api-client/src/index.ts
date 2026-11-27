@@ -187,6 +187,11 @@ export interface PracticeSession {
   starsEarned: number;
 }
 
+export type PracticeSessionProgress = Pick<
+  PracticeSession,
+  "sessionId" | "skillCode" | "answered" | "correct" | "starsEarned"
+>;
+
 export interface ProficiencyReport {
   masteryCount: number;
   competentCount: number;
@@ -278,10 +283,24 @@ export function createApiClient(baseUrl: string) {
     getDailyOrbitToday(locale: string, grade = 1) {
       return request<DailyOrbitSession>(`/api/v1/daily-orbit/today?locale=${locale}&grade=${grade}`);
     },
-    submitDailyOrbit(slotIndex: number, answers: Record<string, string>, locale: string, grade = 1) {
+    submitDailyOrbit(
+      slotIndex: number,
+      answers: Record<string, string>,
+      locale: string,
+      grade = 1,
+      questionMeta?: { templateCode?: string; seed?: number }
+    ) {
       return request<{ slot: DailyOrbitSlot; session: DailyOrbitSession }>(
         `/api/v1/daily-orbit/submit?locale=${locale}&grade=${grade}`,
-        { method: "POST", body: JSON.stringify({ slotIndex, answers }) }
+        {
+          method: "POST",
+          body: JSON.stringify({
+            slotIndex,
+            answers,
+            templateCode: questionMeta?.templateCode,
+            seed: questionMeta?.seed,
+          }),
+        }
       );
     },
     skipDailyOrbit(slotIndex: number, locale: string, grade = 1) {
@@ -350,7 +369,7 @@ export function createApiClient(baseUrl: string) {
       answers: Record<string, string>,
       locale: string
     ) {
-      return request<{ result: GradeResult; session: PracticeSession }>(
+      return request<{ result: GradeResult; session: PracticeSessionProgress }>(
         `/api/v1/training/sessions/submit?locale=${locale}`,
         { method: "POST", body: JSON.stringify({ sessionId, questionIndex, answers }) }
       );

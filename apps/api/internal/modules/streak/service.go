@@ -208,19 +208,24 @@ type authHeaders struct {
 	Authorization string `header:"Authorization"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in authHeaders) (string, string) {
+func (h *Handler) resolveStudent(ctx context.Context, in authHeaders, requireAuth bool) (string, string, error) {
+	tok := in.CookieAccess
+	if tok == "" && len(in.Authorization) > 7 {
+		tok = in.Authorization[7:]
+	}
 	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
 		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, p.Timezone
+			p, err := h.authSvc.ResolvePrincipal(ctx, tok)
+			if err != nil {
+				return "", "", auth.ErrInvalidCredentials
 			}
+			return p.ID, p.Timezone, nil
+		}
+		if requireAuth {
+			return "", "", auth.ErrInvalidCredentials
 		}
 	}
-	return "demo-pilot1", "Asia/Jakarta"
+	return "demo-pilot1", "Asia/Jakarta", nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -231,7 +236,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get student's Orbit Streak, Nova Pet stage, and Cryo Shields",
 		Tags:        []string{"Streak"},
 	}, func(ctx context.Context, in *authHeaders) (*struct{ Body Status }, error) {
-		studentID, tz := h.resolveStudent(ctx, *in)
+		studentID, tz, err := h.resolveStudent(ctx, *in, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		return &struct{ Body Status }{Body: h.svc.GetStatus(studentID, tz)}, nil
 	})
 
@@ -249,7 +257,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Days []CalendarEntry `json:"days"`
 		}
 	}, error) {
-		studentID, _ := h.resolveStudent(ctx, in.authHeaders)
+		studentID, _, err := h.resolveStudent(ctx, in.authHeaders, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		out := &struct {
 			Body struct {
 				Days []CalendarEntry `json:"days"`
@@ -265,6 +276,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/streak/reminder",
 		Summary:     "Update Orbit Streak daily push reminder preference",
 		Tags:        []string{"Streak"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		authHeaders
 		Body struct {
@@ -272,7 +284,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			TimeLocal string `json:"timeLocal,omitempty"`
 		}
 	}) (*struct{ Body Status }, error) {
-		studentID, _ := h.resolveStudent(ctx, in.authHeaders)
+		studentID, _, err := h.resolveStudent(ctx, in.authHeaders, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		return &struct{ Body Status }{
 			Body: h.svc.SetReminder(studentID, in.Body.Enabled, in.Body.TimeLocal),
 		}, nil

@@ -243,11 +243,18 @@
             },
             "type": "object"
           },
+          "seed": {
+            "format": "int64",
+            "type": "integer"
+          },
           "slotIndex": {
             "format": "int64",
             "maximum": 10,
             "minimum": 1,
             "type": "integer"
+          },
+          "templateCode": {
+            "type": "string"
           }
         },
         "required": [
@@ -1998,6 +2005,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Replace a pending Daily Orbit question (max 3 edits/day)",
         "tags": [
           "DailyOrbit"
@@ -2039,6 +2054,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Update active Daily Orbit curriculum pools",
         "tags": [
           "DailyOrbit"
@@ -2080,6 +2103,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Skip a Daily Orbit question (0 SP) and reveal its worked solution",
         "tags": [
           "DailyOrbit"
@@ -2121,6 +2152,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Submit a single-attempt answer for a Daily Orbit slot",
         "tags": [
           "DailyOrbit"
@@ -2162,6 +2201,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Switch unlocked Daily Orbit difficulty tier",
         "tags": [
           "DailyOrbit"
@@ -2462,6 +2509,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Update Orbit Streak daily push reminder preference",
         "tags": [
           "Streak"
@@ -2634,6 +2689,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Start a 10-question Galaxy Training practice session for a skill",
         "tags": [
           "Training"
@@ -2675,6 +2738,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Grade a Galaxy Training practice answer and update Proficiency % and stars",
         "tags": [
           "Training"

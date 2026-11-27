@@ -44,7 +44,7 @@ type reportQuery struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in reportQuery) (string, string) {
+func (h *Handler) resolveStudent(ctx context.Context, in reportQuery) (string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
@@ -55,12 +55,14 @@ func (h *Handler) resolveStudent(ctx context.Context, in reportQuery) (string, s
 			tok = in.Authorization[7:]
 		}
 		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, locale
+			p, err := h.authSvc.ResolvePrincipal(ctx, tok)
+			if err != nil {
+				return "", "", auth.ErrInvalidCredentials
 			}
+			return p.ID, locale, nil
 		}
 	}
-	return "demo-pilot1", locale
+	return "demo-pilot1", locale, nil
 }
 
 func (h *Handler) BuildProficiency(studentID, curriculum string, grade int, locale string) ProficiencySummary {
@@ -115,7 +117,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get student Proficiency % report across all 6 curricula and Grades 1-6",
 		Tags:        []string{"Reports"},
 	}, func(ctx context.Context, in *reportQuery) (*struct{ Body ProficiencySummary }, error) {
-		studentID, locale := h.resolveStudent(ctx, *in)
+		studentID, locale, err := h.resolveStudent(ctx, *in)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		return &struct{ Body ProficiencySummary }{
 			Body: h.BuildProficiency(studentID, in.Curriculum, in.Grade, locale),
 		}, nil
@@ -128,7 +133,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get student High Score star-tier report (9-10, 6-8, 4-5, 1-3)",
 		Tags:        []string{"Reports"},
 	}, func(ctx context.Context, in *reportQuery) (*struct{ Body HighScoreBuckets }, error) {
-		studentID, locale := h.resolveStudent(ctx, *in)
+		studentID, locale, err := h.resolveStudent(ctx, *in)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		return &struct{ Body HighScoreBuckets }{
 			Body: h.BuildHighScores(studentID, in.Curriculum, in.Grade, locale),
 		}, nil

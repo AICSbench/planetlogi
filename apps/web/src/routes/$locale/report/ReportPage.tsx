@@ -4,21 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyCard, ProficiencyPill, StarRating } from "@planetlogi/ui";
-import { apiClient } from "../../../store/authStore";
+import { apiClient, useAuthStore } from "../../../store/authStore";
 
 export function ReportPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["training", "common"]);
+  const userId = useAuthStore((s) => s.user?.id ?? "guest");
   const [tab, setTab] = useState<"PROFICIENCY" | "HIGH_SCORE">("PROFICIENCY");
   const [curriculum, setCurriculum] = useState("ALL");
   const [grade, setGrade] = useState(0);
 
   const profQuery = useQuery({
-    queryKey: ["reports", "proficiency", curriculum, grade, locale],
+    queryKey: ["reports", "proficiency", userId, curriculum, grade, locale],
     queryFn: () => apiClient.getProficiencyReport(curriculum, grade, locale),
   });
 
   const hsQuery = useQuery({
-    queryKey: ["reports", "high-score", curriculum, grade, locale],
+    queryKey: ["reports", "high-score", userId, curriculum, grade, locale],
     queryFn: () => apiClient.getHighScoreReport(curriculum, grade, locale),
   });
 

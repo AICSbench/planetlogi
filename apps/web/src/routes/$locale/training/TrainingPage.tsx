@@ -59,18 +59,19 @@ export function TrainingPage({ locale }: { locale: Locale }) {
   const submitMutation = useMutation({
     mutationFn: (vars: { sessionId: string; questionIndex: number; answers: Record<string, string> }) =>
       apiClient.submitPracticeAnswer(vars.sessionId, vars.questionIndex, vars.answers, locale),
-    onSuccess: (data) => {
-      setLastGrade(data.result);
-      setActiveSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              answered: data.session.answered,
-              correct: data.session.correct,
-              starsEarned: data.session.starsEarned,
-            }
-          : null
-      );
+    onSuccess: (data, vars) => {
+      setActiveSession((prev) => {
+        if (!prev || prev.sessionId !== vars.sessionId) {
+          return prev;
+        }
+        setLastGrade(data.result);
+        return {
+          ...prev,
+          answered: data.session.answered,
+          correct: data.session.correct,
+          starsEarned: data.session.starsEarned,
+        };
+      });
       void queryClient.invalidateQueries({ queryKey: ["training-skills"] });
       void queryClient.invalidateQueries({ queryKey: ["training-hots"] });
       void queryClient.invalidateQueries({ queryKey: ["reports"] });

@@ -491,7 +491,10 @@ export interface components {
                 [key: string]: string;
             };
             /** Format: int64 */
+            seed?: number;
+            /** Format: int64 */
             slotIndex: number;
+            templateCode?: string;
         };
         "Daily-orbit-submitResponse": {
             /**

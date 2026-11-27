@@ -2,9 +2,12 @@ package training
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
@@ -299,7 +302,9 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 	}
 
 	s.nextSeq++
-	sessID := fmt.Sprintf("trn-%d", s.nextSeq)
+	var rnd [4]byte
+	_, _ = rand.Read(rnd[:])
+	sessID := fmt.Sprintf("trn-%d-%s-%d", time.Now().UnixMilli(), hex.EncodeToString(rnd[:]), s.nextSeq)
 	seeds := make([]int64, 10)
 	questions := make([]mathengine.RenderedQuestion, 10)
 	for i := 0; i < 10; i++ {
@@ -343,26 +348,27 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 	gradeRes := mathengine.Grade(prob, submitted)
 
 	if !sess.answered[questionIndex] {
-		sess.answered[questionIndex] = true
-		if gradeRes.IsCorrect {
-			sess.correct++
-		}
-		s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct)
-
 		if s.ledger != nil {
 			xp := int64(1)
 			if gradeRes.IsCorrect {
 				xp = 2
 			}
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyXP,
 				Delta:          xp,
 				SourceType:     "GALAXY_TRAINING",
 				SourceID:       fmt.Sprintf("%s:q%d", sessionID, questionIndex),
 				IdempotencyKey: fmt.Sprintf("training:%s:%s:q%d", sessionID, studentID, questionIndex),
-			})
+			}); err != nil {
+				return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("award training XP: %w", err)
+			}
 		}
+		sess.answered[questionIndex] = true
+		if gradeRes.IsCorrect {
+			sess.correct++
+		}
+		s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct)
 	}
 
 	view := PracticeSession{
@@ -488,23 +494,28 @@ type authQuery struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in authQuery) (string, string) {
+func (h *Handler) resolveStudent(ctx context.Context, in authQuery, requireAuth bool) (string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
+	tok := in.CookieAccess
+	if tok == "" && len(in.Authorization) > 7 {
+		tok = in.Authorization[7:]
+	}
 	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
 		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, locale
+			p, err := h.authSvc.ResolvePrincipal(ctx, tok)
+			if err != nil {
+				return "", "", auth.ErrInvalidCredentials
 			}
+			return p.ID, locale, nil
+		}
+		if requireAuth {
+			return "", "", auth.ErrInvalidCredentials
 		}
 	}
-	return "demo-pilot1", locale
+	return "demo-pilot1", locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -545,7 +556,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Skills []SkillView `json:"skills"`
 		}
 	}, error) {
-		studentID, locale := h.resolveStudent(ctx, in.authQuery)
+		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		out := &struct {
 			Body struct {
 				Skills []SkillView `json:"skills"`
@@ -569,7 +583,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Quadrants []HOTSQuadrant `json:"quadrants"`
 		}
 	}, error) {
-		studentID, locale := h.resolveStudent(ctx, in.authQuery)
+		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		out := &struct {
 			Body struct {
 				Quadrants []HOTSQuadrant `json:"quadrants"`
@@ -585,13 +602,17 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/training/sessions",
 		Summary:     "Start a 10-question Galaxy Training practice session for a skill",
 		Tags:        []string{"Training"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		authQuery
 		Body struct {
 			SkillCode string `json:"skillCode" minLength:"1"`
 		}
 	}) (*struct{ Body PracticeSession }, error) {
-		studentID, locale := h.resolveStudent(ctx, in.authQuery)
+		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		sess, err := h.svc.StartPracticeSession(studentID, in.Body.SkillCode, locale)
 		if err != nil {
 			return nil, huma.Error404NotFound(err.Error())
@@ -605,6 +626,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/training/sessions/submit",
 		Summary:     "Grade a Galaxy Training practice answer and update Proficiency % and stars",
 		Tags:        []string{"Training"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		authQuery
 		Body struct {
@@ -618,7 +640,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session PracticeSession        `json:"session"`
 		}
 	}, error) {
-		studentID, locale := h.resolveStudent(ctx, in.authQuery)
+		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		res, sess, err := h.svc.SubmitPracticeAnswer(ctx, studentID, in.Body.SessionID, in.Body.QuestionIndex, locale, in.Body.Answers)
 		if err != nil {
 			return nil, huma.Error400BadRequest(err.Error())

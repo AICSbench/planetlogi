@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"net/http"
 	"sync"
 	"time"
@@ -24,12 +25,24 @@ const (
 )
 
 var (
-	ErrOutsideOperatingHours = errors.New("daily orbit is open 06:00-22:00 local time")
-	ErrAlreadyAnswered       = errors.New("question already locked after submission or skip")
-	ErrChangeLimitReached    = errors.New("daily change-question limit (3/day) reached")
-	ErrTierLocked            = errors.New("difficulty tier requires more star points")
-	ErrInvalidSlot           = errors.New("question slot must be 1..10")
+	ErrOutsideOperatingHours  = errors.New("daily orbit is open 06:00-22:00 local time")
+	ErrAlreadyAnswered        = errors.New("question already locked after submission or skip")
+	ErrChangeLimitReached     = errors.New("daily change-question limit (3/day) reached")
+	ErrTierLocked             = errors.New("difficulty tier requires more star points")
+	ErrInvalidSlot            = errors.New("question slot must be 1..10")
+	ErrQuestionReplaced       = errors.New("question was replaced; please refresh")
+	ErrNoReplacementAvailable = errors.New("no replacement question available for this grade")
+	ErrInvalidCurricula       = errors.New("at least one valid curriculum code is required")
 )
+
+var validCurriculaSet = map[string]bool{
+	"KURIKULUM_MERDEKA": true,
+	"SINGAPORE_MOE":     true,
+	"CAMBRIDGE_0096":    true,
+	"CHALLENGING_MATHS": true,
+	"HOTS_WHEEL":        true,
+	"EXPLORER_SERIES":   true,
+}
 
 type Tier string
 
@@ -173,33 +186,67 @@ func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 	return p
 }
 
+func deriveSlotSeed(studentID, localDate string, slotIdx int, tier Tier) int64 {
+	h := fnv.New64a()
+	_, _ = fmt.Fprintf(h, "%s|%s|%d|%s", studentID, localDate, slotIdx, tier)
+	return int64(h.Sum64()&0x7fffffffffffffff) + 1
+}
+
+func filterTemplatesByTierAndCurricula(pool []mathengine.TemplateMeta, tier Tier, curricula []string) []mathengine.TemplateMeta {
+	minDiff, maxDiff := 1, 5
+	switch tier {
+	case TierElementary:
+		maxDiff = 3
+	case TierIntermediate:
+		minDiff, maxDiff = 2, 4
+	case TierAdvanced:
+		minDiff, maxDiff = 3, 5
+	case TierMaster:
+		minDiff, maxDiff = 4, 5
+	}
+	currSet := make(map[string]bool, len(curricula))
+	for _, c := range curricula {
+		currSet[c] = true
+	}
+
+	out := make([]mathengine.TemplateMeta, 0, len(pool))
+	for _, t := range pool {
+		if t.Difficulty >= minDiff && t.Difficulty <= maxDiff {
+			if len(currSet) == 0 || t.CurriculumCode == "" || currSet[t.CurriculumCode] {
+				out = append(out, t)
+			}
+		}
+	}
+	if len(out) > 0 {
+		return out
+	}
+	return pool
+}
+
 func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDate string) *internalSession {
 	key := studentID + ":" + localDate
 	if sess, ok := s.sessions[key]; ok {
 		return sess
 	}
 	prefs := s.getPrefsLocked(studentID, grade)
-	templates := mathengine.TemplatesForGrade(prefs.grade)
-	allTemplates := mathengine.Registry()
+	gradePool := mathengine.TemplatesForGrade(prefs.grade)
+	if len(gradePool) == 0 {
+		gradePool = mathengine.Registry()
+	}
+	templates := filterTemplatesByTierAndCurricula(gradePool, prefs.tier, prefs.activeCurricula)
 
 	slots := make([]*internalSlot, 10)
-	baseSeed := int64(20261126)
 	for i := 0; i < 10; i++ {
 		idx := i + 1
 		stage, shape, sp := stageForIndex(idx)
-		var tmpl mathengine.TemplateMeta
-		if i < len(templates) {
-			tmpl = templates[i]
-		} else {
-			tmpl = allTemplates[(prefs.grade*3+i)%len(allTemplates)]
-		}
+		tmpl := templates[i%len(templates)]
 		slots[i] = &internalSlot{
 			index:        idx,
 			stageName:    stage,
 			nodeShape:    shape,
 			rewardSP:     sp,
 			templateCode: tmpl.Code,
-			seed:         baseSeed + int64(idx*97+prefs.grade*13),
+			seed:         deriveSlotSeed(studentID, localDate, idx, prefs.tier),
 			status:       SlotPending,
 		}
 	}
@@ -245,58 +292,66 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 
 	prob, _ := mathengine.GenerateByCode(slot.templateCode, slot.seed, locale)
 	gradeRes := mathengine.Grade(prob, submitted)
-	slot.submitted = submitted
-	sess.completedCount++
 
 	xpDelta := int64(1)
 	if gradeRes.IsCorrect {
-		slot.status = SlotCorrect
-		slot.earnedSP = slot.rewardSP
-		sess.correctCount++
-		sess.totalSPEarned += slot.rewardSP
-		prefs.totalSP += int64(slot.rewardSP)
 		xpDelta = 3
-
 		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencySP,
 				Delta:          int64(slot.rewardSP),
 				SourceType:     "DAILY_ORBIT",
 				SourceID:       fmt.Sprintf("%s:q%d", sess.localDate, slot.index),
 				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:sp", sess.localDate, studentID, slot.index),
-			})
+			}); err != nil {
+				return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit SP: %w", err)
+			}
 		}
-		if s.streakSvc != nil {
-			s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount)
-		}
-	} else {
-		slot.status = SlotWrong
 	}
 
 	if s.ledger != nil {
-		_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
 			Currency:       economy.CurrencyXP,
 			Delta:          xpDelta,
 			SourceType:     "DAILY_ORBIT",
 			SourceID:       fmt.Sprintf("%s:q%d", sess.localDate, slot.index),
 			IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:xp", sess.localDate, studentID, slot.index),
-		})
+		}); err != nil {
+			return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit XP: %w", err)
+		}
 	}
 
-	if sess.completedCount == 10 && !sess.completionBonusAward {
-		sess.completionBonusAward = true
+	if sess.completedCount+1 == 10 && !sess.completionBonusAward {
 		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyAC,
 				Delta:          CompletionBonusAC,
 				SourceType:     "DAILY_ORBIT_BONUS",
 				SourceID:       sess.localDate,
 				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
-			})
+			}); err != nil {
+				return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit completion bonus: %w", err)
+			}
 		}
+		sess.completionBonusAward = true
+	}
+
+	slot.submitted = submitted
+	sess.completedCount++
+	if gradeRes.IsCorrect {
+		slot.status = SlotCorrect
+		slot.earnedSP = slot.rewardSP
+		sess.correctCount++
+		sess.totalSPEarned += slot.rewardSP
+		prefs.totalSP += int64(slot.rewardSP)
+		if s.streakSvc != nil {
+			s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount)
+		}
+	} else {
+		slot.status = SlotWrong
 	}
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
@@ -366,24 +421,37 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 		return SlotView{}, SessionView{}, ErrAlreadyAnswered
 	}
 
-	all := mathengine.Registry()
-	picked := all[0]
-	for _, tmpl := range all {
+	gradePool := mathengine.TemplatesForGrade(prefs.grade)
+	var picked *mathengine.TemplateMeta
+	for i := range gradePool {
+		tmpl := gradePool[i]
 		if tmpl.Code == slot.templateCode {
 			continue
 		}
 		if mode == "easier" && tmpl.Difficulty <= 2 {
-			picked = tmpl
+			picked = &tmpl
 			break
 		}
 		if mode == "harder" && tmpl.Difficulty >= 3 {
-			picked = tmpl
+			picked = &tmpl
 			break
 		}
-		if mode == "topic" && tmpl.Grade == prefs.grade {
-			picked = tmpl
+		if mode == "topic" {
+			picked = &tmpl
 			break
 		}
+	}
+	if picked == nil {
+		for i := range gradePool {
+			tmpl := gradePool[i]
+			if tmpl.Code != slot.templateCode {
+				picked = &tmpl
+				break
+			}
+		}
+	}
+	if picked == nil {
+		return SlotView{}, SessionView{}, ErrNoReplacementAvailable
 	}
 	slot.templateCode = picked.Code
 	slot.seed += 313
@@ -391,6 +459,24 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
+}
+
+func (s *Service) ValidateSlotQuestion(studentID, tz, templateCode string, seed int64, slotIndex int) error {
+	if templateCode == "" && seed == 0 {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
+	sess, ok := s.sessions[studentID+":"+eval.LocalDate]
+	if !ok || slotIndex < 1 || slotIndex > 10 {
+		return nil
+	}
+	sl := sess.slots[slotIndex-1]
+	if (templateCode != "" && sl.templateCode != templateCode) || (seed != 0 && sl.seed != seed) {
+		return ErrQuestionReplaced
+	}
+	return nil
 }
 
 func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier Tier) (SessionView, error) {
@@ -405,19 +491,44 @@ func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier T
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
 	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
 	sess.tier = tier
+	gradePool := mathengine.TemplatesForGrade(prefs.grade)
+	if len(gradePool) > 0 {
+		filtered := filterTemplatesByTierAndCurricula(gradePool, tier, prefs.activeCurricula)
+		for i, sl := range sess.slots {
+			if sl.status == SlotPending {
+				sl.templateCode = filtered[i%len(filtered)].Code
+			}
+		}
+	}
 	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 
-func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, curricula []string) SessionView {
+func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, curricula []string) (SessionView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	prefs := s.getPrefsLocked(studentID, grade)
-	if len(curricula) > 0 {
-		prefs.activeCurricula = curricula
+	valid := make([]string, 0, len(curricula))
+	for _, c := range curricula {
+		if validCurriculaSet[c] {
+			valid = append(valid, c)
+		}
 	}
+	if len(valid) == 0 {
+		return SessionView{}, ErrInvalidCurricula
+	}
+	prefs := s.getPrefsLocked(studentID, grade)
+	prefs.activeCurricula = valid
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
 	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
-	return s.renderViewLocked(sess, prefs, eval, locale)
+	gradePool := mathengine.TemplatesForGrade(prefs.grade)
+	if len(gradePool) > 0 {
+		filtered := filterTemplatesByTierAndCurricula(gradePool, prefs.tier, prefs.activeCurricula)
+		for i, sl := range sess.slots {
+			if sl.status == SlotPending {
+				sl.templateCode = filtered[i%len(filtered)].Code
+			}
+		}
+	}
+	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 
 func (s *Service) renderViewLocked(sess *internalSession, prefs *studentPrefs, eval timewindow.Evaluation, locale string) SessionView {
@@ -488,7 +599,7 @@ type commonIn struct {
 	Grade         int    `query:"grade" default:"1"`
 }
 
-func (h *Handler) resolveUser(ctx context.Context, in commonIn) (string, int, string, string) {
+func (h *Handler) resolveUser(ctx context.Context, in commonIn, requireAuth bool) (string, int, string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
@@ -497,22 +608,27 @@ func (h *Handler) resolveUser(ctx context.Context, in commonIn) (string, int, st
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
+	tok := in.CookieAccess
+	if tok == "" && len(in.Authorization) > 7 {
+		tok = in.Authorization[7:]
+	}
 	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
 		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				g := p.Grade
-				if g < 1 || g > 6 {
-					g = grade
-				}
-				return p.ID, g, p.Timezone, locale
+			p, err := h.authSvc.ResolvePrincipal(ctx, tok)
+			if err != nil {
+				return "", 0, "", "", auth.ErrInvalidCredentials
 			}
+			g := p.Grade
+			if g < 1 || g > 6 {
+				g = grade
+			}
+			return p.ID, g, p.Timezone, locale, nil
+		}
+		if requireAuth {
+			return "", 0, "", "", auth.ErrInvalidCredentials
 		}
 	}
-	return "demo-pilot1", grade, "Asia/Jakarta", locale
+	return "demo-pilot1", grade, "Asia/Jakarta", locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -523,7 +639,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get today's 10-question Daily Orbit progression path",
 		Tags:        []string{"DailyOrbit"},
 	}, func(ctx context.Context, in *commonIn) (*struct{ Body SessionView }, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, *in)
+		id, grade, tz, locale, err := h.resolveUser(ctx, *in, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
 		return &struct{ Body SessionView }{Body: h.svc.GetToday(id, grade, tz, locale)}, nil
 	})
 
@@ -533,11 +652,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/submit",
 		Summary:     "Submit a single-attempt answer for a Daily Orbit slot",
 		Tags:        []string{"DailyOrbit"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		commonIn
 		Body struct {
-			SlotIndex int               `json:"slotIndex" minimum:"1" maximum:"10"`
-			Answers   map[string]string `json:"answers"`
+			SlotIndex    int               `json:"slotIndex" minimum:"1" maximum:"10"`
+			Answers      map[string]string `json:"answers"`
+			TemplateCode string            `json:"templateCode,omitempty"`
+			Seed         int64             `json:"seed,omitempty"`
 		}
 	}) (*struct {
 		Body struct {
@@ -545,7 +667,13 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, in.commonIn)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		if err := h.svc.ValidateSlotQuestion(id, tz, in.Body.TemplateCode, in.Body.Seed, in.Body.SlotIndex); err != nil {
+			return nil, huma.Error409Conflict(err.Error())
+		}
 		slot, sess, err := h.svc.SubmitAnswer(ctx, id, grade, tz, locale, in.Body.SlotIndex, in.Body.Answers)
 		if err != nil {
 			switch {
@@ -574,6 +702,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/skip",
 		Summary:     "Skip a Daily Orbit question (0 SP) and reveal its worked solution",
 		Tags:        []string{"DailyOrbit"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		commonIn
 		Body struct {
@@ -585,7 +714,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, in.commonIn)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		slot, sess, err := h.svc.SkipSlot(ctx, id, grade, tz, locale, in.Body.SlotIndex)
 		if err != nil {
 			if errors.Is(err, ErrAlreadyAnswered) {
@@ -610,6 +742,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/change-question",
 		Summary:     "Replace a pending Daily Orbit question (max 3 edits/day)",
 		Tags:        []string{"DailyOrbit"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		commonIn
 		Body struct {
@@ -622,7 +755,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, in.commonIn)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		slot, sess, err := h.svc.ChangeQuestion(id, grade, tz, locale, in.Body.SlotIndex, in.Body.Mode)
 		if err != nil {
 			return nil, huma.Error400BadRequest(err.Error())
@@ -644,13 +780,17 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/tier",
 		Summary:     "Switch unlocked Daily Orbit difficulty tier",
 		Tags:        []string{"DailyOrbit"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		commonIn
 		Body struct {
 			Tier Tier `json:"tier" enum:"ELEMENTARY,INTERMEDIATE,ADVANCED,MASTER"`
 		}
 	}) (*struct{ Body SessionView }, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, in.commonIn)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		sess, err := h.svc.SetTier(id, grade, tz, locale, in.Body.Tier)
 		if err != nil {
 			return nil, huma.Error403Forbidden(err.Error())
@@ -664,13 +804,21 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/curricula",
 		Summary:     "Update active Daily Orbit curriculum pools",
 		Tags:        []string{"DailyOrbit"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
 		commonIn
 		Body struct {
 			Curricula []string `json:"curricula" minItems:"1"`
 		}
 	}) (*struct{ Body SessionView }, error) {
-		id, grade, tz, locale := h.resolveUser(ctx, in.commonIn)
-		return &struct{ Body SessionView }{Body: h.svc.SetCurricula(id, grade, tz, locale, in.Body.Curricula)}, nil
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		sess, err := h.svc.SetCurricula(id, grade, tz, locale, in.Body.Curricula)
+		if err != nil {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
+		return &struct{ Body SessionView }{Body: sess}, nil
 	})
 }

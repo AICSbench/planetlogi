@@ -21,6 +21,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const grade = user?.grade ?? 1;
+  const sessionCacheKey = ["daily-orbit-today", user?.id ?? "guest", locale, grade] as const;
 
   const [activeSlotIdx, setActiveSlotIdx] = useState(1);
   const [showTierModal, setShowTierModal] = useState(false);
@@ -29,15 +30,23 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   const sessionQuery = useQuery({
-    queryKey: ["daily-orbit-today", locale, grade],
+    queryKey: sessionCacheKey,
     queryFn: () => apiClient.getDailyOrbitToday(locale, grade),
   });
 
   const submitMutation = useMutation({
-    mutationFn: (vars: { slotIndex: number; answers: Record<string, string> }) =>
-      apiClient.submitDailyOrbit(vars.slotIndex, vars.answers, locale, grade),
+    mutationFn: (vars: {
+      slotIndex: number;
+      answers: Record<string, string>;
+      templateCode?: string;
+      seed?: number;
+    }) =>
+      apiClient.submitDailyOrbit(vars.slotIndex, vars.answers, locale, grade, {
+        templateCode: vars.templateCode,
+        seed: vars.seed,
+      }),
     onSuccess: (data) => {
-      queryClient.setQueryData(["daily-orbit-today", locale, grade], data.session);
+      queryClient.setQueryData(sessionCacheKey, data.session);
       void queryClient.invalidateQueries({ queryKey: ["streak-status"] });
     },
   });
@@ -45,7 +54,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const skipMutation = useMutation({
     mutationFn: (slotIndex: number) => apiClient.skipDailyOrbit(slotIndex, locale, grade),
     onSuccess: (data) => {
-      queryClient.setQueryData(["daily-orbit-today", locale, grade], data.session);
+      queryClient.setQueryData(sessionCacheKey, data.session);
     },
   });
 
@@ -53,7 +62,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
     mutationFn: (vars: { slotIndex: number; mode: "easier" | "harder" | "topic" }) =>
       apiClient.changeDailyOrbitQuestion(vars.slotIndex, vars.mode, locale, grade),
     onSuccess: (data) => {
-      queryClient.setQueryData(["daily-orbit-today", locale, grade], data.session);
+      queryClient.setQueryData(sessionCacheKey, data.session);
       setShowChangeMenu(false);
     },
   });
@@ -61,7 +70,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const tierMutation = useMutation({
     mutationFn: (tier: DailyOrbitTier) => apiClient.setDailyOrbitTier(tier, locale, grade),
     onSuccess: (session) => {
-      queryClient.setQueryData(["daily-orbit-today", locale, grade], session);
+      queryClient.setQueryData(sessionCacheKey, session);
       setShowTierModal(false);
     },
   });
@@ -238,7 +247,12 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
         workedSolution={activeSlot.workedSolution ?? null}
         submitting={submitMutation.isPending}
         onSubmit={async (answers) => {
-          await submitMutation.mutateAsync({ slotIndex: activeSlot.index, answers });
+          await submitMutation.mutateAsync({
+            slotIndex: activeSlot.index,
+            answers,
+            templateCode: activeSlot.question.templateCode,
+            seed: activeSlot.question.seed,
+          });
         }}
         onSkip={async () => {
           await skipMutation.mutateAsync(activeSlot.index);
