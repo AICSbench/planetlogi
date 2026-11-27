@@ -123,7 +123,7 @@ func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
 	err = pool.QueryRow(ctx, `
 		INSERT INTO user_accounts (role, email, display_name, password_hash, otp_enabled, preferred_locale, timezone)
 		VALUES ('PARENT', 'parent@planetlogi.local', 'Budi Santoso', $1, FALSE, 'id', 'Asia/Jakarta')
-		ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name
+		ON CONFLICT (LOWER(email)) WHERE email IS NOT NULL DO UPDATE SET display_name = EXCLUDED.display_name
 		RETURNING id
 	`, string(hash)).Scan(&parentID)
 	if err != nil {
@@ -137,40 +137,53 @@ func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
 			grade, preferred_locale, timezone, crew_code, next_promotion_date
 		)
 		VALUES ($1, $2, 'pilot1', $3, 'Raka', 'Raka S.', 1, 'id', 'Asia/Jakarta', '100200300', '2027-07-01')
-		ON CONFLICT (login_id) DO UPDATE SET first_name = EXCLUDED.first_name
+		ON CONFLICT (LOWER(login_id)) DO UPDATE SET first_name = EXCLUDED.first_name
 		RETURNING id
 	`, parentID, schoolID, string(hash)).Scan(&studentID)
 	if err != nil {
 		return fmt.Errorf("seed student: %w", err)
 	}
 
-	if _, err := pool.Exec(ctx, `
+	walletTx, err := pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("begin wallet seed tx: %w", err)
+	}
+	defer func() { _ = walletTx.Rollback(ctx) }()
+
+	walletTag, err := walletTx.Exec(ctx, `
 		INSERT INTO student_wallets (student_id, total_sp, astro_coins, pilot_xp, pilot_level, total_star_scrolls)
 		VALUES ($1, 12, 25, 10, 2, 0)
 		ON CONFLICT (student_id) DO NOTHING
-	`, studentID); err != nil {
+	`, studentID)
+	if err != nil {
 		return fmt.Errorf("seed wallet: %w", err)
 	}
 
-	// Record idempotent opening ledger entries matching the seeded wallet balances
-	openingEntries := []struct {
-		currency string
-		amount   int64
-		idemKey  string
-	}{
-		{"SP", 12, "seed:pilot1:opening:sp"},
-		{"AC", 25, "seed:pilot1:opening:ac"},
-		{"XP", 10, "seed:pilot1:opening:xp"},
-	}
-	for _, entry := range openingEntries {
-		if _, err := pool.Exec(ctx, `
-			INSERT INTO currency_transactions
-				(student_id, subject_id, currency, delta, balance_after, source_type, source_id, idempotency_key)
-			VALUES ($1::uuid, $2::uuid, $3, $4, $4, 'SEED_OPENING_BALANCE', 'seed', $5)
-			ON CONFLICT (idempotency_key) DO NOTHING
-		`, studentID, mathSubjectID, entry.currency, entry.amount, entry.idemKey); err != nil {
-			return fmt.Errorf("seed ledger %s: %w", entry.currency, err)
+	// Record opening ledger entries only when this seed initializes the wallet row
+	if walletTag.RowsAffected() > 0 {
+		openingEntries := []struct {
+			currency string
+			amount   int64
+			idemKey  string
+		}{
+			{"SP", 12, "seed:pilot1:opening:sp"},
+			{"AC", 25, "seed:pilot1:opening:ac"},
+			{"XP", 10, "seed:pilot1:opening:xp"},
 		}
+		for _, entry := range openingEntries {
+			if _, err := walletTx.Exec(ctx, `
+				INSERT INTO currency_transactions
+					(student_id, subject_id, currency, delta, balance_after, source_type, source_id, idempotency_key)
+				VALUES ($1::uuid, $2::uuid, $3, $4, $4, 'SEED_OPENING_BALANCE', 'seed', $5)
+				ON CONFLICT (idempotency_key) DO NOTHING
+			`, studentID, mathSubjectID, entry.currency, entry.amount, entry.idemKey); err != nil {
+				return fmt.Errorf("seed ledger %s: %w", entry.currency, err)
+			}
+		}
+	}
+
+	if err := walletTx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit wallet seed tx: %w", err)
 	}
 
 	if _, err := pool.Exec(ctx, `

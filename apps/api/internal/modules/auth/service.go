@@ -43,6 +43,15 @@ if c == 1 then
 end
 return c
 `)
+	rotateRefreshScript = redis.NewScript(`
+local cur = redis.call("GET", KEYS[1])
+if not cur or cur == "" then
+	return 0
+end
+redis.call("DEL", KEYS[1])
+redis.call("PSETEX", KEYS[2], ARGV[1], ARGV[2])
+return 1
+`)
 )
 
 // OTPDeliverer dispatches 6-digit Parent OTP challenges via email/SMS/WhatsApp in production.
@@ -195,7 +204,7 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*Principal,
 	if s.store == nil {
 		return nil, TokenPair{}, ErrInvalidCredentials
 	}
-	if err := s.consumeRefreshJTI(ctx, claims.ID); err != nil {
+	if err := s.hasRefreshJTI(ctx, claims.ID); err != nil {
 		return nil, TokenPair{}, err
 	}
 	p, err := s.store.FindByIDAndRole(ctx, claims.Subject, claims.Role)
@@ -205,8 +214,11 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*Principal,
 		}
 		return nil, TokenPair{}, err
 	}
-	pair, err := s.issueTokens(ctx, *p)
+	pair, newJTI, refreshExp, err := s.mintTokenPair(*p)
 	if err != nil {
+		return nil, TokenPair{}, err
+	}
+	if err := s.rotateRefreshJTI(ctx, claims.ID, newJTI, p.ID, refreshExp); err != nil {
 		return nil, TokenPair{}, err
 	}
 	return p, pair, nil
@@ -229,14 +241,14 @@ func (s *Service) RevokeRefreshToken(ctx context.Context, refreshToken string) {
 	s.mu.Unlock()
 }
 
-func (s *Service) consumeRefreshJTI(ctx context.Context, jti string) error {
+func (s *Service) hasRefreshJTI(ctx context.Context, jti string) error {
 	if s.rdb != nil {
-		val, err := s.rdb.GetDel(ctx, "auth:rt:"+jti).Result()
-		if errors.Is(err, redis.Nil) || val == "" {
-			return ErrInvalidCredentials
-		}
+		exists, err := s.rdb.Exists(ctx, "auth:rt:"+jti).Result()
 		if err != nil {
 			return err
+		}
+		if exists == 0 {
+			return ErrInvalidCredentials
 		}
 		return nil
 	}
@@ -247,10 +259,40 @@ func (s *Service) consumeRefreshJTI(ctx context.Context, jti string) error {
 	if !ok {
 		return ErrInvalidCredentials
 	}
-	delete(s.memRefreshJTIs, jti)
 	if s.nowClock().After(exp) {
+		delete(s.memRefreshJTIs, jti)
 		return ErrInvalidCredentials
 	}
+	return nil
+}
+
+func (s *Service) rotateRefreshJTI(ctx context.Context, oldJTI, newJTI, principalID string, refreshExp time.Time) error {
+	if s.rdb != nil {
+		swapped, err := rotateRefreshScript.Run(
+			ctx,
+			s.rdb,
+			[]string{"auth:rt:" + oldJTI, "auth:rt:" + newJTI},
+			s.cfg.JWTRefreshTTL.Milliseconds(),
+			principalID,
+		).Int64()
+		if err != nil {
+			return fmt.Errorf("rotate refresh token: %w", err)
+		}
+		if swapped != 1 {
+			return ErrInvalidCredentials
+		}
+		return nil
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	exp, ok := s.memRefreshJTIs[oldJTI]
+	if !ok || s.nowClock().After(exp) {
+		delete(s.memRefreshJTIs, oldJTI)
+		return ErrInvalidCredentials
+	}
+	delete(s.memRefreshJTIs, oldJTI)
+	s.memRefreshJTIs[newJTI] = refreshExp
 	return nil
 }
 
@@ -272,11 +314,11 @@ func (s *Service) ResolvePrincipal(ctx context.Context, accessToken string) (*Pr
 	return p, nil
 }
 
-func (s *Service) issueTokens(ctx context.Context, p Principal) (TokenPair, error) {
+func (s *Service) mintTokenPair(p Principal) (TokenPair, string, time.Time, error) {
 	now := s.nowClock().UTC()
 	jti, err := randomHexID(16)
 	if err != nil {
-		return TokenPair{}, fmt.Errorf("generate refresh jti: %w", err)
+		return TokenPair{}, "", time.Time{}, fmt.Errorf("generate refresh jti: %w", err)
 	}
 	refreshExp := now.Add(s.cfg.JWTRefreshTTL)
 
@@ -304,13 +346,20 @@ func (s *Service) issueTokens(ctx context.Context, p Principal) (TokenPair, erro
 
 	accessTok, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(s.cfg.JWTAccessSecret))
 	if err != nil {
-		return TokenPair{}, fmt.Errorf("sign access token: %w", err)
+		return TokenPair{}, "", time.Time{}, fmt.Errorf("sign access token: %w", err)
 	}
 	refreshTok, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(s.cfg.JWTRefreshSecret))
 	if err != nil {
-		return TokenPair{}, fmt.Errorf("sign refresh token: %w", err)
+		return TokenPair{}, "", time.Time{}, fmt.Errorf("sign refresh token: %w", err)
 	}
+	return TokenPair{AccessToken: accessTok, RefreshToken: refreshTok}, jti, refreshExp, nil
+}
 
+func (s *Service) issueTokens(ctx context.Context, p Principal) (TokenPair, error) {
+	pair, jti, refreshExp, err := s.mintTokenPair(p)
+	if err != nil {
+		return TokenPair{}, err
+	}
 	if s.rdb != nil {
 		if err := s.rdb.Set(ctx, "auth:rt:"+jti, p.ID, s.cfg.JWTRefreshTTL).Err(); err != nil {
 			return TokenPair{}, fmt.Errorf("persist refresh token: %w", err)
@@ -320,8 +369,7 @@ func (s *Service) issueTokens(ctx context.Context, p Principal) (TokenPair, erro
 		s.memRefreshJTIs[jti] = refreshExp
 		s.mu.Unlock()
 	}
-
-	return TokenPair{AccessToken: accessTok, RefreshToken: refreshTok}, nil
+	return pair, nil
 }
 
 func (s *Service) ParseToken(raw, expectedType string) (*TokenClaims, error) {

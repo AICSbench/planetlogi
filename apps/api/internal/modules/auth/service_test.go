@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +16,8 @@ import (
 )
 
 type memoryStore struct {
-	records map[string]*CredentialRecord
+	records     map[string]*CredentialRecord
+	findByIDErr error
 }
 
 func (m *memoryStore) FindByIdentifier(_ context.Context, id string) (*CredentialRecord, error) {
@@ -27,6 +29,9 @@ func (m *memoryStore) FindByIdentifier(_ context.Context, id string) (*Credentia
 }
 
 func (m *memoryStore) FindByIDAndRole(_ context.Context, id string, role Role) (*Principal, error) {
+	if m.findByIDErr != nil {
+		return nil, m.findByIDErr
+	}
 	for _, r := range m.records {
 		if r.Principal.ID == id && r.Principal.Role == role {
 			p := r.Principal
@@ -190,5 +195,29 @@ func TestAuthLoginRBACRefreshRotationAndOTP(t *testing.T) {
 	freshCode, _ := svc.RequestParentOTP(context.Background(), parentPrincipal)
 	if err := svc.VerifyParentOTP(context.Background(), parentPrincipal, freshCode); err != ErrOTPRateLimited {
 		t.Fatalf("expected ErrOTPRateLimited even after OTP reissue, got %v", err)
+	}
+
+	// 7. Transient store error during Refresh returns 503 WITHOUT burning the refresh JTI
+	store.findByIDErr = errors.New("temporary db outage")
+	transientRefReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	for _, c := range parentCookies {
+		transientRefReq.AddCookie(c)
+	}
+	transientRefRec := httptest.NewRecorder()
+	app.Router.ServeHTTP(transientRefRec, transientRefReq)
+	if transientRefRec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 on transient DB failure during refresh, got %d", transientRefRec.Code)
+	}
+
+	// Once DB recovers, retrying with the SAME refresh cookie succeeds (200)
+	store.findByIDErr = nil
+	recoveredRefReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	for _, c := range parentCookies {
+		recoveredRefReq.AddCookie(c)
+	}
+	recoveredRefRec := httptest.NewRecorder()
+	app.Router.ServeHTTP(recoveredRefRec, recoveredRefReq)
+	if recoveredRefRec.Code != http.StatusOK {
+		t.Fatalf("expected 200 when retrying refresh after transient DB outage, got %d", recoveredRefRec.Code)
 	}
 }

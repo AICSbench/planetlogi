@@ -27,8 +27,13 @@ describe("@planetlogi/i18n", () => {
   it("accepts both dot and comma decimals from student keyboards", () => {
     expect(parseStudentDecimal("3.5")).toBe(3.5);
     expect(parseStudentDecimal("3,5")).toBe(3.5);
+    expect(parseStudentDecimal("0.125")).toBe(0.125);
     expect(parseStudentDecimal(" 42 ")).toBe(42);
     expect(parseStudentDecimal("3 5")).toBeNull();
+    expect(parseStudentDecimal("1,250")).toBeNull();
+    expect(parseStudentDecimal("1.250")).toBeNull();
+    expect(parseStudentDecimal("1,250", { locale: "en", mode: "integer" })).toBe(1250);
+    expect(parseStudentDecimal("1.250", { locale: "id", mode: "integer" })).toBe(1250);
     expect(parseStudentDecimal("1,234.5")).toBeNull();
     expect(parseStudentDecimal("abc")).toBeNull();
   });

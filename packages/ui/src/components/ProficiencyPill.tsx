@@ -4,6 +4,8 @@ export interface ProficiencyPillProps {
   tier: ProficiencyTier;
   label: string;
   pct?: number;
+  attemptedCount?: number;
+  targetCount?: number;
 }
 
 const TIER_MAP: Record<ProficiencyTier, { icon: string; cls: string }> = {
@@ -13,7 +15,13 @@ const TIER_MAP: Record<ProficiencyTier, { icon: string; cls: string }> = {
   INCOMPLETE: { icon: "○", cls: "bg-slate-500/20 text-slate-300 border-slate-400/35" },
 };
 
-export function ProficiencyPill({ tier, label, pct }: ProficiencyPillProps) {
+export function ProficiencyPill({
+  tier,
+  label,
+  pct,
+  attemptedCount,
+  targetCount = 10,
+}: ProficiencyPillProps) {
   const cfg = TIER_MAP[tier];
   return (
     <span
@@ -22,6 +30,11 @@ export function ProficiencyPill({ tier, label, pct }: ProficiencyPillProps) {
       <span aria-hidden="true">{cfg.icon}</span>
       <span>{label}</span>
       {pct !== undefined && tier !== "INCOMPLETE" ? <span>({pct}%)</span> : null}
+      {tier === "INCOMPLETE" && attemptedCount !== undefined ? (
+        <span>
+          ({attemptedCount} / {targetCount})
+        </span>
+      ) : null}
     </span>
   );
 }

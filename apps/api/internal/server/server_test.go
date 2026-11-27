@@ -7,6 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/go-chi/chi/v5"
+
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
 )
 
@@ -52,6 +55,38 @@ func TestHealthzAndReadyz(t *testing.T) {
 		app.Router.ServeHTTP(rec, req)
 		if rec.Code != http.StatusServiceUnavailable {
 			t.Fatalf("expected 503, got %d", rec.Code)
+		}
+	})
+
+	t.Run("timeout middleware exempts SSE streams", func(t *testing.T) {
+		var sseHasDeadline, jsonHasDeadline bool
+		app := New(Dependencies{
+			Config: cfg,
+			Registrars: []ModuleRegistrar{
+				func(r chi.Router, _ huma.API) {
+					r.Get("/api/v1/duels/stream", func(w http.ResponseWriter, req *http.Request) {
+						_, sseHasDeadline = req.Context().Deadline()
+						w.WriteHeader(http.StatusOK)
+					})
+					r.Get("/api/v1/regular", func(w http.ResponseWriter, req *http.Request) {
+						_, jsonHasDeadline = req.Context().Deadline()
+						w.WriteHeader(http.StatusOK)
+					})
+				},
+			},
+		})
+
+		sseReq := httptest.NewRequest(http.MethodGet, "/api/v1/duels/stream", nil)
+		sseReq.Header.Set("Accept", "text/event-stream")
+		app.Router.ServeHTTP(httptest.NewRecorder(), sseReq)
+		if sseHasDeadline {
+			t.Fatalf("expected SSE stream request to bypass 30s timeout deadline")
+		}
+
+		jsonReq := httptest.NewRequest(http.MethodGet, "/api/v1/regular", nil)
+		app.Router.ServeHTTP(httptest.NewRecorder(), jsonReq)
+		if !jsonHasDeadline {
+			t.Fatalf("expected ordinary HTTP request to carry 30s timeout deadline")
 		}
 	})
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GRADE_PLANETS, getPlanetForGrade } from "./index";
+import { GRADE_PLANETS, ProficiencyPill, getPlanetForGrade } from "./index";
 
 describe("@planetlogi/ui galaxy themes", () => {
   it("defines 6 elementary grade planets with bilingual names", () => {
@@ -15,5 +15,17 @@ describe("@planetlogi/ui galaxy themes", () => {
     expect(getPlanetForGrade(6).code).toBe("solaris");
     expect(getPlanetForGrade(99).code).toBe("solaris");
     expect(getPlanetForGrade(0).code).toBe("terra_pebble");
+  });
+
+  it("renders INCOMPLETE proficiency attempt progress when provided", () => {
+    const element = ProficiencyPill({
+      tier: "INCOMPLETE",
+      label: "Incomplete",
+      attemptedCount: 4,
+    });
+    const serialized = JSON.stringify(element);
+    expect(serialized).toContain("Incomplete");
+    expect(serialized).toContain("4");
+    expect(serialized).toContain("10");
   });
 });

@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/planetlogi-icon.svg", "_redirects"],
+      includeAssets: ["icons/planetlogi-icon.svg", "icons/apple-touch-icon.png", "_redirects"],
       manifest: {
         name: "PlanetLogi — Cosmic Math Adventures",
         short_name: "PlanetLogi",
@@ -22,6 +22,12 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         icons: [
+          {
+            src: "/icons/apple-touch-icon.png",
+            sizes: "180x180",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: "/icons/planetlogi-icon.svg",
             sizes: "any",

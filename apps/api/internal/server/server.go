@@ -47,7 +47,7 @@ func New(deps Dependencies) *App {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(requestTimeoutMiddleware(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   deps.Config.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -117,6 +117,31 @@ func New(deps Dependencies) *App {
 		Router: r,
 		API:    api,
 	}
+}
+
+func requestTimeoutMiddleware(timeout time.Duration) func(http.Handler) http.Handler {
+	standardTimeout := middleware.Timeout(timeout)
+	return func(next http.Handler) http.Handler {
+		timed := standardTimeout(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if isStreamingRequest(r) {
+				next.ServeHTTP(w, r)
+				return
+			}
+			timed.ServeHTTP(w, r)
+		})
+	}
+}
+
+func isStreamingRequest(r *http.Request) bool {
+	if strings.Contains(strings.ToLower(r.Header.Get("Accept")), "text/event-stream") {
+		return true
+	}
+	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
+		return true
+	}
+	path := strings.TrimSuffix(r.URL.Path, "/")
+	return strings.HasSuffix(path, "/stream") || strings.HasSuffix(path, "/events")
 }
 
 func csrfOriginMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {

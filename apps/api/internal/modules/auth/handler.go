@@ -213,7 +213,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			case errors.Is(err, ErrOTPDeliveryUnavailable):
 				return nil, huma.Error503ServiceUnavailable("otp delivery service is not configured")
 			default:
-				return nil, huma.Error500InternalServerError("failed to generate otp")
+				return nil, huma.Error503ServiceUnavailable("otp service temporarily unavailable")
 			}
 		}
 		out := &otpRequestOutput{}
@@ -245,8 +245,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				return nil, huma.Error403Forbidden("parent or staff role required")
 			case errors.Is(err, ErrOTPRateLimited):
 				return nil, huma.Error429TooManyRequests("too many otp attempts; try again in 15 minutes")
-			default:
+			case errors.Is(err, ErrOTPInvalid):
 				return nil, huma.Error400BadRequest("invalid or expired otp code")
+			default:
+				return nil, huma.Error503ServiceUnavailable("otp verification service temporarily unavailable")
 			}
 		}
 		out := &otpVerifyOutput{}

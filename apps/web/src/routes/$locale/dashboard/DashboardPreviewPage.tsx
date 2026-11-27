@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { formatNumber, type Locale } from "@planetlogi/i18n";
 import {
@@ -11,12 +11,34 @@ import {
 } from "@planetlogi/ui";
 import { useAuthStore } from "../../../store/authStore";
 
-type PillarKey = "challenges" | "training" | "academy" | "fun";
+const PILLARS = ["challenges", "training", "academy", "fun"] as const;
+type PillarKey = (typeof PILLARS)[number];
 
 export function DashboardPreviewPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["dashboard", "common"]);
   const user = useAuthStore((s) => s.user);
   const [pillar, setPillar] = useState<PillarKey>("challenges");
+  const tabRefs = useRef<Record<PillarKey, HTMLButtonElement | null>>({
+    challenges: null,
+    training: null,
+    academy: null,
+    fun: null,
+  });
+
+  function handleTabKeyDown(e: KeyboardEvent<HTMLButtonElement>, idx: number) {
+    let nextIdx: number | null = null;
+    if (e.key === "ArrowRight") nextIdx = (idx + 1) % PILLARS.length;
+    else if (e.key === "ArrowLeft") nextIdx = (idx - 1 + PILLARS.length) % PILLARS.length;
+    else if (e.key === "Home") nextIdx = 0;
+    else if (e.key === "End") nextIdx = PILLARS.length - 1;
+
+    if (nextIdx !== null) {
+      e.preventDefault();
+      const nextKey = PILLARS[nextIdx]!;
+      setPillar(nextKey);
+      tabRefs.current[nextKey]?.focus();
+    }
+  }
 
   const grade = user?.grade ?? 1;
   const planet = getPlanetForGrade(grade);
@@ -62,13 +84,20 @@ export function DashboardPreviewPage({ locale }: { locale: Locale }) {
           aria-label={t("dashboard:pillarsLabel")}
           className="grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
-          {(["challenges", "training", "academy", "fun"] as const).map((key) => (
+          {PILLARS.map((key, idx) => (
             <button
               key={key}
+              ref={(el) => {
+                tabRefs.current[key] = el;
+              }}
+              id={`pillar-tab-${key}`}
               role="tab"
               type="button"
+              tabIndex={pillar === key ? 0 : -1}
               aria-selected={pillar === key}
+              aria-controls={`pillar-panel-${key}`}
               onClick={() => setPillar(key)}
+              onKeyDown={(e) => handleTabKeyDown(e, idx)}
               className={`min-h-12 rounded-2xl px-3 text-sm font-bold transition-colors cursor-pointer ${
                 pillar === key
                   ? "bg-[#6366F1] text-white shadow-lg shadow-indigo-500/30"
@@ -80,71 +109,83 @@ export function DashboardPreviewPage({ locale }: { locale: Locale }) {
           ))}
         </div>
 
-        {pillar === "challenges" ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <GalaxyCard>
-              <h2 className="text-lg font-bold text-[#FBBF24]">
-                🪐 {t("dashboard:cards.dailyOrbitTitle")}
-              </h2>
-              <p className="mt-1.5 text-sm text-slate-300">{t("dashboard:cards.dailyOrbitDesc")}</p>
-            </GalaxyCard>
-            <GalaxyCard>
-              <h2 className="text-lg font-bold text-[#22D3EE]">
-                ⚡ {t("dashboard:cards.superNovaTitle")}
-              </h2>
-              <p className="mt-1.5 text-sm text-slate-300">{t("dashboard:cards.superNovaDesc")}</p>
-            </GalaxyCard>
-            <GalaxyCard className="sm:col-span-2">
-              <h2 className="text-lg font-bold text-indigo-300">
-                ⚔️ {t("dashboard:cards.starDuelsTitle")}
-              </h2>
-              <p className="mt-1.5 text-sm text-slate-300">{t("dashboard:cards.starDuelsDesc")}</p>
-            </GalaxyCard>
-          </div>
-        ) : null}
+        <div
+          role="tabpanel"
+          id={`pillar-panel-${pillar}`}
+          aria-labelledby={`pillar-tab-${pillar}`}
+        >
+          {pillar === "challenges" ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <GalaxyCard>
+                <h2 className="text-lg font-bold text-[#FBBF24]">
+                  🪐 {t("dashboard:cards.dailyOrbitTitle")}
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t("dashboard:cards.dailyOrbitDesc")}
+                </p>
+              </GalaxyCard>
+              <GalaxyCard>
+                <h2 className="text-lg font-bold text-[#22D3EE]">
+                  ⚡ {t("dashboard:cards.superNovaTitle")}
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t("dashboard:cards.superNovaDesc")}
+                </p>
+              </GalaxyCard>
+              <GalaxyCard className="sm:col-span-2">
+                <h2 className="text-lg font-bold text-indigo-300">
+                  ⚔️ {t("dashboard:cards.starDuelsTitle")}
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t("dashboard:cards.starDuelsDesc")}
+                </p>
+              </GalaxyCard>
+            </div>
+          ) : null}
 
-        {pillar === "training" ? (
-          <GalaxyCard>
-            <h2 className="text-lg font-bold text-emerald-300">
-              🌌 {t("dashboard:cards.galaxyTrainingTitle")}
-            </h2>
-            <p className="mt-1.5 text-sm text-slate-300">
-              {t("dashboard:cards.galaxyTrainingDesc")}
-            </p>
-          </GalaxyCard>
-        ) : null}
-
-        {pillar === "academy" ? (
-          <GalaxyCard>
-            <h2 className="text-lg font-bold text-cyan-300">
-              🚀 {t("dashboard:cards.spaceAcademyTitle")}
-            </h2>
-            <p className="mt-1.5 text-sm text-slate-300">
-              {t("dashboard:cards.spaceAcademyDesc")}
-            </p>
-          </GalaxyCard>
-        ) : null}
-
-        {pillar === "fun" ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {pillar === "training" ? (
             <GalaxyCard>
-              <h2 className="text-lg font-bold text-amber-300">
-                📖 {t("dashboard:cards.planetStoriesTitle")}
+              <h2 className="text-lg font-bold text-emerald-300">
+                🌌 {t("dashboard:cards.galaxyTrainingTitle")}
               </h2>
               <p className="mt-1.5 text-sm text-slate-300">
-                {t("dashboard:cards.planetStoriesDesc")}
+                {t("dashboard:cards.galaxyTrainingDesc")}
               </p>
             </GalaxyCard>
+          ) : null}
+
+          {pillar === "academy" ? (
             <GalaxyCard>
-              <h2 className="text-lg font-bold text-pink-300">
-                🧠 {t("dashboard:cards.brainGalaxyTitle")}
+              <h2 className="text-lg font-bold text-cyan-300">
+                🚀 {t("dashboard:cards.spaceAcademyTitle")}
               </h2>
-              <p className="mt-1.5 text-sm text-slate-300">
-                {t("dashboard:cards.brainGalaxyDesc")}
+              <p className="text-sm text-slate-300">
+                {t("dashboard:cards.spaceAcademyDesc")}
               </p>
             </GalaxyCard>
-          </div>
-        ) : null}
+          ) : null}
+
+          {pillar === "fun" ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <GalaxyCard>
+                <h2 className="text-lg font-bold text-amber-300">
+                  📖 {t("dashboard:cards.planetStoriesTitle")}
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t("dashboard:cards.planetStoriesDesc")}
+                </p>
+              </GalaxyCard>
+              <GalaxyCard>
+                <h2 className="text-lg font-bold text-pink-300">
+                  🧠 {t("dashboard:cards.brainGalaxyTitle")}
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  {t("dashboard:cards.brainGalaxyDesc")}
+                </p>
+              </GalaxyCard>
+            </div>
+          ) : null}
+        </div>
 
         <p className="rounded-xl border border-indigo-400/20 bg-[#131B3A]/60 px-4 py-2.5 text-xs text-slate-300">
           ✨ {t("dashboard:status.foundationReady")}
