@@ -203,12 +203,12 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authHeaders struct {
+type AuthHeaders struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in authHeaders, requireAuth bool) (string, string, error) {
+func (h *Handler) resolveStudent(ctx context.Context, in AuthHeaders, requireAuth bool) (string, string, error) {
 	tok := in.CookieAccess
 	if tok == "" && len(in.Authorization) > 7 {
 		tok = in.Authorization[7:]
@@ -235,7 +235,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/streak/status",
 		Summary:     "Get student's Orbit Streak, Nova Pet stage, and Cryo Shields",
 		Tags:        []string{"Streak"},
-	}, func(ctx context.Context, in *authHeaders) (*struct{ Body Status }, error) {
+	}, func(ctx context.Context, in *AuthHeaders) (*struct{ Body Status }, error) {
 		studentID, tz, err := h.resolveStudent(ctx, *in, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
@@ -250,14 +250,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get monthly Orbit Streak calendar days",
 		Tags:        []string{"Streak"},
 	}, func(ctx context.Context, in *struct {
-		authHeaders
+		AuthHeaders
 		Month string `query:"month" doc:"YYYY-MM filter"`
 	}) (*struct {
 		Body struct {
 			Days []CalendarEntry `json:"days"`
 		}
 	}, error) {
-		studentID, _, err := h.resolveStudent(ctx, in.authHeaders, false)
+		studentID, _, err := h.resolveStudent(ctx, in.AuthHeaders, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
@@ -278,13 +278,13 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"Streak"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		authHeaders
+		AuthHeaders
 		Body struct {
 			Enabled   bool   `json:"enabled"`
 			TimeLocal string `json:"timeLocal,omitempty"`
 		}
 	}) (*struct{ Body Status }, error) {
-		studentID, _, err := h.resolveStudent(ctx, in.authHeaders, true)
+		studentID, _, err := h.resolveStudent(ctx, in.AuthHeaders, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}

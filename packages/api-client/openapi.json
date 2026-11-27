@@ -1973,6 +1973,41 @@
     "/api/v1/daily-orbit/change-question": {
       "post": {
         "operationId": "daily-orbit-change-question",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2022,6 +2057,41 @@
     "/api/v1/daily-orbit/curricula": {
       "patch": {
         "operationId": "daily-orbit-set-curricula",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2071,6 +2141,41 @@
     "/api/v1/daily-orbit/skip": {
       "post": {
         "operationId": "daily-orbit-skip",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2120,6 +2225,41 @@
     "/api/v1/daily-orbit/submit": {
       "post": {
         "operationId": "daily-orbit-submit",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2169,6 +2309,41 @@
     "/api/v1/daily-orbit/tier": {
       "patch": {
         "operationId": "daily-orbit-set-tier",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2436,6 +2611,20 @@
         "operationId": "streak-calendar",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "YYYY-MM filter",
             "explode": false,
             "in": "query",
@@ -2477,6 +2666,22 @@
     "/api/v1/streak/reminder": {
       "post": {
         "operationId": "streak-reminder",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2617,6 +2822,29 @@
         "operationId": "training-hots-wheel",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "explode": false,
             "in": "query",
             "name": "ageBand",
@@ -2657,6 +2885,31 @@
     "/api/v1/training/sessions": {
       "post": {
         "operationId": "training-start-session",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2706,6 +2959,31 @@
     "/api/v1/training/sessions/submit": {
       "post": {
         "operationId": "training-submit-answer",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2756,6 +3034,29 @@
       "get": {
         "operationId": "training-skills",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "explode": false,
             "in": "query",

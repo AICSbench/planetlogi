@@ -114,17 +114,23 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 
 	results := make([]MutationResult, len(reqs))
 	pending := make([]int, 0, len(reqs))
+	stagedSeen := make(map[string]int64, len(reqs))
 
 	for i, req := range reqs {
 		if req.StudentID != studentID {
 			return nil, fmt.Errorf("batch ledger mutations must target a single student")
+		}
+		if bal, exists := stagedSeen[req.IdempotencyKey]; exists {
+			results[i] = MutationResult{BalanceAfter: bal, WasDuplicate: true}
+			continue
 		}
 		var existingBalance int64
 		err = tx.QueryRow(ctx, `
 			SELECT balance_after FROM currency_transactions WHERE idempotency_key = $1
 		`, req.IdempotencyKey).Scan(&existingBalance)
 		if err == nil {
-			results[i] = MutationResult{Wallet: w, BalanceAfter: existingBalance, WasDuplicate: true}
+			stagedSeen[req.IdempotencyKey] = existingBalance
+			results[i] = MutationResult{BalanceAfter: existingBalance, WasDuplicate: true}
 			continue
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -135,6 +141,7 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 		if err != nil {
 			return nil, err
 		}
+		stagedSeen[req.IdempotencyKey] = balanceAfter
 		results[i] = MutationResult{BalanceAfter: balanceAfter, WasDuplicate: false}
 		pending = append(pending, i)
 	}
@@ -158,12 +165,15 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 			`, req.StudentID, req.SubjectID, string(req.Currency), req.Delta, results[i].BalanceAfter, req.SourceType, req.SourceID, req.IdempotencyKey); err != nil {
 				return nil, fmt.Errorf("insert ledger tx: %w", err)
 			}
-			results[i].Wallet = w
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit ledger tx: %w", err)
+	}
+
+	for i := range results {
+		results[i].Wallet = w
 	}
 
 	return results, nil

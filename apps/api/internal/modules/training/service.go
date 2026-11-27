@@ -488,13 +488,13 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authQuery struct {
+type AuthQuery struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in authQuery, requireAuth bool) (string, string, error) {
+func (h *Handler) resolveStudent(ctx context.Context, in AuthQuery, requireAuth bool) (string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
@@ -548,7 +548,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "List skills for a curriculum and grade with High Score stars and Proficiency %",
 		Tags:        []string{"Training"},
 	}, func(ctx context.Context, in *struct {
-		authQuery
+		AuthQuery
 		Curriculum string `query:"curriculum" default:"SINGAPORE_MOE"`
 		Grade      int    `query:"grade" default:"1"`
 	}) (*struct {
@@ -556,7 +556,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Skills []SkillView `json:"skills"`
 		}
 	}, error) {
-		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, false)
+		studentID, locale, err := h.resolveStudent(ctx, in.AuthQuery, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
@@ -576,14 +576,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get the 4-Quadrant / 9-Heuristic HOTS Constellation Wheel",
 		Tags:        []string{"Training"},
 	}, func(ctx context.Context, in *struct {
-		authQuery
+		AuthQuery
 		AgeBand string `query:"ageBand" default:"ALL"`
 	}) (*struct {
 		Body struct {
 			Quadrants []HOTSQuadrant `json:"quadrants"`
 		}
 	}, error) {
-		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, false)
+		studentID, locale, err := h.resolveStudent(ctx, in.AuthQuery, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
@@ -604,12 +604,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"Training"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		authQuery
+		AuthQuery
 		Body struct {
 			SkillCode string `json:"skillCode" minLength:"1"`
 		}
 	}) (*struct{ Body PracticeSession }, error) {
-		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, true)
+		studentID, locale, err := h.resolveStudent(ctx, in.AuthQuery, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
@@ -628,7 +628,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"Training"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		authQuery
+		AuthQuery
 		Body struct {
 			SessionID     string            `json:"sessionId" minLength:"1"`
 			QuestionIndex int               `json:"questionIndex" minimum:"1" maximum:"10"`
@@ -640,7 +640,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session PracticeSession        `json:"session"`
 		}
 	}, error) {
-		studentID, locale, err := h.resolveStudent(ctx, in.authQuery, true)
+		studentID, locale, err := h.resolveStudent(ctx, in.AuthQuery, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}

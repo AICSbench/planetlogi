@@ -590,14 +590,14 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type commonIn struct {
+type CommonIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
 	Grade         int    `query:"grade" default:"1"`
 }
 
-func (h *Handler) resolveUser(ctx context.Context, in commonIn, requireAuth bool) (string, int, string, string, error) {
+func (h *Handler) resolveUser(ctx context.Context, in CommonIn, requireAuth bool) (string, int, string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
@@ -636,7 +636,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/daily-orbit/today",
 		Summary:     "Get today's 10-question Daily Orbit progression path",
 		Tags:        []string{"DailyOrbit"},
-	}, func(ctx context.Context, in *commonIn) (*struct{ Body SessionView }, error) {
+	}, func(ctx context.Context, in *CommonIn) (*struct{ Body SessionView }, error) {
 		id, grade, tz, locale, err := h.resolveUser(ctx, *in, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
@@ -652,7 +652,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"DailyOrbit"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		commonIn
+		CommonIn
 		Body struct {
 			SlotIndex    int               `json:"slotIndex" minimum:"1" maximum:"10"`
 			Answers      map[string]string `json:"answers"`
@@ -665,7 +665,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.CommonIn, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
@@ -699,7 +699,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"DailyOrbit"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		commonIn
+		CommonIn
 		Body struct {
 			SlotIndex int `json:"slotIndex" minimum:"1" maximum:"10"`
 		}
@@ -709,7 +709,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.CommonIn, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
@@ -739,7 +739,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"DailyOrbit"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		commonIn
+		CommonIn
 		Body struct {
 			SlotIndex int    `json:"slotIndex" minimum:"1" maximum:"10"`
 			Mode      string `json:"mode" enum:"easier,harder,topic"`
@@ -750,7 +750,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SessionView `json:"session"`
 		}
 	}, error) {
-		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.CommonIn, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
@@ -777,12 +777,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"DailyOrbit"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		commonIn
+		CommonIn
 		Body struct {
 			Tier Tier `json:"tier" enum:"ELEMENTARY,INTERMEDIATE,ADVANCED,MASTER"`
 		}
 	}) (*struct{ Body SessionView }, error) {
-		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.CommonIn, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
@@ -801,12 +801,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"DailyOrbit"},
 		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *struct {
-		commonIn
+		CommonIn
 		Body struct {
 			Curricula []string `json:"curricula" minItems:"1"`
 		}
 	}) (*struct{ Body SessionView }, error) {
-		id, grade, tz, locale, err := h.resolveUser(ctx, in.commonIn, true)
+		id, grade, tz, locale, err := h.resolveUser(ctx, in.CommonIn, true)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}

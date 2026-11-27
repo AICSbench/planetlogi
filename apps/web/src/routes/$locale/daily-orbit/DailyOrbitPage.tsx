@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Filter, RefreshCw, SlidersHorizontal, Sparkles } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
-import type { DailyOrbitTier } from "@planetlogi/api-client";
+import type { DailyOrbitSession, DailyOrbitTier } from "@planetlogi/api-client";
 import { CurrencyPill, GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
 import { apiClient, useAuthStore } from "../../../store/authStore";
@@ -67,10 +67,32 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
     },
   });
 
+  const reconcileSessionUpdate = (prev: DailyOrbitSession | undefined, incoming: DailyOrbitSession): DailyOrbitSession => {
+    if (!prev || prev.localDate !== incoming.localDate) {
+      return incoming;
+    }
+    const mergedSlots = incoming.slots.map((slot, idx) => {
+      const prevSlot = prev.slots[idx];
+      if (prevSlot && prevSlot.status !== "PENDING" && slot.status === "PENDING") {
+        return prevSlot;
+      }
+      return slot;
+    });
+    return {
+      ...incoming,
+      slots: mergedSlots,
+      completedCount: Math.max(prev.completedCount, incoming.completedCount),
+      correctCount: Math.max(prev.correctCount, incoming.correctCount),
+      totalSpEarned: Math.max(prev.totalSpEarned, incoming.totalSpEarned),
+      completionBonusAwarded: prev.completionBonusAwarded || incoming.completionBonusAwarded,
+      changeQuestionUsed: Math.max(prev.changeQuestionUsed, incoming.changeQuestionUsed),
+    };
+  };
+
   const tierMutation = useMutation({
     mutationFn: (tier: DailyOrbitTier) => apiClient.setDailyOrbitTier(tier, locale, grade),
     onSuccess: (session) => {
-      queryClient.setQueryData(sessionCacheKey, session);
+      queryClient.setQueryData<DailyOrbitSession>(sessionCacheKey, (prev) => reconcileSessionUpdate(prev, session));
       setShowTierModal(false);
     },
   });
@@ -78,7 +100,7 @@ export function DailyOrbitPage({ locale }: { locale: Locale }) {
   const curriculaMutation = useMutation({
     mutationFn: (curricula: string[]) => apiClient.setDailyOrbitCurricula(curricula, locale, grade),
     onSuccess: (session) => {
-      queryClient.setQueryData(sessionCacheKey, session);
+      queryClient.setQueryData<DailyOrbitSession>(sessionCacheKey, (prev) => reconcileSessionUpdate(prev, session));
     },
   });
 

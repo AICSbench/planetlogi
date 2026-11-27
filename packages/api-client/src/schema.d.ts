@@ -1185,10 +1185,17 @@ export interface operations {
     };
     "daily-orbit-change-question": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1218,10 +1225,17 @@ export interface operations {
     };
     "daily-orbit-set-curricula": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1251,10 +1265,17 @@ export interface operations {
     };
     "daily-orbit-skip": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1284,10 +1305,17 @@ export interface operations {
     };
     "daily-orbit-submit": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1317,10 +1345,17 @@ export interface operations {
     };
     "daily-orbit-set-tier": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1464,9 +1499,13 @@ export interface operations {
                 /** @description YYYY-MM filter */
                 month?: string;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1493,9 +1532,13 @@ export interface operations {
     "streak-reminder": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1590,11 +1633,16 @@ export interface operations {
     "training-hots-wheel": {
         parameters: {
             query?: {
+                locale?: string;
                 ageBand?: string;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1620,10 +1668,16 @@ export interface operations {
     };
     "training-start-session": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1653,10 +1707,16 @@ export interface operations {
     };
     "training-submit-answer": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1687,12 +1747,17 @@ export interface operations {
     "training-skills": {
         parameters: {
             query?: {
+                locale?: string;
                 curriculum?: string;
                 grade?: number;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
