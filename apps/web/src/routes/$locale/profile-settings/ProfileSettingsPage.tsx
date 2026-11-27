@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -18,17 +18,14 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   });
 
   const bundle = bundleQuery.data;
-  const [otpEnabled, setOtpEnabled] = useState(false);
-  const [lang, setLang] = useState<"en" | "id">(locale);
-  const [brainCap, setBrainCap] = useState(25);
+  const [otpDraft, setOtpDraft] = useState<boolean | null>(null);
+  const [langDraft, setLangDraft] = useState<"en" | "id" | null>(null);
+  const [brainCapDraft, setBrainCapDraft] = useState<number | null>(null);
   const [savedToast, setSavedToast] = useState(false);
 
-  useEffect(() => {
-    if (!bundle) return;
-    setOtpEnabled(bundle.settings.otpEnabled);
-    setLang(bundle.settings.language);
-    setBrainCap(bundle.settings.brainGalaxyDailyCapMin);
-  }, [bundle]);
+  const otpEnabled = otpDraft ?? bundle?.settings.otpEnabled ?? false;
+  const lang = langDraft ?? bundle?.settings.language ?? locale;
+  const brainCap = brainCapDraft ?? bundle?.settings.brainGalaxyDailyCapMin ?? 25;
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -39,6 +36,9 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
       }),
     onSuccess: async (updated) => {
       queryClient.setQueryData(["profile-bundle"], updated);
+      setOtpDraft(null);
+      setLangDraft(null);
+      setBrainCapDraft(null);
       await setAppLocale(updated.settings.language);
       setSavedToast(true);
     },
@@ -93,7 +93,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
           <input
             type="checkbox"
             checked={otpEnabled}
-            onChange={(e) => setOtpEnabled(e.target.checked)}
+            onChange={(e) => setOtpDraft(e.target.checked)}
             className="mt-1"
           />
           <div>
@@ -109,7 +109,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
             </label>
             <select
               value={lang}
-              onChange={(e) => setLang(e.target.value as "en" | "id")}
+              onChange={(e) => setLangDraft(e.target.value as "en" | "id")}
               className="mt-1 min-h-11 w-full rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-sm text-white"
             >
               <option value="en">{t("common:language.en")}</option>
@@ -127,7 +127,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
               min={0}
               max={25}
               value={brainCap}
-              onChange={(e) => setBrainCap(Number(e.target.value))}
+              onChange={(e) => setBrainCapDraft(Number(e.target.value))}
               className="mt-3 w-full"
             />
           </div>
