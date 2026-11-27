@@ -284,7 +284,19 @@ func (h *Handler) authenticateToken(ctx context.Context, cookieTok, authHeader s
 	return h.svc.ResolvePrincipal(ctx, tok)
 }
 
+func (h *Handler) cookieSameSite() http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(h.cfg.CookieSameSite)) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteLaxMode
+	}
+}
+
 func (h *Handler) buildAuthCookies(pair TokenPair) []http.Cookie {
+	sameSite := h.cookieSameSite()
 	return []http.Cookie{
 		{
 			Name:     AccessCookieName,
@@ -294,7 +306,7 @@ func (h *Handler) buildAuthCookies(pair TokenPair) []http.Cookie {
 			MaxAge:   int(h.cfg.JWTAccessTTL.Seconds()),
 			HttpOnly: true,
 			Secure:   h.cfg.CookieSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 		},
 		{
 			Name:     RefreshCookieName,
@@ -304,13 +316,14 @@ func (h *Handler) buildAuthCookies(pair TokenPair) []http.Cookie {
 			MaxAge:   int(h.cfg.JWTRefreshTTL.Seconds()),
 			HttpOnly: true,
 			Secure:   h.cfg.CookieSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 		},
 	}
 }
 
 func (h *Handler) clearAuthCookies() []http.Cookie {
 	past := time.Unix(0, 0)
+	sameSite := h.cookieSameSite()
 	return []http.Cookie{
 		{
 			Name:     AccessCookieName,
@@ -321,7 +334,7 @@ func (h *Handler) clearAuthCookies() []http.Cookie {
 			MaxAge:   -1,
 			HttpOnly: true,
 			Secure:   h.cfg.CookieSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 		},
 		{
 			Name:     RefreshCookieName,
@@ -332,7 +345,7 @@ func (h *Handler) clearAuthCookies() []http.Cookie {
 			MaxAge:   -1,
 			HttpOnly: true,
 			Secure:   h.cfg.CookieSecure,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: sameSite,
 		},
 	}
 }

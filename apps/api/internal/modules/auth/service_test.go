@@ -221,3 +221,16 @@ func TestAuthLoginRBACRefreshRotationAndOTP(t *testing.T) {
 		t.Fatalf("expected 200 when retrying refresh after transient DB outage, got %d", recoveredRefRec.Code)
 	}
 }
+
+func TestAuthCookiesSupportSameSiteNoneForCrossOriginPages(t *testing.T) {
+	cfg := config.Load()
+	cfg.CookieSecure = true
+	cfg.CookieSameSite = "none"
+	h := NewHandler(NewService(cfg, nil, nil, nil), cfg)
+	cookies := h.buildAuthCookies(TokenPair{AccessToken: "a", RefreshToken: "r"})
+	for _, c := range cookies {
+		if c.SameSite != http.SameSiteNoneMode || !c.Secure {
+			t.Fatalf("expected SameSite=None and Secure=true on cookie %s, got sameSite=%v secure=%v", c.Name, c.SameSite, c.Secure)
+		}
+	}
+}
