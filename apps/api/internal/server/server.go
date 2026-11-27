@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -55,6 +56,7 @@ func New(deps Dependencies) *App {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+	r.Use(csrfOriginMiddleware(deps.Config.AllowedOrigins))
 
 	// HA Load Balancer Liveness Probe — always 200 while process is alive.
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -114,6 +116,27 @@ func New(deps Dependencies) *App {
 	return &App{
 		Router: r,
 		API:    api,
+	}
+}
+
+func csrfOriginMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
+	allowed := make(map[string]bool, len(allowedOrigins))
+	for _, o := range allowedOrigins {
+		allowed[strings.ToLower(strings.TrimSpace(o))] = true
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch || r.Method == http.MethodDelete {
+				origin := strings.ToLower(strings.TrimSpace(r.Header.Get("Origin")))
+				cookieHdr := r.Header.Get("Cookie")
+				hasSessionCookie := strings.Contains(cookieHdr, "pl_access=") || strings.Contains(cookieHdr, "pl_refresh=")
+				if origin != "" && hasSessionCookie && len(allowed) > 0 && !allowed[origin] {
+					writeJSON(w, http.StatusForbidden, map[string]string{"detail": "cross-origin cookie request blocked"})
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 

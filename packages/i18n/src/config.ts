@@ -13,7 +13,7 @@ export function isSupportedLocale(value: string | undefined | null): value is Lo
 export function normalizeLocale(value: string | undefined | null): Locale {
   if (!value) return DEFAULT_LOCALE;
   const lower = value.toLowerCase().trim();
-  if (lower.startsWith("id")) return "id";
-  if (lower.startsWith("en")) return "en";
+  if (lower === "id" || lower.startsWith("id-") || lower.startsWith("id_")) return "id";
+  if (lower === "en" || lower.startsWith("en-") || lower.startsWith("en_")) return "en";
   return DEFAULT_LOCALE;
 }

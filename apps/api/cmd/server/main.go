@@ -27,6 +27,10 @@ func (r redisPinger) Ping(ctx context.Context) error {
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	cfg := config.Load()
+	if err := cfg.ValidateForServer(); err != nil {
+		logger.Error("invalid production server configuration", "error", err)
+		os.Exit(1)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -61,6 +65,7 @@ func main() {
 		Addr:              ":" + cfg.APIPort,
 		Handler:           app.Router,
 		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
 
@@ -78,7 +83,7 @@ func main() {
 		os.Exit(1)
 	case <-ctx.Done():
 		logger.Info("shutdown signal received; draining connections")
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 		defer cancel()
 		if err := httpSrv.Shutdown(shutdownCtx); err != nil {
 			logger.Error("graceful shutdown error", "error", err)

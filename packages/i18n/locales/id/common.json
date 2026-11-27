@@ -8,6 +8,9 @@
     "achievement": "Pencapaian",
     "events": "Event",
     "subjectMath": "Matematika Galaksi",
+    "subjectScience": "Sains",
+    "subjectEnglish": "Bahasa Inggris",
+    "subjectActive": "Aktif",
     "subjectComingSoon": "Segera Hadir",
     "streak": "Streak Orbit",
     "bonusGift": "Hadiah Bonus",
@@ -62,5 +65,9 @@
     "level": "Lvl {{level}}",
     "loading": "Menyiapkan landasan roket...",
     "comingInPhase": "Hadir di Phase {{phase}}"
+  },
+  "a11y": {
+    "stars": "{{stars}} dari 3 bintang",
+    "difficulty": "Tingkat kesulitan {{level}} dari 5"
   }
 }

@@ -49,8 +49,8 @@ export function DashboardPreviewPage({ locale }: { locale: Locale }) {
           </p>
           <div className="flex flex-wrap gap-2">
             <ProficiencyPill tier="MASTERY" label={t("common:proficiency.mastery")} pct={88} />
-            <StarRating stars={3} />
-            <DifficultyMeter level={3} />
+            <StarRating stars={3} label={t("common:a11y.stars", { stars: 3 })} />
+            <DifficultyMeter level={3} label={t("common:a11y.difficulty", { level: 3 })} />
           </div>
         </GalaxyCard>
       </aside>
@@ -59,7 +59,7 @@ export function DashboardPreviewPage({ locale }: { locale: Locale }) {
       <section className="lg:col-span-6 space-y-4">
         <div
           role="tablist"
-          aria-label="PlanetLogi Pillars"
+          aria-label={t("dashboard:pillarsLabel")}
           className="grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
           {(["challenges", "training", "academy", "fun"] as const).map((key) => (
@@ -160,12 +160,12 @@ export function DashboardPreviewPage({ locale }: { locale: Locale }) {
           <div className="flex flex-wrap gap-2">
             <CurrencyPill
               kind="SP"
-              value={formatNumber(user?.totalSp ?? 12, locale)}
+              value={formatNumber(user ? (user.totalSp ?? 0) : 12, locale)}
               label={t("common:currencies.sp")}
             />
             <CurrencyPill
               kind="AC"
-              value={formatNumber(user?.astroCoins ?? 25, locale)}
+              value={formatNumber(user ? (user.astroCoins ?? 0) : 25, locale)}
               label={t("common:currencies.ac")}
             />
           </div>

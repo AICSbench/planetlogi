@@ -1,6 +1,6 @@
 .PHONY: dev-up dev-down api-run api-worker api-test api-vet api-build api-migrate-up api-migrate-down api-sqlc api-seed api-openapi web-dev web-build check
 
-DB_URL ?= postgres://planetlogi:planetlogi_dev@localhost:5432/planetlogi?sslmode=disable
+DB_URL ?= $(or $(DATABASE_URL),postgres://planetlogi:planetlogi_dev@localhost:5432/planetlogi?sslmode=disable)
 
 dev-up:
 	docker compose -f docker/docker-compose.yml up -d
@@ -21,7 +21,7 @@ api-vet:
 	cd apps/api && go vet ./...
 
 api-build:
-	cd apps/api && go build -o bin/server ./cmd/server && go build -o bin/worker ./cmd/worker && go build -o bin/seed ./cmd/seed
+	cd apps/api && mkdir -p bin && go build -o bin/server ./cmd/server && go build -o bin/worker ./cmd/worker && go build -o bin/seed ./cmd/seed
 
 api-migrate-up:
 	cd apps/api && goose -dir db/migrations postgres "$(DB_URL)" up

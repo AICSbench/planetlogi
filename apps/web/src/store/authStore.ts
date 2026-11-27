@@ -14,19 +14,37 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
+let sessionGeneration = 0;
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   hydrated: false,
-  setUser: (user) => set({ user, hydrated: true }),
+  setUser: (user) => {
+    sessionGeneration += 1;
+    set({ user, hydrated: true });
+  },
   hydrate: async () => {
+    const gen = ++sessionGeneration;
     try {
       const res = await apiClient.me();
-      set({ user: res.user, hydrated: true });
+      if (gen === sessionGeneration) {
+        set({ user: res.user, hydrated: true });
+      }
     } catch {
-      set({ user: null, hydrated: true });
+      try {
+        const refreshed = await apiClient.refresh();
+        if (gen === sessionGeneration) {
+          set({ user: refreshed.user, hydrated: true });
+        }
+      } catch {
+        if (gen === sessionGeneration) {
+          set({ user: null, hydrated: true });
+        }
+      }
     }
   },
   logout: async () => {
+    sessionGeneration += 1;
     try {
       await apiClient.logout();
     } catch {

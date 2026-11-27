@@ -8,6 +8,9 @@
     "achievement": "Achievement",
     "events": "Events",
     "subjectMath": "Galaxy Math",
+    "subjectScience": "Science",
+    "subjectEnglish": "English",
+    "subjectActive": "Active",
     "subjectComingSoon": "Coming Soon",
     "streak": "Orbit Streak",
     "bonusGift": "Bonus Gift",
@@ -62,5 +65,9 @@
     "level": "Lvl {{level}}",
     "loading": "Preparing launchpad...",
     "comingInPhase": "Arriving in Phase {{phase}}"
+  },
+  "a11y": {
+    "stars": "{{stars}} of 3 stars",
+    "difficulty": "Difficulty {{level}} of 5"
   }
 }

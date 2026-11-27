@@ -9,7 +9,7 @@ SELECT id, parent_account_id, school_id, classroom_id, login_id, password_hash,
        first_name, masked_display_name, grade, preferred_locale, timezone,
        avatar_pack_id, avatar_item_id, astro_buddy_name, crew_code, daily_orbit_tier
 FROM student_profiles
-WHERE login_id = $1
+WHERE lower(login_id) = lower($1)
 LIMIT 1;
 
 -- name: GetUserAccountByEmail :one

@@ -11,11 +11,13 @@ import (
 )
 
 var (
-	ErrNotFound           = errors.New("account not found")
-	ErrInvalidCredentials = errors.New("invalid login credentials")
-	ErrForbidden          = errors.New("forbidden role")
-	ErrOTPInvalid         = errors.New("invalid or expired otp")
-	ErrOTPRateLimited     = errors.New("too many otp attempts")
+	ErrNotFound               = errors.New("account not found")
+	ErrInvalidCredentials     = errors.New("invalid login credentials")
+	ErrForbidden              = errors.New("forbidden role")
+	ErrOTPInvalid             = errors.New("invalid or expired otp")
+	ErrOTPRateLimited         = errors.New("too many otp attempts")
+	ErrLoginRateLimited       = errors.New("too many login attempts")
+	ErrOTPDeliveryUnavailable = errors.New("otp delivery provider not configured")
 )
 
 type Store interface {
@@ -41,10 +43,13 @@ func (s *PGStore) FindByIdentifier(ctx context.Context, identifier string) (*Cre
 		return nil, ErrNotFound
 	}
 
-	// If input contains '@', check parent/teacher/admin accounts first; otherwise student login_id first.
 	if strings.Contains(idClean, "@") {
-		if rec, err := s.findUserAccountByEmail(ctx, idClean); err == nil {
+		rec, err := s.findUserAccountByEmail(ctx, idClean)
+		if err == nil {
 			return rec, nil
+		}
+		if !errors.Is(err, ErrNotFound) {
+			return nil, err
 		}
 	}
 
@@ -52,7 +57,15 @@ func (s *PGStore) FindByIdentifier(ctx context.Context, identifier string) (*Cre
 	if err == nil {
 		return rec, nil
 	}
-	if !errors.Is(err, pgx.ErrNoRows) {
+	if !errors.Is(err, ErrNotFound) {
+		return nil, err
+	}
+
+	rec, err = s.findUserAccountByPhone(ctx, idClean)
+	if err == nil {
+		return rec, nil
+	}
+	if !errors.Is(err, ErrNotFound) {
 		return nil, err
 	}
 
@@ -121,6 +134,33 @@ func (s *PGStore) findUserAccountByEmail(ctx context.Context, email string) (*Cr
 	return &rec, nil
 }
 
+func (s *PGStore) findUserAccountByPhone(ctx context.Context, phone string) (*CredentialRecord, error) {
+	var rec CredentialRecord
+	var roleStr string
+	err := s.pool.QueryRow(ctx, `
+		SELECT id::text, role, display_name, password_hash, otp_enabled, preferred_locale, timezone
+		FROM user_accounts
+		WHERE phone = $1
+		LIMIT 1
+	`, phone).Scan(
+		&rec.Principal.ID,
+		&roleStr,
+		&rec.Principal.DisplayName,
+		&rec.PasswordHash,
+		&rec.Principal.OTPEnabled,
+		&rec.Principal.PreferredLocale,
+		&rec.Principal.Timezone,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	rec.Principal.Role = Role(roleStr)
+	return &rec, nil
+}
+
 func (s *PGStore) FindByIDAndRole(ctx context.Context, id string, role Role) (*Principal, error) {
 	if s.pool == nil {
 		return nil, ErrNotFound
@@ -167,6 +207,21 @@ func (s *PGStore) FindByIDAndRole(ctx context.Context, id string, role Role) (*P
 	return &p, nil
 }
 
+func formatFeedSourceLabel(sourceType string) string {
+	switch strings.ToUpper(strings.TrimSpace(sourceType)) {
+	case "DAILY_ORBIT":
+		return "Daily Orbit"
+	case "STAR_DUEL_WIN", "STAR_DUEL_DRAW", "STAR_DUEL_LOSS", "STAR_DUELS":
+		return "Star Duels"
+	case "SUNDAY_METEOR":
+		return "Sunday Meteor"
+	case "SUPER_SIGHT", "SUPER_WARP":
+		return "Super Nova"
+	default:
+		return "Daily Orbit"
+	}
+}
+
 func (s *PGStore) RecentStarPointsFeed(ctx context.Context, limit int) ([]LiveFeedItem, error) {
 	if limit <= 0 || limit > 25 {
 		limit = 10
@@ -176,7 +231,7 @@ func (s *PGStore) RecentStarPointsFeed(ctx context.Context, limit int) ([]LiveFe
 	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT ct.id::text, sp.masked_display_name, sp.grade, sp.avatar_item_id,
-		       ct.delta::int, ct.source_type, ct.created_at
+		       ct.delta, ct.source_type, ct.created_at
 		FROM currency_transactions ct
 		JOIN student_profiles sp ON sp.id = ct.student_id
 		WHERE ct.currency = 'SP' AND ct.delta > 0
@@ -184,17 +239,22 @@ func (s *PGStore) RecentStarPointsFeed(ctx context.Context, limit int) ([]LiveFe
 		LIMIT $1
 	`, limit)
 	if err != nil {
-		return defaultLiveFeed(), nil
+		return nil, err
 	}
 	defer rows.Close()
 
 	items := make([]LiveFeedItem, 0, limit)
 	for rows.Next() {
 		var item LiveFeedItem
-		if err := rows.Scan(&item.ID, &item.MaskedName, &item.Grade, &item.AvatarID, &item.Points, &item.SourceLabel, &item.SubmittedAt); err != nil {
+		var rawSource string
+		if err := rows.Scan(&item.ID, &item.MaskedName, &item.Grade, &item.AvatarID, &item.Points, &rawSource, &item.SubmittedAt); err != nil {
 			return nil, err
 		}
+		item.SourceLabel = formatFeedSourceLabel(rawSource)
 		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if len(items) == 0 {
 		return defaultLiveFeed(), nil

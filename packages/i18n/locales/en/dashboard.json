@@ -1,6 +1,7 @@
 {
   "welcome": "Welcome back, {{name}}!",
   "planetLabel": "Current Planet: {{planet}}",
+  "pillarsLabel": "PlanetLogi Pillars",
   "pillars": {
     "challenges": "Star Challenges",
     "training": "Galaxy Training",
@@ -15,7 +16,7 @@
     "starDuelsTitle": "Star Duels",
     "starDuelsDesc": "Challenge classmates, your Star Crew, or a random pilot with 3 energy cells per day.",
     "galaxyTrainingTitle": "6-Track Galaxy Training",
-    "galaxyTrainingDesc": "Master Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Challenging Maths, and HOTS.",
+    "galaxyTrainingDesc": "Master Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Challenging Maths, HOTS, and Real-World Explorer Series.",
     "spaceAcademyTitle": "Space Academy",
     "spaceAcademyDesc": "Learn step-by-step with videos, guided Do & Learn drills, and Star Scrolls.",
     "planetStoriesTitle": "Planet Stories",

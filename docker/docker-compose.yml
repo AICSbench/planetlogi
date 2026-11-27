@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: planetlogi_dev
       POSTGRES_DB: planetlogi
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
     container_name: planetlogi-redis
     command: redis-server --appendonly yes
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -38,8 +38,8 @@ services:
       MINIO_ROOT_PASSWORD: planetlogi_minio_dev
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
 
@@ -49,10 +49,13 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      sleep 2;
-      /usr/bin/mc alias set local http://minio:9000 planetlogi_minio planetlogi_minio_dev;
-      /usr/bin/mc mb --ignore-existing local/planetlogi-assets;
-      exit 0;
+      i=0;
+      until /usr/bin/mc alias set local http://minio:9000 planetlogi_minio planetlogi_minio_dev; do
+        i=$$((i + 1));
+        [ $$i -lt 15 ] || exit 1;
+        sleep 1;
+      done &&
+      /usr/bin/mc mb --ignore-existing local/planetlogi-assets
       "
 
 volumes:

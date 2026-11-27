@@ -132,14 +132,14 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
                     className="flex w-full min-h-11 items-center justify-between rounded-xl bg-[#6366F1]/25 px-3 text-sm font-semibold text-white"
                   >
                     <span>🪐 {t("nav.subjectMath")}</span>
-                    <span className="text-xs text-[#22D3EE]">Active</span>
+                    <span className="text-xs text-[#22D3EE]">{t("nav.subjectActive")}</span>
                   </button>
                   <div className="mt-1 flex min-h-11 items-center justify-between rounded-xl px-3 text-sm text-slate-400">
-                    <span>🔬 Science</span>
+                    <span>🔬 {t("nav.subjectScience")}</span>
                     <span className="text-xs">{t("nav.subjectComingSoon")}</span>
                   </div>
                   <div className="flex min-h-11 items-center justify-between rounded-xl px-3 text-sm text-slate-400">
-                    <span>📚 English</span>
+                    <span>📚 {t("nav.subjectEnglish")}</span>
                     <span className="text-xs">{t("nav.subjectComingSoon")}</span>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
               className="flex min-h-11 items-center gap-1 rounded-xl border border-orange-400/30 bg-orange-500/15 px-2.5 text-sm font-bold text-orange-300 hover:bg-orange-500/25 planetlogi-tabular"
             >
               <Flame className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-              <span>{user?.currentStreak ?? 3}</span>
+              <span>{user ? (user.currentStreak ?? 0) : 3}</span>
             </Link>
 
             {/* Desktop Utility Icons (>=1440px full expansion, compact on smaller) */}

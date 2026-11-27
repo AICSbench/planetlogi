@@ -23,10 +23,10 @@ type Principal struct {
 	Timezone        string `json:"timezone"`
 	OTPEnabled      bool   `json:"otpEnabled,omitempty"`
 	AvatarItemID    string `json:"avatarItemId,omitempty"`
-	TotalSP         int64  `json:"totalSp,omitempty"`
-	AstroCoins      int64  `json:"astroCoins,omitempty"`
+	TotalSP         int64  `json:"totalSp"`
+	AstroCoins      int64  `json:"astroCoins"`
 	PilotLevel      int    `json:"pilotLevel,omitempty"`
-	CurrentStreak   int    `json:"currentStreak,omitempty"`
+	CurrentStreak   int    `json:"currentStreak"`
 }
 
 // CredentialRecord is returned by Store lookups during password verification.
@@ -41,7 +41,7 @@ type LiveFeedItem struct {
 	MaskedName  string    `json:"maskedName"`
 	Grade       int       `json:"grade"`
 	AvatarID    string    `json:"avatarId"`
-	Points      int       `json:"points"`
+	Points      int64     `json:"points"`
 	SourceLabel string    `json:"sourceLabel"`
 	SubmittedAt time.Time `json:"submittedAt"`
 }

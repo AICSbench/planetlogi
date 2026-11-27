@@ -37,7 +37,10 @@ func LoadLocationSafe(tz string) *time.Location {
 	}
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
-		loc, _ = time.LoadLocation("UTC")
+		loc, err = time.LoadLocation("Asia/Jakarta")
+		if err != nil {
+			loc = time.FixedZone("WIB", 7*3600)
+		}
 	}
 	return loc
 }

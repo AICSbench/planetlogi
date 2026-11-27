@@ -40,7 +40,7 @@ func (m *memoryStore) RecentStarPointsFeed(_ context.Context, _ int) ([]LiveFeed
 	return defaultLiveFeed(), nil
 }
 
-func TestAuthLoginRBACAndOTP(t *testing.T) {
+func TestAuthLoginRBACRefreshRotationAndOTP(t *testing.T) {
 	hash, err := bcrypt.GenerateFromPassword([]byte("planet123"), bcrypt.MinCost)
 	if err != nil {
 		t.Fatal(err)
@@ -63,6 +63,9 @@ func TestAuthLoginRBACAndOTP(t *testing.T) {
 	}
 
 	cfg := config.Load()
+	cfg.AppEnv = "development"
+	cfg.OTPDevEcho = true
+
 	svc := NewService(cfg, store, nil, nil)
 	app := server.New(server.Dependencies{
 		Config:     cfg,
@@ -82,8 +85,48 @@ func TestAuthLoginRBACAndOTP(t *testing.T) {
 	if len(studentCookies) < 2 {
 		t.Fatalf("expected access + refresh cookies, got %d", len(studentCookies))
 	}
+	var refreshCookie *http.Cookie
+	for _, c := range studentCookies {
+		if !c.HttpOnly {
+			t.Fatalf("expected cookie %s to be HttpOnly", c.Name)
+		}
+		if c.Name == RefreshCookieName {
+			refreshCookie = c
+		}
+	}
+	if refreshCookie == nil {
+		t.Fatalf("missing refresh cookie")
+	}
 
-	// 2. Student MUST be blocked (403) from requesting Parent OTP
+	// 2. Refresh token rotates once and rejects replay of consumed token
+	refReq1 := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	refReq1.AddCookie(refreshCookie)
+	refRec1 := httptest.NewRecorder()
+	app.Router.ServeHTTP(refRec1, refReq1)
+	if refRec1.Code != http.StatusOK {
+		t.Fatalf("expected first refresh to return 200, got %d", refRec1.Code)
+	}
+	refReq2 := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	refReq2.AddCookie(refreshCookie)
+	refRec2 := httptest.NewRecorder()
+	app.Router.ServeHTTP(refRec2, refReq2)
+	if refRec2.Code != http.StatusUnauthorized {
+		t.Fatalf("expected replay of consumed refresh token to return 401, got %d", refRec2.Code)
+	}
+
+	// 3. Cross-Origin CSRF cookie POST is rejected with 403
+	csrfReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/otp/request", nil)
+	csrfReq.Header.Set("Origin", "https://evil.example.com")
+	for _, c := range studentCookies {
+		csrfReq.AddCookie(c)
+	}
+	csrfRec := httptest.NewRecorder()
+	app.Router.ServeHTTP(csrfRec, csrfReq)
+	if csrfRec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for untrusted Origin cookie POST, got %d", csrfRec.Code)
+	}
+
+	// 4. Student MUST be blocked (403) from requesting Parent OTP
 	otpReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/otp/request", nil)
 	for _, c := range studentCookies {
 		otpReq.AddCookie(c)
@@ -94,7 +137,7 @@ func TestAuthLoginRBACAndOTP(t *testing.T) {
 		t.Fatalf("expected 403 for student calling parent OTP, got %d", otpRec.Code)
 	}
 
-	// 3. Parent login + OTP request + wrong attempts lockout + fresh valid OTP verification
+	// 5. Parent login + OTP request + valid verification
 	pBody, _ := json.Marshal(map[string]string{"identifier": "parent@planetlogi.local", "password": "planet123"})
 	pReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(pBody))
 	pReq.Header.Set("Content-Type", "application/json")
@@ -123,7 +166,6 @@ func TestAuthLoginRBACAndOTP(t *testing.T) {
 		t.Fatalf("expected 6-digit devCode, got %q", otpPayload.DevCode)
 	}
 
-	// Verify valid code succeeds
 	vBody, _ := json.Marshal(map[string]string{"code": otpPayload.DevCode})
 	vReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/otp/verify", bytes.NewReader(vBody))
 	vReq.Header.Set("Content-Type", "application/json")
@@ -136,14 +178,17 @@ func TestAuthLoginRBACAndOTP(t *testing.T) {
 		t.Fatalf("expected 200 on valid OTP verify, got %d: %s", vRec.Code, vRec.Body.String())
 	}
 
-	// 4. Rate limit after 5 failed attempts
-	_, _ = svc.RequestParentOTP(context.Background(), store.records["parent@planetlogi.local"].Principal)
+	// 6. Rate limit after 5 failed attempts — AND re-requesting OTP does NOT reset lockout!
+	parentPrincipal := store.records["parent@planetlogi.local"].Principal
+	_, _ = svc.RequestParentOTP(context.Background(), parentPrincipal)
 	for i := 0; i < 5; i++ {
-		if err := svc.VerifyParentOTP(context.Background(), store.records["parent@planetlogi.local"].Principal, "000000"); err == nil {
+		if err := svc.VerifyParentOTP(context.Background(), parentPrincipal, "000000"); err == nil {
 			t.Fatalf("expected error on wrong otp")
 		}
 	}
-	if err := svc.VerifyParentOTP(context.Background(), store.records["parent@planetlogi.local"].Principal, "000000"); err != ErrOTPRateLimited {
-		t.Fatalf("expected ErrOTPRateLimited on 6th attempt, got %v", err)
+	// Re-issue a fresh OTP — attempt budget MUST remain exhausted
+	freshCode, _ := svc.RequestParentOTP(context.Background(), parentPrincipal)
+	if err := svc.VerifyParentOTP(context.Background(), parentPrincipal, freshCode); err != ErrOTPRateLimited {
+		t.Fatalf("expected ErrOTPRateLimited even after OTP reissue, got %v", err)
 	}
 }

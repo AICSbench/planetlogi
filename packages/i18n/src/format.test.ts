@@ -5,7 +5,9 @@ import { formatCurrency, formatDecimal, formatNumber, parseStudentDecimal } from
 describe("@planetlogi/i18n", () => {
   it("normalizes locale strings with en fallback", () => {
     expect(normalizeLocale("id-ID")).toBe("id");
+    expect(normalizeLocale("id_ID")).toBe("id");
     expect(normalizeLocale("en-GB")).toBe("en");
+    expect(normalizeLocale("idk")).toBe("en");
     expect(normalizeLocale("fr-FR")).toBe("en");
     expect(normalizeLocale(undefined)).toBe("en");
   });
@@ -26,6 +28,7 @@ describe("@planetlogi/i18n", () => {
     expect(parseStudentDecimal("3.5")).toBe(3.5);
     expect(parseStudentDecimal("3,5")).toBe(3.5);
     expect(parseStudentDecimal(" 42 ")).toBe(42);
+    expect(parseStudentDecimal("3 5")).toBeNull();
     expect(parseStudentDecimal("1,234.5")).toBeNull();
     expect(parseStudentDecimal("abc")).toBeNull();
   });

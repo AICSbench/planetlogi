@@ -31,7 +31,7 @@ func NewHandler(svc *Service, cfg config.Config) *Handler {
 
 type loginInput struct {
 	Body struct {
-		Identifier string `json:"identifier" minLength:"1" doc:"Student Login ID or Parent Email"`
+		Identifier string `json:"identifier" minLength:"1" doc:"Student Login ID, Parent Email, or Parent Phone"`
 		Password   string `json:"password" minLength:"1" doc:"Account password"`
 	}
 }
@@ -87,6 +87,30 @@ type liveFeedOutput struct {
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
+	// Register OpenAPI 3.1 Security Schemes
+	oapi := api.OpenAPI()
+	if oapi.Components == nil {
+		oapi.Components = &huma.Components{}
+	}
+	if oapi.Components.SecuritySchemes == nil {
+		oapi.Components.SecuritySchemes = map[string]*huma.SecurityScheme{}
+	}
+	oapi.Components.SecuritySchemes["bearerAuth"] = &huma.SecurityScheme{
+		Type:         "http",
+		Scheme:       "bearer",
+		BearerFormat: "JWT",
+	}
+	oapi.Components.SecuritySchemes["accessCookie"] = &huma.SecurityScheme{
+		Type: "apiKey",
+		In:   "cookie",
+		Name: AccessCookieName,
+	}
+	oapi.Components.SecuritySchemes["refreshCookie"] = &huma.SecurityScheme{
+		Type: "apiKey",
+		In:   "cookie",
+		Name: RefreshCookieName,
+	}
+
 	huma.Register(api, huma.Operation{
 		OperationID: "auth-login",
 		Method:      http.MethodPost,
@@ -96,7 +120,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 	}, func(ctx context.Context, in *loginInput) (*authOutput, error) {
 		principal, pair, err := h.svc.Login(ctx, in.Body.Identifier, in.Body.Password)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("invalid login credentials")
+			switch {
+			case errors.Is(err, ErrLoginRateLimited):
+				return nil, huma.Error429TooManyRequests("too many login attempts; please try again later")
+			case errors.Is(err, ErrInvalidCredentials):
+				return nil, huma.Error401Unauthorized("invalid login credentials")
+			default:
+				return nil, huma.Error503ServiceUnavailable("authentication service temporarily unavailable")
+			}
 		}
 		out := &authOutput{SetCookie: h.buildAuthCookies(pair)}
 		out.Body.User = *principal
@@ -107,15 +138,19 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		OperationID: "auth-refresh",
 		Method:      http.MethodPost,
 		Path:        "/api/v1/auth/refresh",
-		Summary:     "Rotate access and refresh cookies",
+		Summary:     "Rotate access and refresh cookies (one-time refresh token consumption)",
 		Tags:        []string{"Auth"},
+		Security:    []map[string][]string{{"refreshCookie": {}}},
 	}, func(ctx context.Context, in *refreshInput) (*authOutput, error) {
 		if in.CookieRefresh == "" {
 			return nil, huma.Error401Unauthorized("missing refresh cookie")
 		}
 		principal, pair, err := h.svc.Refresh(ctx, in.CookieRefresh)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("invalid refresh token")
+			if errors.Is(err, ErrInvalidCredentials) {
+				return nil, huma.Error401Unauthorized("invalid or already-consumed refresh token")
+			}
+			return nil, huma.Error503ServiceUnavailable("authentication service temporarily unavailable")
 		}
 		out := &authOutput{SetCookie: h.buildAuthCookies(pair)}
 		out.Body.User = *principal
@@ -126,9 +161,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		OperationID: "auth-logout",
 		Method:      http.MethodPost,
 		Path:        "/api/v1/auth/logout",
-		Summary:     "Clear session cookies",
+		Summary:     "Revoke refresh token and clear session cookies",
 		Tags:        []string{"Auth"},
-	}, func(_ context.Context, _ *struct{}) (*logoutOutput, error) {
+	}, func(ctx context.Context, in *refreshInput) (*logoutOutput, error) {
+		h.svc.RevokeRefreshToken(ctx, in.CookieRefresh)
 		out := &logoutOutput{SetCookie: h.clearAuthCookies()}
 		out.Body.OK = true
 		return out, nil
@@ -140,10 +176,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/auth/me",
 		Summary:     "Return current authenticated profile",
 		Tags:        []string{"Auth"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *meInput) (*authOutput, error) {
 		p, err := h.authenticateToken(ctx, in.CookieAccess, in.Authorization)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("unauthenticated")
+			if errors.Is(err, ErrInvalidCredentials) {
+				return nil, huma.Error401Unauthorized("unauthenticated")
+			}
+			return nil, huma.Error503ServiceUnavailable("authentication service temporarily unavailable")
 		}
 		out := &authOutput{}
 		out.Body.User = *p
@@ -156,21 +196,29 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/auth/otp/request",
 		Summary:     "Request a 6-digit Parent OTP security code",
 		Tags:        []string{"Auth"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *meInput) (*otpRequestOutput, error) {
 		p, err := h.authenticateToken(ctx, in.CookieAccess, in.Authorization)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("unauthenticated")
+			if errors.Is(err, ErrInvalidCredentials) {
+				return nil, huma.Error401Unauthorized("unauthenticated")
+			}
+			return nil, huma.Error503ServiceUnavailable("authentication service temporarily unavailable")
 		}
 		code, err := h.svc.RequestParentOTP(ctx, *p)
 		if err != nil {
-			if errors.Is(err, ErrForbidden) {
+			switch {
+			case errors.Is(err, ErrForbidden):
 				return nil, huma.Error403Forbidden("parent or staff role required")
+			case errors.Is(err, ErrOTPDeliveryUnavailable):
+				return nil, huma.Error503ServiceUnavailable("otp delivery service is not configured")
+			default:
+				return nil, huma.Error500InternalServerError("failed to generate otp")
 			}
-			return nil, huma.Error500InternalServerError("failed to generate otp")
 		}
 		out := &otpRequestOutput{}
 		out.Body.Sent = true
-		if h.cfg.OTPDevEcho && h.cfg.AppEnv != "production" {
+		if h.cfg.OTPDevEcho && !strings.EqualFold(h.cfg.AppEnv, "production") {
 			out.Body.DevCode = code
 		}
 		return out, nil
@@ -182,10 +230,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/auth/otp/verify",
 		Summary:     "Verify a 6-digit Parent OTP code (rate limited)",
 		Tags:        []string{"Auth"},
+		Security:    []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}},
 	}, func(ctx context.Context, in *otpVerifyInput) (*otpVerifyOutput, error) {
 		p, err := h.authenticateToken(ctx, in.CookieAccess, in.Authorization)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("unauthenticated")
+			if errors.Is(err, ErrInvalidCredentials) {
+				return nil, huma.Error401Unauthorized("unauthenticated")
+			}
+			return nil, huma.Error503ServiceUnavailable("authentication service temporarily unavailable")
 		}
 		if err := h.svc.VerifyParentOTP(ctx, *p, in.Body.Code); err != nil {
 			switch {
@@ -283,7 +335,6 @@ func (h *Handler) clearAuthCookies() []http.Cookie {
 	}
 }
 
-// PrincipalFromContext retrieves the authenticated principal attached by middleware.
 func PrincipalFromContext(ctx context.Context) (*Principal, bool) {
 	p, ok := ctx.Value(ctxKey{}).(*Principal)
 	return p, ok

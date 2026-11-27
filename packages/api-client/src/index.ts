@@ -83,8 +83,11 @@ export function createApiClient(baseUrl: string) {
     logout() {
       return request<{ ok: boolean }>("/api/v1/auth/logout", { method: "POST" });
     },
-    getLiveFeed() {
-      return request<{ items: LiveFeedItem[] }>("/api/v1/auth/live-feed", { method: "GET" });
+    async getLiveFeed() {
+      const res = await request<{ items?: LiveFeedItem[] | null }>("/api/v1/auth/live-feed", {
+        method: "GET",
+      });
+      return { items: res.items ?? [] };
     },
     requestParentOtp() {
       return request<{ sent: boolean; devCode?: string }>("/api/v1/auth/otp/request", {

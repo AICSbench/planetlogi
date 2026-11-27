@@ -1,6 +1,7 @@
 {
   "welcome": "Selamat datang kembali, {{name}}!",
   "planetLabel": "Planet Saat Ini: {{planet}}",
+  "pillarsLabel": "Pilar PlanetLogi",
   "pillars": {
     "challenges": "Tantangan Bintang",
     "training": "Latihan Galaksi",
@@ -15,7 +16,7 @@
     "starDuelsTitle": "Duel Bintang",
     "starDuelsDesc": "Tantang teman sekelas, Kru Bintang, atau pilot acak dengan 3 sel energi per hari.",
     "galaxyTrainingTitle": "Latihan Galaksi 6 Kurikulum",
-    "galaxyTrainingDesc": "Kuasai Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Matematika Tantangan, dan HOTS.",
+    "galaxyTrainingDesc": "Kuasai Kurikulum Merdeka, Singapore MOE, Cambridge 0096, Matematika Tantangan, HOTS, dan Seri Eksplorasi Dunia Nyata.",
     "spaceAcademyTitle": "Akademi Antariksa",
     "spaceAcademyDesc": "Belajar terstruktur lewat video konsep, latihan terbimbing, dan Gulungan Bintang.",
     "planetStoriesTitle": "Cerita Planet",

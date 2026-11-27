@@ -78,7 +78,15 @@ func (l *PGLedger) Apply(ctx context.Context, req MutationRequest) (MutationResu
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	// 1. Lock student wallet row atomically
+	// 1. Ensure default wallet exists, then lock student wallet row atomically
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO student_wallets (student_id)
+		VALUES ($1::uuid)
+		ON CONFLICT (student_id) DO NOTHING
+	`, req.StudentID); err != nil {
+		return MutationResult{}, fmt.Errorf("ensure wallet: %w", err)
+	}
+
 	var w Wallet
 	err = tx.QueryRow(ctx, `
 		SELECT student_id::text, total_sp, astro_coins, pilot_xp, pilot_level, total_star_scrolls

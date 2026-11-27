@@ -182,7 +182,7 @@
             "type": "string"
           },
           "identifier": {
-            "description": "Student Login ID or Parent Email",
+            "description": "Student Login ID, Parent Email, or Parent Phone",
             "minLength": 1,
             "type": "string"
           },
@@ -338,9 +338,29 @@
           "role",
           "displayName",
           "preferredLocale",
-          "timezone"
+          "timezone",
+          "totalSp",
+          "astroCoins",
+          "currentStreak"
         ],
         "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "accessCookie": {
+        "in": "cookie",
+        "name": "pl_access",
+        "type": "apiKey"
+      },
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "refreshCookie": {
+        "in": "cookie",
+        "name": "pl_refresh",
+        "type": "apiKey"
       }
     }
   },
@@ -433,6 +453,15 @@
     "/api/v1/auth/logout": {
       "post": {
         "operationId": "auth-logout",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_refresh",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -462,7 +491,7 @@
             "description": "Error"
           }
         },
-        "summary": "Clear session cookies",
+        "summary": "Revoke refresh token and clear session cookies",
         "tags": [
           "Auth"
         ]
@@ -516,6 +545,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Return current authenticated profile",
         "tags": [
           "Auth"
@@ -563,6 +600,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Request a 6-digit Parent OTP security code",
         "tags": [
           "Auth"
@@ -620,6 +665,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Verify a 6-digit Parent OTP code (rate limited)",
         "tags": [
           "Auth"
@@ -667,7 +720,12 @@
             "description": "Error"
           }
         },
-        "summary": "Rotate access and refresh cookies",
+        "security": [
+          {
+            "refreshCookie": []
+          }
+        ],
+        "summary": "Rotate access and refresh cookies (one-time refresh token consumption)",
         "tags": [
           "Auth"
         ]

@@ -19,7 +19,7 @@ export default defineConfig({
         background_color: "#0B1026",
         display: "standalone",
         orientation: "any",
-        start_url: "/en/dashboard",
+        start_url: "/",
         scope: "/",
         icons: [
           {
@@ -36,7 +36,9 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
-            urlPattern: /^\/api\/v1\/(training|academy|stories)\//,
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              /^\/api\/v1\/(training|academy|stories)\//.test(url.pathname),
             handler: "NetworkFirst",
             options: {
               cacheName: "planetlogi-api-cache",

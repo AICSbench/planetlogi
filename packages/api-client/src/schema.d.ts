@@ -47,7 +47,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Clear session cookies */
+        /** Revoke refresh token and clear session cookies */
         post: operations["auth-logout"];
         delete?: never;
         options?: never;
@@ -115,7 +115,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate access and refresh cookies */
+        /** Rotate access and refresh cookies (one-time refresh token consumption) */
         post: operations["auth-refresh"];
         delete?: never;
         options?: never;
@@ -211,7 +211,7 @@ export interface components {
              * @example https://example.com/schemas/LoginInputBody.json
              */
             readonly $schema?: string;
-            /** @description Student Login ID or Parent Email */
+            /** @description Student Login ID, Parent Email, or Parent Phone */
             identifier: string;
             /** @description Account password */
             password: string;
@@ -256,10 +256,10 @@ export interface components {
         };
         Principal: {
             /** Format: int64 */
-            astroCoins?: number;
+            astroCoins: number;
             avatarItemId?: string;
             /** Format: int64 */
-            currentStreak?: number;
+            currentStreak: number;
             displayName: string;
             /** Format: int64 */
             grade?: number;
@@ -271,7 +271,7 @@ export interface components {
             role: string;
             timezone: string;
             /** Format: int64 */
-            totalSp?: number;
+            totalSp: number;
         };
     };
     responses: never;
@@ -350,7 +350,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_refresh?: string;
+            };
         };
         requestBody?: never;
         responses: {

@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,10 +21,34 @@ import (
 )
 
 const (
-	maxOTPAttempts = 5
-	otpTTL         = 5 * time.Minute
-	otpWindow      = 15 * time.Minute
+	maxOTPAttempts   = 5
+	maxLoginAttempts = 10
+	otpTTL           = 5 * time.Minute
+	otpWindow        = 15 * time.Minute
+	loginWindow      = 15 * time.Minute
 )
+
+var (
+	otpVerifyScript = redis.NewScript(`
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+	redis.call("DEL", KEYS[1], KEYS[2])
+	return 1
+end
+return 0
+`)
+	incrWithWindowScript = redis.NewScript(`
+local c = redis.call("INCR", KEYS[1])
+if c == 1 then
+	redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+return c
+`)
+)
+
+// OTPDeliverer dispatches 6-digit Parent OTP challenges via email/SMS/WhatsApp in production.
+type OTPDeliverer interface {
+	SendOTP(ctx context.Context, principal Principal, code string) error
+}
 
 type TokenClaims struct {
 	Role      Role   `json:"role"`
@@ -36,21 +62,30 @@ type TokenPair struct {
 }
 
 type otpMemoryEntry struct {
-	code      string
-	expiresAt time.Time
-	attempts  int
-	lockedTil time.Time
+	code        string
+	expiresAt   time.Time
+	attempts    int
+	windowEnds  time.Time
+	lockedUntil time.Time
+}
+
+type loginAttemptEntry struct {
+	count      int
+	windowEnds time.Time
 }
 
 type Service struct {
-	cfg    config.Config
-	store  Store
-	rdb    *redis.Client
-	logger *slog.Logger
+	cfg       config.Config
+	store     Store
+	rdb       *redis.Client
+	logger    *slog.Logger
+	deliverer OTPDeliverer
 
-	mu       sync.Mutex
-	memOTPs  map[string]*otpMemoryEntry
-	nowClock func() time.Time
+	mu             sync.Mutex
+	memOTPs        map[string]*otpMemoryEntry
+	memRefreshJTIs map[string]time.Time
+	memLoginTries  map[string]*loginAttemptEntry
+	nowClock       func() time.Time
 }
 
 func NewService(cfg config.Config, store Store, rdb *redis.Client, logger *slog.Logger) *Service {
@@ -58,28 +93,94 @@ func NewService(cfg config.Config, store Store, rdb *redis.Client, logger *slog.
 		logger = slog.Default()
 	}
 	return &Service{
-		cfg:      cfg,
-		store:    store,
-		rdb:      rdb,
-		logger:   logger,
-		memOTPs:  make(map[string]*otpMemoryEntry),
-		nowClock: time.Now,
+		cfg:            cfg,
+		store:          store,
+		rdb:            rdb,
+		logger:         logger,
+		memOTPs:        make(map[string]*otpMemoryEntry),
+		memRefreshJTIs: make(map[string]time.Time),
+		memLoginTries:  make(map[string]*loginAttemptEntry),
+		nowClock:       time.Now,
 	}
 }
 
+func (s *Service) SetOTPDeliverer(d OTPDeliverer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.deliverer = d
+}
+
+func randomHexID(numBytes int) (string, error) {
+	buf := make([]byte, numBytes)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buf), nil
+}
+
+func (s *Service) checkAndRecordLoginAttempt(ctx context.Context, key string) error {
+	if s.rdb != nil {
+		rKey := "auth:login_attempts:" + key
+		count, err := incrWithWindowScript.Run(ctx, s.rdb, []string{rKey}, loginWindow.Milliseconds()).Int64()
+		if err != nil {
+			return err
+		}
+		if count > maxLoginAttempts {
+			return ErrLoginRateLimited
+		}
+		return nil
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := s.nowClock()
+	e, ok := s.memLoginTries[key]
+	if !ok || now.After(e.windowEnds) {
+		e = &loginAttemptEntry{count: 0, windowEnds: now.Add(loginWindow)}
+		s.memLoginTries[key] = e
+	}
+	e.count++
+	if e.count > maxLoginAttempts {
+		return ErrLoginRateLimited
+	}
+	return nil
+}
+
+func (s *Service) clearLoginAttempts(ctx context.Context, key string) {
+	if s.rdb != nil {
+		_ = s.rdb.Del(ctx, "auth:login_attempts:"+key).Err()
+		return
+	}
+	s.mu.Lock()
+	delete(s.memLoginTries, key)
+	s.mu.Unlock()
+}
+
 func (s *Service) Login(ctx context.Context, identifier, password string) (*Principal, TokenPair, error) {
-	if s.store == nil {
+	normID := strings.ToLower(strings.TrimSpace(identifier))
+	if normID == "" || s.store == nil {
 		return nil, TokenPair{}, ErrInvalidCredentials
 	}
+	if err := s.checkAndRecordLoginAttempt(ctx, normID); err != nil {
+		if errors.Is(err, ErrLoginRateLimited) {
+			return nil, TokenPair{}, ErrLoginRateLimited
+		}
+		return nil, TokenPair{}, err
+	}
+
 	rec, err := s.store.FindByIdentifier(ctx, identifier)
 	if err != nil {
-		return nil, TokenPair{}, ErrInvalidCredentials
+		if errors.Is(err, ErrNotFound) {
+			return nil, TokenPair{}, ErrInvalidCredentials
+		}
+		return nil, TokenPair{}, err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(rec.PasswordHash), []byte(password)); err != nil {
 		return nil, TokenPair{}, ErrInvalidCredentials
 	}
 
-	pair, err := s.issueTokens(rec.Principal)
+	s.clearLoginAttempts(ctx, normID)
+	pair, err := s.issueTokens(ctx, rec.Principal)
 	if err != nil {
 		return nil, TokenPair{}, err
 	}
@@ -88,21 +189,69 @@ func (s *Service) Login(ctx context.Context, identifier, password string) (*Prin
 
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (*Principal, TokenPair, error) {
 	claims, err := s.ParseToken(refreshToken, "refresh")
-	if err != nil {
+	if err != nil || claims.ID == "" {
 		return nil, TokenPair{}, ErrInvalidCredentials
 	}
 	if s.store == nil {
 		return nil, TokenPair{}, ErrInvalidCredentials
 	}
+	if err := s.consumeRefreshJTI(ctx, claims.ID); err != nil {
+		return nil, TokenPair{}, err
+	}
 	p, err := s.store.FindByIDAndRole(ctx, claims.Subject, claims.Role)
 	if err != nil {
-		return nil, TokenPair{}, ErrInvalidCredentials
+		if errors.Is(err, ErrNotFound) {
+			return nil, TokenPair{}, ErrInvalidCredentials
+		}
+		return nil, TokenPair{}, err
 	}
-	pair, err := s.issueTokens(*p)
+	pair, err := s.issueTokens(ctx, *p)
 	if err != nil {
 		return nil, TokenPair{}, err
 	}
 	return p, pair, nil
+}
+
+func (s *Service) RevokeRefreshToken(ctx context.Context, refreshToken string) {
+	if refreshToken == "" {
+		return
+	}
+	claims, err := s.ParseToken(refreshToken, "refresh")
+	if err != nil || claims.ID == "" {
+		return
+	}
+	if s.rdb != nil {
+		_ = s.rdb.Del(ctx, "auth:rt:"+claims.ID).Err()
+		return
+	}
+	s.mu.Lock()
+	delete(s.memRefreshJTIs, claims.ID)
+	s.mu.Unlock()
+}
+
+func (s *Service) consumeRefreshJTI(ctx context.Context, jti string) error {
+	if s.rdb != nil {
+		val, err := s.rdb.GetDel(ctx, "auth:rt:"+jti).Result()
+		if errors.Is(err, redis.Nil) || val == "" {
+			return ErrInvalidCredentials
+		}
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	exp, ok := s.memRefreshJTIs[jti]
+	if !ok {
+		return ErrInvalidCredentials
+	}
+	delete(s.memRefreshJTIs, jti)
+	if s.nowClock().After(exp) {
+		return ErrInvalidCredentials
+	}
+	return nil
 }
 
 func (s *Service) ResolvePrincipal(ctx context.Context, accessToken string) (*Principal, error) {
@@ -113,11 +262,24 @@ func (s *Service) ResolvePrincipal(ctx context.Context, accessToken string) (*Pr
 	if s.store == nil {
 		return &Principal{ID: claims.Subject, Role: claims.Role}, nil
 	}
-	return s.store.FindByIDAndRole(ctx, claims.Subject, claims.Role)
+	p, err := s.store.FindByIDAndRole(ctx, claims.Subject, claims.Role)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrInvalidCredentials
+		}
+		return nil, err
+	}
+	return p, nil
 }
 
-func (s *Service) issueTokens(p Principal) (TokenPair, error) {
+func (s *Service) issueTokens(ctx context.Context, p Principal) (TokenPair, error) {
 	now := s.nowClock().UTC()
+	jti, err := randomHexID(16)
+	if err != nil {
+		return TokenPair{}, fmt.Errorf("generate refresh jti: %w", err)
+	}
+	refreshExp := now.Add(s.cfg.JWTRefreshTTL)
+
 	accessClaims := TokenClaims{
 		Role:      p.Role,
 		TokenType: "access",
@@ -132,10 +294,11 @@ func (s *Service) issueTokens(p Principal) (TokenPair, error) {
 		Role:      p.Role,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        jti,
 			Subject:   p.ID,
 			Issuer:    "planetlogi-api",
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(s.cfg.JWTRefreshTTL)),
+			ExpiresAt: jwt.NewNumericDate(refreshExp),
 		},
 	}
 
@@ -146,6 +309,16 @@ func (s *Service) issueTokens(p Principal) (TokenPair, error) {
 	refreshTok, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(s.cfg.JWTRefreshSecret))
 	if err != nil {
 		return TokenPair{}, fmt.Errorf("sign refresh token: %w", err)
+	}
+
+	if s.rdb != nil {
+		if err := s.rdb.Set(ctx, "auth:rt:"+jti, p.ID, s.cfg.JWTRefreshTTL).Err(); err != nil {
+			return TokenPair{}, fmt.Errorf("persist refresh token: %w", err)
+		}
+	} else {
+		s.mu.Lock()
+		s.memRefreshJTIs[jti] = refreshExp
+		s.mu.Unlock()
 	}
 
 	return TokenPair{AccessToken: accessTok, RefreshToken: refreshTok}, nil
@@ -173,10 +346,21 @@ func (s *Service) ParseToken(raw, expectedType string) (*TokenClaims, error) {
 }
 
 // RequestParentOTP issues a 6-digit OTP restricted strictly to non-student adult roles.
+// Re-issuing a code NEVER resets the 15-minute failed-attempt counter.
 func (s *Service) RequestParentOTP(ctx context.Context, p Principal) (string, error) {
 	if !HasAllowedRole(p.Role, RoleParent, RoleTeacher, RoleSchoolAdmin, RoleAdmin) {
 		return "", ErrForbidden
 	}
+
+	s.mu.Lock()
+	deliverer := s.deliverer
+	s.mu.Unlock()
+
+	isDevEchoAllowed := s.cfg.OTPDevEcho && !strings.EqualFold(s.cfg.AppEnv, "production")
+	if deliverer == nil && !isDevEchoAllowed {
+		return "", ErrOTPDeliveryUnavailable
+	}
+
 	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
 	if err != nil {
 		return "", fmt.Errorf("generate otp: %w", err)
@@ -185,19 +369,27 @@ func (s *Service) RequestParentOTP(ctx context.Context, p Principal) (string, er
 
 	if s.rdb != nil {
 		key := "otp:code:" + p.ID
-		if err := s.rdb.Set(ctx, key, code, otpTTL).Err(); err == nil {
-			_ = s.rdb.Del(ctx, "otp:attempts:"+p.ID).Err()
-			return code, nil
+		if err := s.rdb.Set(ctx, key, code, otpTTL).Err(); err != nil {
+			return "", fmt.Errorf("store otp in redis: %w", err)
 		}
+	} else {
+		s.mu.Lock()
+		now := s.nowClock()
+		existing, ok := s.memOTPs[p.ID]
+		if !ok {
+			existing = &otpMemoryEntry{}
+			s.memOTPs[p.ID] = existing
+		}
+		existing.code = code
+		existing.expiresAt = now.Add(otpTTL)
+		s.mu.Unlock()
 	}
 
-	s.mu.Lock()
-	s.memOTPs[p.ID] = &otpMemoryEntry{
-		code:      code,
-		expiresAt: s.nowClock().Add(otpTTL),
-		attempts:  0,
+	if deliverer != nil {
+		if err := deliverer.SendOTP(ctx, p, code); err != nil {
+			return "", fmt.Errorf("deliver otp: %w", err)
+		}
 	}
-	s.mu.Unlock()
 	return code, nil
 }
 
@@ -209,21 +401,22 @@ func (s *Service) VerifyParentOTP(ctx context.Context, p Principal, submittedCod
 
 	if s.rdb != nil {
 		attemptKey := "otp:attempts:" + p.ID
-		attempts, err := s.rdb.Incr(ctx, attemptKey).Result()
-		if err == nil {
-			if attempts == 1 {
-				_ = s.rdb.Expire(ctx, attemptKey, otpWindow).Err()
-			}
-			if attempts > maxOTPAttempts {
-				return ErrOTPRateLimited
-			}
-			stored, err := s.rdb.Get(ctx, "otp:code:"+p.ID).Result()
-			if err != nil || subtle.ConstantTimeCompare([]byte(stored), []byte(submittedCode)) != 1 {
-				return ErrOTPInvalid
-			}
-			_ = s.rdb.Del(ctx, "otp:code:"+p.ID, attemptKey).Err()
-			return nil
+		codeKey := "otp:code:" + p.ID
+		attempts, err := incrWithWindowScript.Run(ctx, s.rdb, []string{attemptKey}, otpWindow.Milliseconds()).Int64()
+		if err != nil {
+			return fmt.Errorf("check otp attempts: %w", err)
 		}
+		if attempts > maxOTPAttempts {
+			return ErrOTPRateLimited
+		}
+		matched, err := otpVerifyScript.Run(ctx, s.rdb, []string{codeKey, attemptKey}, submittedCode).Int64()
+		if err != nil {
+			return fmt.Errorf("verify otp in redis: %w", err)
+		}
+		if matched != 1 {
+			return ErrOTPInvalid
+		}
+		return nil
 	}
 
 	s.mu.Lock()
@@ -233,15 +426,31 @@ func (s *Service) VerifyParentOTP(ctx context.Context, p Principal, submittedCod
 	if !ok {
 		return ErrOTPInvalid
 	}
-	if !entry.lockedTil.IsZero() && now.Before(entry.lockedTil) {
-		return ErrOTPRateLimited
+	// Reset expired lockout / attempt window before checking code expiry
+	if !entry.lockedUntil.IsZero() {
+		if now.Before(entry.lockedUntil) {
+			return ErrOTPRateLimited
+		}
+		entry.lockedUntil = time.Time{}
+		entry.attempts = 0
+		entry.windowEnds = time.Time{}
+	}
+	if !entry.windowEnds.IsZero() && now.After(entry.windowEnds) {
+		entry.attempts = 0
+		entry.windowEnds = time.Time{}
+	}
+	if entry.code == "" || now.After(entry.expiresAt) {
+		return ErrOTPInvalid
+	}
+	if entry.windowEnds.IsZero() {
+		entry.windowEnds = now.Add(otpWindow)
 	}
 	entry.attempts++
 	if entry.attempts > maxOTPAttempts {
-		entry.lockedTil = now.Add(otpWindow)
+		entry.lockedUntil = now.Add(otpWindow)
 		return ErrOTPRateLimited
 	}
-	if now.After(entry.expiresAt) || subtle.ConstantTimeCompare([]byte(entry.code), []byte(submittedCode)) != 1 {
+	if subtle.ConstantTimeCompare([]byte(entry.code), []byte(submittedCode)) != 1 {
 		return ErrOTPInvalid
 	}
 	delete(s.memOTPs, p.ID)

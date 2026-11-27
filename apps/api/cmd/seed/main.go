@@ -101,13 +101,15 @@ func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
 		}
 	}
 
-	// 3. Seed demo school, parent, and Grade 1 student (pilot1 / planet123)
+	// 3. Seed demo school (stable UUID so repeated runs reuse the same school), parent, and Grade 1 student (pilot1 / planet123)
+	const demoSchoolUUID = "00000000-0000-0000-0000-000000000001"
 	var schoolID string
 	err := pool.QueryRow(ctx, `
-		INSERT INTO schools (name, country_code, academic_rollover_month, academic_rollover_day)
-		VALUES ('SDN Bintang Galaksi 01', 'ID', 7, 1)
+		INSERT INTO schools (id, name, country_code, academic_rollover_month, academic_rollover_day)
+		VALUES ($1::uuid, 'SDN Bintang Galaksi 01', 'ID', 7, 1)
+		ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
 		RETURNING id
-	`).Scan(&schoolID)
+	`, demoSchoolUUID).Scan(&schoolID)
 	if err != nil {
 		return fmt.Errorf("seed school: %w", err)
 	}
@@ -148,6 +150,27 @@ func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
 		ON CONFLICT (student_id) DO NOTHING
 	`, studentID); err != nil {
 		return fmt.Errorf("seed wallet: %w", err)
+	}
+
+	// Record idempotent opening ledger entries matching the seeded wallet balances
+	openingEntries := []struct {
+		currency string
+		amount   int64
+		idemKey  string
+	}{
+		{"SP", 12, "seed:pilot1:opening:sp"},
+		{"AC", 25, "seed:pilot1:opening:ac"},
+		{"XP", 10, "seed:pilot1:opening:xp"},
+	}
+	for _, entry := range openingEntries {
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO currency_transactions
+				(student_id, subject_id, currency, delta, balance_after, source_type, source_id, idempotency_key)
+			VALUES ($1::uuid, $2::uuid, $3, $4, $4, 'SEED_OPENING_BALANCE', 'seed', $5)
+			ON CONFLICT (idempotency_key) DO NOTHING
+		`, studentID, mathSubjectID, entry.currency, entry.amount, entry.idemKey); err != nil {
+			return fmt.Errorf("seed ledger %s: %w", entry.currency, err)
+		}
 	}
 
 	if _, err := pool.Exec(ctx, `

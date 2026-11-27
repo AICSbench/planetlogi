@@ -35,7 +35,7 @@ export function formatCurrency(amount: number, locale: Locale): string {
  * decimal conventions while rejecting ambiguous or non-numeric strings.
  */
 export function parseStudentDecimal(raw: string): number | null {
-  const cleaned = raw.trim().replace(/\s+/g, "");
+  const cleaned = raw.trim();
   if (!cleaned) return null;
 
   const hasDot = cleaned.includes(".");

@@ -15,8 +15,11 @@ CREATE TABLE user_accounts (
     preferred_locale TEXT NOT NULL DEFAULT 'en' CHECK (preferred_locale IN ('en', 'id')),
     timezone         TEXT NOT NULL DEFAULT 'Asia/Jakarta',
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (email IS NOT NULL OR phone IS NOT NULL)
 );
+
+CREATE UNIQUE INDEX uq_user_accounts_email_lower ON user_accounts (LOWER(email)) WHERE email IS NOT NULL;
 
 CREATE TABLE schools (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -70,6 +73,7 @@ CREATE TABLE student_profiles (
     updated_at                       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE UNIQUE INDEX uq_student_profiles_login_id_lower ON student_profiles (LOWER(login_id));
 CREATE INDEX idx_student_profiles_parent ON student_profiles(parent_account_id);
 CREATE INDEX idx_student_profiles_school_grade ON student_profiles(school_id, grade);
 CREATE INDEX idx_student_profiles_classroom ON student_profiles(classroom_id);
