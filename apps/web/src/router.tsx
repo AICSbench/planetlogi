@@ -26,6 +26,15 @@ import { AssignmentsPage } from "./routes/$locale/assignments/AssignmentsPage";
 import { ProfileSettingsPage } from "./routes/$locale/profile-settings/ProfileSettingsPage";
 import { ParentPortalPage } from "./routes/$locale/parent/ParentPortalPage";
 import { HelpPage } from "./routes/$locale/help/HelpPage";
+import { SuperNovaPage } from "./routes/$locale/super-nova/SuperNovaPage";
+import { PlanetStoriesPage } from "./routes/$locale/stories/PlanetStoriesPage";
+import { AstroBuddyPage } from "./routes/$locale/astro-buddy/AstroBuddyPage";
+import { GalaxyShowcasePage } from "./routes/$locale/showcase/GalaxyShowcasePage";
+import { AchievementBadgesPage } from "./routes/$locale/achievement/AchievementBadgesPage";
+import { StarDuelsPage } from "./routes/$locale/star-duels/StarDuelsPage";
+import { StarCrewPage } from "./routes/$locale/star-crew/StarCrewPage";
+import { LeaderboardPage } from "./routes/$locale/leaderboard/LeaderboardPage";
+import { EventsPage } from "./routes/$locale/events/EventsPage";
 import { useAuthStore } from "./store/authStore";
 
 const FEATURE_META: Record<string, { titleKey: string; phase: number }> = {
@@ -225,6 +234,87 @@ const helpRoute = createRoute({
   component: HelpPage,
 });
 
+const superNovaRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/super-nova",
+  component: function SuperNovaRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/super-nova" });
+    return <SuperNovaPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const storiesRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/stories",
+  component: function StoriesRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/stories" });
+    return <PlanetStoriesPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const astroBuddyRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/astro-buddy",
+  component: function AstroBuddyRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/astro-buddy" });
+    return <AstroBuddyPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const showcaseRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/showcase",
+  component: function ShowcaseRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/showcase" });
+    return <GalaxyShowcasePage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const achievementRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/achievement",
+  component: function AchievementRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/achievement" });
+    return <AchievementBadgesPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const starDuelsRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/star-duels",
+  component: function StarDuelsRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/star-duels" });
+    return <StarDuelsPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const starCrewRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/star-crew",
+  component: function StarCrewRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/star-crew" });
+    return <StarCrewPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const leaderboardRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/leaderboard",
+  component: function LeaderboardRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/leaderboard" });
+    return <LeaderboardPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const eventsRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/events",
+  component: function EventsRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/events" });
+    return <EventsPage locale={normalizeLocale(locale)} />;
+  },
+});
+
 const featureSplatRoute = createRoute({
   getParentRoute: () => appShellRoute,
   path: "/$",
@@ -249,6 +339,15 @@ const routeTree = rootRoute.addChildren([
       profileSettingsRoute,
       parentPortalRoute,
       helpRoute,
+      superNovaRoute,
+      storiesRoute,
+      astroBuddyRoute,
+      showcaseRoute,
+      achievementRoute,
+      starDuelsRoute,
+      starCrewRoute,
+      leaderboardRoute,
+      eventsRoute,
       featureSplatRoute,
     ]),
   ]),

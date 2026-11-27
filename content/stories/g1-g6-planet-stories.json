@@ -1,0 +1,2189 @@
+{
+  "version": "1.0.0",
+  "planets": [
+    {
+      "grade": 1,
+      "code": "terra_pebble",
+      "accentColor": "#10B981",
+      "translations": {
+        "en": "Terra Pebble",
+        "id": "Planet Kerikil"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "terra_pebble-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Miko the Star Fox",
+            "id": "Bab Pembuka \u2014 Miko si Rubah Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #1 using Grade 1 math!",
+                "id": "Halaman 1/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #1 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #2 using Grade 1 math!",
+                "id": "Halaman 2/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #2 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #3 using Grade 1 math!",
+                "id": "Halaman 3/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #3 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #4 using Grade 1 math!",
+                "id": "Halaman 4/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #4 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #5 using Grade 1 math!",
+                "id": "Halaman 5/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #5 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #6 using Grade 1 math!",
+                "id": "Halaman 6/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #6 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #7 using Grade 1 math!",
+                "id": "Halaman 7/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #7 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #8 using Grade 1 math!",
+                "id": "Halaman 8/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #8 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #9 using Grade 1 math!",
+                "id": "Halaman 9/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #9 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #10 using Grade 1 math!",
+                "id": "Halaman 10/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #10 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #11 using Grade 1 math!",
+                "id": "Halaman 11/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #11 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #12 using Grade 1 math!",
+                "id": "Halaman 12/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #12 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #13 using Grade 1 math!",
+                "id": "Halaman 13/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #13 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #14 using Grade 1 math!",
+                "id": "Halaman 14/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #14 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #15 using Grade 1 math!",
+                "id": "Halaman 15/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #15 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #16 using Grade 1 math!",
+                "id": "Halaman 16/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #16 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #17 using Grade 1 math!",
+                "id": "Halaman 17/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #17 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #18 using Grade 1 math!",
+                "id": "Halaman 18/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #18 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #19 using Grade 1 math!",
+                "id": "Halaman 19/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #19 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #20 using Grade 1 math!",
+                "id": "Halaman 20/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #20 memakai matematika Kelas 1!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "terra_pebble-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Terra Pebble",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Kerikil"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #1 using Grade 1 math!",
+                "id": "Halaman 1/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #1 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #2 using Grade 1 math!",
+                "id": "Halaman 2/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #2 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #3 using Grade 1 math!",
+                "id": "Halaman 3/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #3 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #4 using Grade 1 math!",
+                "id": "Halaman 4/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #4 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #5 using Grade 1 math!",
+                "id": "Halaman 5/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #5 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #6 using Grade 1 math!",
+                "id": "Halaman 6/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #6 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #7 using Grade 1 math!",
+                "id": "Halaman 7/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #7 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #8 using Grade 1 math!",
+                "id": "Halaman 8/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #8 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #9 using Grade 1 math!",
+                "id": "Halaman 9/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #9 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #10 using Grade 1 math!",
+                "id": "Halaman 10/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #10 memakai matematika Kelas 1!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "terra_pebble-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #1 using Grade 1 math!",
+                "id": "Halaman 1/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #1 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #2 using Grade 1 math!",
+                "id": "Halaman 2/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #2 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #3 using Grade 1 math!",
+                "id": "Halaman 3/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #3 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #4 using Grade 1 math!",
+                "id": "Halaman 4/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #4 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #5 using Grade 1 math!",
+                "id": "Halaman 5/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #5 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #6 using Grade 1 math!",
+                "id": "Halaman 6/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #6 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "terra_pebble_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #7 using Grade 1 math!",
+                "id": "Halaman 7/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #7 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "terra_pebble_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #8 using Grade 1 math!",
+                "id": "Halaman 8/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #8 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "terra_pebble_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #9 using Grade 1 math!",
+                "id": "Halaman 9/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #9 memakai matematika Kelas 1!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "terra_pebble_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Miko the Star Fox explores Terra Pebble and discovers clue #10 using Grade 1 math!",
+                "id": "Halaman 10/20 \u2014 Miko si Rubah Bintang menjelajahi Planet Kerikil dan menemukan petunjuk #10 memakai matematika Kelas 1!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 2,
+      "code": "tropica",
+      "accentColor": "#14B8A6",
+      "translations": {
+        "en": "Planet Tropica",
+        "id": "Planet Tropika"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "tropica-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Kiki of the Canopy",
+            "id": "Bab Pembuka \u2014 Kiki dari Hutan Awan"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #1 using Grade 2 math!",
+                "id": "Halaman 1/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #1 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #2 using Grade 2 math!",
+                "id": "Halaman 2/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #2 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #3 using Grade 2 math!",
+                "id": "Halaman 3/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #3 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #4 using Grade 2 math!",
+                "id": "Halaman 4/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #4 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #5 using Grade 2 math!",
+                "id": "Halaman 5/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #5 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #6 using Grade 2 math!",
+                "id": "Halaman 6/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #6 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #7 using Grade 2 math!",
+                "id": "Halaman 7/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #7 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #8 using Grade 2 math!",
+                "id": "Halaman 8/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #8 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #9 using Grade 2 math!",
+                "id": "Halaman 9/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #9 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #10 using Grade 2 math!",
+                "id": "Halaman 10/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #10 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #11 using Grade 2 math!",
+                "id": "Halaman 11/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #11 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #12 using Grade 2 math!",
+                "id": "Halaman 12/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #12 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #13 using Grade 2 math!",
+                "id": "Halaman 13/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #13 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #14 using Grade 2 math!",
+                "id": "Halaman 14/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #14 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #15 using Grade 2 math!",
+                "id": "Halaman 15/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #15 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #16 using Grade 2 math!",
+                "id": "Halaman 16/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #16 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #17 using Grade 2 math!",
+                "id": "Halaman 17/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #17 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #18 using Grade 2 math!",
+                "id": "Halaman 18/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #18 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #19 using Grade 2 math!",
+                "id": "Halaman 19/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #19 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #20 using Grade 2 math!",
+                "id": "Halaman 20/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #20 memakai matematika Kelas 2!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "tropica-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Planet Tropica",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Tropika"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #1 using Grade 2 math!",
+                "id": "Halaman 1/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #1 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #2 using Grade 2 math!",
+                "id": "Halaman 2/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #2 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #3 using Grade 2 math!",
+                "id": "Halaman 3/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #3 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #4 using Grade 2 math!",
+                "id": "Halaman 4/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #4 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #5 using Grade 2 math!",
+                "id": "Halaman 5/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #5 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #6 using Grade 2 math!",
+                "id": "Halaman 6/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #6 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #7 using Grade 2 math!",
+                "id": "Halaman 7/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #7 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #8 using Grade 2 math!",
+                "id": "Halaman 8/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #8 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #9 using Grade 2 math!",
+                "id": "Halaman 9/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #9 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #10 using Grade 2 math!",
+                "id": "Halaman 10/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #10 memakai matematika Kelas 2!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "tropica-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #1 using Grade 2 math!",
+                "id": "Halaman 1/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #1 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #2 using Grade 2 math!",
+                "id": "Halaman 2/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #2 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #3 using Grade 2 math!",
+                "id": "Halaman 3/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #3 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #4 using Grade 2 math!",
+                "id": "Halaman 4/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #4 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #5 using Grade 2 math!",
+                "id": "Halaman 5/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #5 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #6 using Grade 2 math!",
+                "id": "Halaman 6/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #6 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "tropica_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #7 using Grade 2 math!",
+                "id": "Halaman 7/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #7 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "tropica_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #8 using Grade 2 math!",
+                "id": "Halaman 8/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #8 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "tropica_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #9 using Grade 2 math!",
+                "id": "Halaman 9/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #9 memakai matematika Kelas 2!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "tropica_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Kiki of the Canopy explores Planet Tropica and discovers clue #10 using Grade 2 math!",
+                "id": "Halaman 10/20 \u2014 Kiki dari Hutan Awan menjelajahi Planet Tropika dan menemukan petunjuk #10 memakai matematika Kelas 2!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 3,
+      "code": "aquaris",
+      "accentColor": "#0EA5E9",
+      "translations": {
+        "en": "Planet Aquaris",
+        "id": "Planet Akuaris"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "aquaris-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Nori the Reef Diver",
+            "id": "Bab Pembuka \u2014 Nori Penyelam Karang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #1 using Grade 3 math!",
+                "id": "Halaman 1/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #1 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #2 using Grade 3 math!",
+                "id": "Halaman 2/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #2 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #3 using Grade 3 math!",
+                "id": "Halaman 3/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #3 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #4 using Grade 3 math!",
+                "id": "Halaman 4/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #4 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #5 using Grade 3 math!",
+                "id": "Halaman 5/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #5 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #6 using Grade 3 math!",
+                "id": "Halaman 6/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #6 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #7 using Grade 3 math!",
+                "id": "Halaman 7/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #7 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #8 using Grade 3 math!",
+                "id": "Halaman 8/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #8 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #9 using Grade 3 math!",
+                "id": "Halaman 9/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #9 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #10 using Grade 3 math!",
+                "id": "Halaman 10/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #10 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #11 using Grade 3 math!",
+                "id": "Halaman 11/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #11 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #12 using Grade 3 math!",
+                "id": "Halaman 12/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #12 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #13 using Grade 3 math!",
+                "id": "Halaman 13/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #13 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #14 using Grade 3 math!",
+                "id": "Halaman 14/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #14 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #15 using Grade 3 math!",
+                "id": "Halaman 15/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #15 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #16 using Grade 3 math!",
+                "id": "Halaman 16/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #16 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #17 using Grade 3 math!",
+                "id": "Halaman 17/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #17 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #18 using Grade 3 math!",
+                "id": "Halaman 18/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #18 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #19 using Grade 3 math!",
+                "id": "Halaman 19/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #19 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #20 using Grade 3 math!",
+                "id": "Halaman 20/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #20 memakai matematika Kelas 3!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "aquaris-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Planet Aquaris",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Akuaris"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #1 using Grade 3 math!",
+                "id": "Halaman 1/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #1 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #2 using Grade 3 math!",
+                "id": "Halaman 2/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #2 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #3 using Grade 3 math!",
+                "id": "Halaman 3/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #3 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #4 using Grade 3 math!",
+                "id": "Halaman 4/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #4 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #5 using Grade 3 math!",
+                "id": "Halaman 5/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #5 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #6 using Grade 3 math!",
+                "id": "Halaman 6/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #6 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #7 using Grade 3 math!",
+                "id": "Halaman 7/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #7 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #8 using Grade 3 math!",
+                "id": "Halaman 8/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #8 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #9 using Grade 3 math!",
+                "id": "Halaman 9/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #9 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #10 using Grade 3 math!",
+                "id": "Halaman 10/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #10 memakai matematika Kelas 3!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "aquaris-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #1 using Grade 3 math!",
+                "id": "Halaman 1/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #1 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #2 using Grade 3 math!",
+                "id": "Halaman 2/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #2 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #3 using Grade 3 math!",
+                "id": "Halaman 3/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #3 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #4 using Grade 3 math!",
+                "id": "Halaman 4/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #4 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #5 using Grade 3 math!",
+                "id": "Halaman 5/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #5 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #6 using Grade 3 math!",
+                "id": "Halaman 6/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #6 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "aquaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #7 using Grade 3 math!",
+                "id": "Halaman 7/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #7 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "aquaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #8 using Grade 3 math!",
+                "id": "Halaman 8/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #8 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "aquaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #9 using Grade 3 math!",
+                "id": "Halaman 9/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #9 memakai matematika Kelas 3!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "aquaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Nori the Reef Diver explores Planet Aquaris and discovers clue #10 using Grade 3 math!",
+                "id": "Halaman 10/20 \u2014 Nori Penyelam Karang menjelajahi Planet Akuaris dan menemukan petunjuk #10 memakai matematika Kelas 3!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 4,
+      "code": "crystalia",
+      "accentColor": "#A855F7",
+      "translations": {
+        "en": "Planet Crystalia",
+        "id": "Planet Kristalia"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "crystalia-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Zara and the Prism Bridge",
+            "id": "Bab Pembuka \u2014 Zara dan Jembatan Prisma"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #1 using Grade 4 math!",
+                "id": "Halaman 1/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #1 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #2 using Grade 4 math!",
+                "id": "Halaman 2/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #2 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #3 using Grade 4 math!",
+                "id": "Halaman 3/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #3 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #4 using Grade 4 math!",
+                "id": "Halaman 4/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #4 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #5 using Grade 4 math!",
+                "id": "Halaman 5/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #5 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #6 using Grade 4 math!",
+                "id": "Halaman 6/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #6 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #7 using Grade 4 math!",
+                "id": "Halaman 7/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #7 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #8 using Grade 4 math!",
+                "id": "Halaman 8/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #8 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #9 using Grade 4 math!",
+                "id": "Halaman 9/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #9 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #10 using Grade 4 math!",
+                "id": "Halaman 10/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #10 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #11 using Grade 4 math!",
+                "id": "Halaman 11/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #11 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #12 using Grade 4 math!",
+                "id": "Halaman 12/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #12 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #13 using Grade 4 math!",
+                "id": "Halaman 13/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #13 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #14 using Grade 4 math!",
+                "id": "Halaman 14/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #14 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #15 using Grade 4 math!",
+                "id": "Halaman 15/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #15 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #16 using Grade 4 math!",
+                "id": "Halaman 16/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #16 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #17 using Grade 4 math!",
+                "id": "Halaman 17/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #17 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #18 using Grade 4 math!",
+                "id": "Halaman 18/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #18 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #19 using Grade 4 math!",
+                "id": "Halaman 19/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #19 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #20 using Grade 4 math!",
+                "id": "Halaman 20/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #20 memakai matematika Kelas 4!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "crystalia-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Planet Crystalia",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Kristalia"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #1 using Grade 4 math!",
+                "id": "Halaman 1/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #1 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #2 using Grade 4 math!",
+                "id": "Halaman 2/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #2 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #3 using Grade 4 math!",
+                "id": "Halaman 3/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #3 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #4 using Grade 4 math!",
+                "id": "Halaman 4/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #4 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #5 using Grade 4 math!",
+                "id": "Halaman 5/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #5 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #6 using Grade 4 math!",
+                "id": "Halaman 6/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #6 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #7 using Grade 4 math!",
+                "id": "Halaman 7/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #7 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #8 using Grade 4 math!",
+                "id": "Halaman 8/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #8 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #9 using Grade 4 math!",
+                "id": "Halaman 9/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #9 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #10 using Grade 4 math!",
+                "id": "Halaman 10/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #10 memakai matematika Kelas 4!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "crystalia-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #1 using Grade 4 math!",
+                "id": "Halaman 1/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #1 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #2 using Grade 4 math!",
+                "id": "Halaman 2/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #2 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #3 using Grade 4 math!",
+                "id": "Halaman 3/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #3 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #4 using Grade 4 math!",
+                "id": "Halaman 4/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #4 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #5 using Grade 4 math!",
+                "id": "Halaman 5/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #5 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #6 using Grade 4 math!",
+                "id": "Halaman 6/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #6 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "crystalia_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #7 using Grade 4 math!",
+                "id": "Halaman 7/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #7 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "crystalia_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #8 using Grade 4 math!",
+                "id": "Halaman 8/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #8 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "crystalia_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #9 using Grade 4 math!",
+                "id": "Halaman 9/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #9 memakai matematika Kelas 4!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "crystalia_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Zara and the Prism Bridge explores Planet Crystalia and discovers clue #10 using Grade 4 math!",
+                "id": "Halaman 10/20 \u2014 Zara dan Jembatan Prisma menjelajahi Planet Kristalia dan menemukan petunjuk #10 memakai matematika Kelas 4!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 5,
+      "code": "lumina",
+      "accentColor": "#22D3EE",
+      "translations": {
+        "en": "Planet Lumina",
+        "id": "Planet Lumina"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "lumina-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Taro of Neon Rail",
+            "id": "Bab Pembuka \u2014 Taro dari Rel Neon"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #1 using Grade 5 math!",
+                "id": "Halaman 1/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #1 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #2 using Grade 5 math!",
+                "id": "Halaman 2/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #2 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #3 using Grade 5 math!",
+                "id": "Halaman 3/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #3 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #4 using Grade 5 math!",
+                "id": "Halaman 4/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #4 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #5 using Grade 5 math!",
+                "id": "Halaman 5/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #5 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #6 using Grade 5 math!",
+                "id": "Halaman 6/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #6 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #7 using Grade 5 math!",
+                "id": "Halaman 7/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #7 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #8 using Grade 5 math!",
+                "id": "Halaman 8/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #8 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #9 using Grade 5 math!",
+                "id": "Halaman 9/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #9 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #10 using Grade 5 math!",
+                "id": "Halaman 10/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #10 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #11 using Grade 5 math!",
+                "id": "Halaman 11/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #11 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #12 using Grade 5 math!",
+                "id": "Halaman 12/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #12 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #13 using Grade 5 math!",
+                "id": "Halaman 13/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #13 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #14 using Grade 5 math!",
+                "id": "Halaman 14/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #14 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #15 using Grade 5 math!",
+                "id": "Halaman 15/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #15 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #16 using Grade 5 math!",
+                "id": "Halaman 16/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #16 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #17 using Grade 5 math!",
+                "id": "Halaman 17/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #17 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #18 using Grade 5 math!",
+                "id": "Halaman 18/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #18 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #19 using Grade 5 math!",
+                "id": "Halaman 19/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #19 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #20 using Grade 5 math!",
+                "id": "Halaman 20/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #20 memakai matematika Kelas 5!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "lumina-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Planet Lumina",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Lumina"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #1 using Grade 5 math!",
+                "id": "Halaman 1/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #1 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #2 using Grade 5 math!",
+                "id": "Halaman 2/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #2 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #3 using Grade 5 math!",
+                "id": "Halaman 3/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #3 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #4 using Grade 5 math!",
+                "id": "Halaman 4/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #4 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #5 using Grade 5 math!",
+                "id": "Halaman 5/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #5 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #6 using Grade 5 math!",
+                "id": "Halaman 6/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #6 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #7 using Grade 5 math!",
+                "id": "Halaman 7/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #7 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #8 using Grade 5 math!",
+                "id": "Halaman 8/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #8 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #9 using Grade 5 math!",
+                "id": "Halaman 9/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #9 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #10 using Grade 5 math!",
+                "id": "Halaman 10/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #10 memakai matematika Kelas 5!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "lumina-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #1 using Grade 5 math!",
+                "id": "Halaman 1/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #1 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #2 using Grade 5 math!",
+                "id": "Halaman 2/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #2 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #3 using Grade 5 math!",
+                "id": "Halaman 3/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #3 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #4 using Grade 5 math!",
+                "id": "Halaman 4/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #4 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #5 using Grade 5 math!",
+                "id": "Halaman 5/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #5 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #6 using Grade 5 math!",
+                "id": "Halaman 6/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #6 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "lumina_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #7 using Grade 5 math!",
+                "id": "Halaman 7/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #7 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "lumina_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #8 using Grade 5 math!",
+                "id": "Halaman 8/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #8 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "lumina_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #9 using Grade 5 math!",
+                "id": "Halaman 9/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #9 memakai matematika Kelas 5!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "lumina_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Taro of Neon Rail explores Planet Lumina and discovers clue #10 using Grade 5 math!",
+                "id": "Halaman 10/20 \u2014 Taro dari Rel Neon menjelajahi Planet Lumina dan menemukan petunjuk #10 memakai matematika Kelas 5!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grade": 6,
+      "code": "solaris",
+      "accentColor": "#FBBF24",
+      "translations": {
+        "en": "Planet Solaris",
+        "id": "Planet Solaris"
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "code": "solaris-ch0",
+          "unlockCostAc": 0,
+          "translations": {
+            "en": "Opening Chapter \u2014 Aria at the Citadel of Light",
+            "id": "Bab Pembuka \u2014 Aria di Benteng Cahaya"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #1 using Grade 6 math!",
+                "id": "Halaman 1/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #1 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #2 using Grade 6 math!",
+                "id": "Halaman 2/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #2 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #3 using Grade 6 math!",
+                "id": "Halaman 3/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #3 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #4 using Grade 6 math!",
+                "id": "Halaman 4/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #4 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #5 using Grade 6 math!",
+                "id": "Halaman 5/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #5 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #6 using Grade 6 math!",
+                "id": "Halaman 6/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #6 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #7 using Grade 6 math!",
+                "id": "Halaman 7/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #7 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #8 using Grade 6 math!",
+                "id": "Halaman 8/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #8 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #9 using Grade 6 math!",
+                "id": "Halaman 9/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #9 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #10 using Grade 6 math!",
+                "id": "Halaman 10/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #10 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 11,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 11/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #11 using Grade 6 math!",
+                "id": "Halaman 11/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #11 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 12,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 12/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #12 using Grade 6 math!",
+                "id": "Halaman 12/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #12 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 13,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 13/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #13 using Grade 6 math!",
+                "id": "Halaman 13/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #13 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 14,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 14/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #14 using Grade 6 math!",
+                "id": "Halaman 14/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #14 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 15,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 15/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #15 using Grade 6 math!",
+                "id": "Halaman 15/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #15 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 16,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 16/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #16 using Grade 6 math!",
+                "id": "Halaman 16/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #16 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 17,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 17/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #17 using Grade 6 math!",
+                "id": "Halaman 17/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #17 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 18,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 18/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #18 using Grade 6 math!",
+                "id": "Halaman 18/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #18 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 19,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 19/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #19 using Grade 6 math!",
+                "id": "Halaman 19/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #19 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 20,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 20/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #20 using Grade 6 math!",
+                "id": "Halaman 20/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #20 memakai matematika Kelas 6!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "code": "solaris-ch1",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 1 \u2014 The Hidden Orbit of Planet Solaris",
+            "id": "Bab 1 \u2014 Orbit Rahasia Planet Solaris"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #1 using Grade 6 math!",
+                "id": "Halaman 1/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #1 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #2 using Grade 6 math!",
+                "id": "Halaman 2/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #2 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #3 using Grade 6 math!",
+                "id": "Halaman 3/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #3 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #4 using Grade 6 math!",
+                "id": "Halaman 4/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #4 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #5 using Grade 6 math!",
+                "id": "Halaman 5/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #5 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #6 using Grade 6 math!",
+                "id": "Halaman 6/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #6 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #7 using Grade 6 math!",
+                "id": "Halaman 7/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #7 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #8 using Grade 6 math!",
+                "id": "Halaman 8/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #8 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #9 using Grade 6 math!",
+                "id": "Halaman 9/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #9 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #10 using Grade 6 math!",
+                "id": "Halaman 10/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #10 memakai matematika Kelas 6!"
+              }
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "code": "solaris-ch2",
+          "unlockCostAc": 20,
+          "translations": {
+            "en": "Chapter 2 \u2014 Mystery of the Star Core",
+            "id": "Bab 2 \u2014 Misteri Inti Bintang"
+          },
+          "pages": [
+            {
+              "page": 1,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 1/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #1 using Grade 6 math!",
+                "id": "Halaman 1/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #1 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 2,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 2/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #2 using Grade 6 math!",
+                "id": "Halaman 2/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #2 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 3,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 3/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #3 using Grade 6 math!",
+                "id": "Halaman 3/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #3 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 4,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 4/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #4 using Grade 6 math!",
+                "id": "Halaman 4/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #4 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 5,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 5/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #5 using Grade 6 math!",
+                "id": "Halaman 5/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #5 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 6,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 6/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #6 using Grade 6 math!",
+                "id": "Halaman 6/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #6 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 7,
+              "sceneTheme": "solaris_scene_3",
+              "text": {
+                "en": "Page 7/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #7 using Grade 6 math!",
+                "id": "Halaman 7/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #7 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 8,
+              "sceneTheme": "solaris_scene_4",
+              "text": {
+                "en": "Page 8/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #8 using Grade 6 math!",
+                "id": "Halaman 8/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #8 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 9,
+              "sceneTheme": "solaris_scene_1",
+              "text": {
+                "en": "Page 9/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #9 using Grade 6 math!",
+                "id": "Halaman 9/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #9 memakai matematika Kelas 6!"
+              }
+            },
+            {
+              "page": 10,
+              "sceneTheme": "solaris_scene_2",
+              "text": {
+                "en": "Page 10/20 \u2014 Aria at the Citadel of Light explores Planet Solaris and discovers clue #10 using Grade 6 math!",
+                "id": "Halaman 10/20 \u2014 Aria di Benteng Cahaya menjelajahi Planet Solaris dan menemukan petunjuk #10 memakai matematika Kelas 6!"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

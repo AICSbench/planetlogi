@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   Bell,
@@ -13,8 +14,9 @@ import {
   WifiOff,
 } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
+import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { setAppLocale } from "../../i18n/init";
-import { useAuthStore } from "../../store/authStore";
+import { apiClient, useAuthStore } from "../../store/authStore";
 
 interface TopNavShellProps {
   locale: Locale;
@@ -34,7 +36,8 @@ const LAUNCHER_APPS = [
 ] as const;
 
 export function TopNavShell({ locale, children }: TopNavShellProps) {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation(["common", "social"]);
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, logout } = useAuthStore();
@@ -42,9 +45,37 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
   const [openMenu, setOpenMenu] = useState<
     "subject" | "notif" | "launcher" | "account" | "overflow" | null
   >(null);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [bonusToast, setBonusToast] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState<boolean>(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
+
+  const notifQuery = useQuery({
+    queryKey: ["shell-notifications", locale],
+    queryFn: () => apiClient.getNotifications(locale),
+    enabled: Boolean(user),
+  });
+  const markReadMut = useMutation({
+    mutationFn: () => apiClient.markNotificationsRead(),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["shell-notifications"] }),
+  });
+
+  const bonusQuery = useQuery({
+    queryKey: ["shell-bonus-gift"],
+    queryFn: () => apiClient.getBonusGift(),
+    enabled: Boolean(user),
+  });
+  const claimBonusMut = useMutation({
+    mutationFn: () => apiClient.claimBonusGift(),
+    onSuccess: (status) => {
+      qc.setQueryData(["shell-bonus-gift"], status);
+      setBonusToast(t("social:shell.bonusGiftSuccess", { ac: status.rewardAc }));
+    },
+  });
+
+  const notifications = notifQuery.data?.items ?? [];
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const onOnline = () => setIsOffline(false);
@@ -187,14 +218,22 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
               <span>{user ? (user.currentStreak ?? 0) : 3}</span>
             </Link>
 
-            {/* Desktop Utility Icons (>=1440px full expansion, compact on smaller) */}
+            {/* Bonus Gift Button */}
             <button
               type="button"
               title={t("nav.bonusGift")}
               aria-label={t("nav.bonusGift")}
-              className="hidden 2xl:flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 cursor-pointer"
+              onClick={() => {
+                setOpenMenu(null);
+                setBonusToast(null);
+                setShowBonusModal(true);
+              }}
+              className="relative hidden sm:flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 cursor-pointer"
             >
               <Gift className="h-5 w-5" aria-hidden="true" />
+              {bonusQuery.data && !bonusQuery.data.claimed ? (
+                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-amber-400" />
+              ) : null}
             </button>
 
             {/* Notifications */}
@@ -204,14 +243,46 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
                 aria-label={t("nav.notifications")}
                 aria-expanded={openMenu === "notif"}
                 onClick={() => setOpenMenu(openMenu === "notif" ? null : "notif")}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-white/10 text-slate-200 cursor-pointer"
+                className="relative flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-white/10 text-slate-200 cursor-pointer"
               >
                 <Bell className="h-5 w-5" aria-hidden="true" />
+                {unreadCount > 0 ? (
+                  <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-extrabold text-white">
+                    {unreadCount}
+                  </span>
+                ) : null}
               </button>
               {openMenu === "notif" ? (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-indigo-400/25 bg-[#131B3A] p-4 shadow-2xl">
-                  <p className="text-sm font-bold text-white">{t("nav.notifications")}</p>
-                  <p className="mt-2 text-sm text-slate-400">{t("nav.noNotifications")}</p>
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-indigo-400/25 bg-[#131B3A] p-4 shadow-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-white">{t("nav.notifications")}</p>
+                    {unreadCount > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => markReadMut.mutate()}
+                        className="text-xs font-semibold text-cyan-300 hover:underline cursor-pointer"
+                      >
+                        {t("social:shell.markAllRead")}
+                      </button>
+                    ) : null}
+                  </div>
+                  {notifications.length > 0 ? (
+                    <div className="max-h-72 space-y-2 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`rounded-xl p-2.5 text-xs ${
+                            n.read ? "bg-white/5 text-slate-300" : "bg-indigo-500/20 text-white"
+                          }`}
+                        >
+                          <p className="font-bold">{n.title}</p>
+                          <p className="mt-0.5 text-slate-300">{n.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400">{t("nav.noNotifications")}</p>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -279,7 +350,7 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
               {openMenu === "account" ? (
                 <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-indigo-400/25 bg-[#131B3A] p-2 shadow-2xl">
                   {[
-                    { label: t("nav.editAvatar"), slug: "profile-settings" },
+                    { label: t("nav.editAvatar"), slug: "astro-buddy" },
                     { label: t("nav.editProfile"), slug: "profile-settings" },
                     { label: t("nav.settings"), slug: "profile-settings" },
                     { label: t("nav.mySubscription"), slug: "profile-settings" },
@@ -377,6 +448,41 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
       ) : null}
 
       <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6">{children}</main>
+
+      {/* Daily Bonus Gift Modal */}
+      {showBonusModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <GalaxyCard className="max-w-md w-full space-y-4 text-center">
+            <Gift className="mx-auto h-10 w-10 text-purple-300" />
+            <h2 className="text-xl font-extrabold text-white">
+              {t("social:shell.bonusGiftTitle")}
+            </h2>
+            <p className="text-sm text-slate-300">{t("social:shell.bonusGiftBody")}</p>
+            {bonusToast ? (
+              <p className="rounded-xl bg-emerald-500/20 px-3 py-2 text-sm font-bold text-emerald-200">
+                {bonusToast}
+              </p>
+            ) : null}
+            <div className="flex justify-center gap-2">
+              {bonusQuery.data?.claimed ? (
+                <p className="text-xs font-semibold text-amber-300">
+                  {t("social:shell.bonusGiftClaimed")}
+                </p>
+              ) : (
+                <GalaxyButton
+                  onClick={() => claimBonusMut.mutate()}
+                  disabled={claimBonusMut.isPending}
+                >
+                  {t("social:shell.bonusGiftClaim", { ac: bonusQuery.data?.rewardAc ?? 2 })}
+                </GalaxyButton>
+              )}
+              <GalaxyButton variant="secondary" onClick={() => setShowBonusModal(false)}>
+                {t("social:shell.close")}
+              </GalaxyButton>
+            </div>
+          </GalaxyCard>
+        </div>
+      ) : null}
     </div>
   );
 }

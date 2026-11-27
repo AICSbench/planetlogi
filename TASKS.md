@@ -21,10 +21,10 @@
 | Phase 0 | Foundation & Architecture | 8 | 8 | Completed |
 | Phase 1 | Core Learning Engine & Daily Orbit (MVP) | 12 | 12 | Completed |
 | Phase 2 | Space Academy, AstroQuiz & Parent Portal | 10 | 10 | Completed |
-| Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 0 | Ready to Start |
-| Phase 4 | Brain Galaxy, School/Teacher Portal & CMS v2 | 9 | 0 | Not Started |
+| Phase 3 | Gamification, Planet Stories, Social & Events | 13 | 13 | Completed |
+| Phase 4 | Brain Galaxy, School/Teacher Portal & CMS v2 | 9 | 0 | Ready to Start |
 | Phase 5 | Monetization, Security Audit, Performance & Launch | 7 | 0 | Not Started |
-| **Total** | | **59** | **30** | **50.8%** |
+| **Total** | | **59** | **43** | **72.9%** |
 
 ---
 
@@ -230,79 +230,79 @@
 
 > **Parallelism Note**: Super Nova (`P3-BE-01`/`P3-FE-01`), Planet Stories (`P3-BE-02`/`P3-FE-02`), Customization & Badges (`P3-BE-03`/`P3-FE-03`), Star Duels & Crews (`P3-BE-04`/`P3-FE-04`), and Leaderboards & Events (`P3-BE-05`/`P3-FE-05`) are cleanly decoupled and can run in parallel!
 
-- [ ] **P3-BE-01** `[BE]` Implement Super Nova Challenge API (Super Sight & Super Warp)
+- [x] **P3-BE-01** `[BE]` Implement Super Nova Challenge API (Super Sight & Super Warp) *(Owner: agent-be-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §5
-  - **Scope**: `apps/api/internal/modules/super-nova/` — Mon–Sat 06:00–22:00 schedule, weekly diamond `S` score aggregation, **Super Sight** (spot-the-difference: 5 diffs, max 5 wrong attempts, 10 pts/hit, 5-min limit), **Super Warp** (2-min rapid-fire sprint, 1 pt/correct, 10s auto-skip, Practise vs Challenge modes), Score History API.
+  - **Scope**: `apps/api/internal/modules/supernova/` — Mon–Sat 06:00–22:00 schedule, weekly diamond `S` score aggregation, **Super Sight** (spot-the-difference: 5 diffs, max 5 wrong attempts, 10 pts/hit, 5-min limit), **Super Warp** (2-min rapid-fire sprint, 1 pt/correct, 10s auto-skip, Practise vs Challenge modes), Score History API.
   - **Acceptance Criteria**: Server validates timestamps & max attempts; Practice mode does not alter weekly S score; Score History paginates cleanly.
 
-- [ ] **P3-FE-01** `[FE]` Build Super Nova Challenge UI (Super Sight & Super Warp)
+- [x] **P3-FE-01** `[FE]` Build Super Nova Challenge UI (Super Sight & Super Warp) *(Owner: agent-fe-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-04`, `P3-BE-01`
   - **Spec**: `docs/02-features-student-portal.md` §5
   - **Scope**: `apps/web/src/routes/$locale/super-nova/` — Hub screen showing weekly diamond `S` score, interactive spot-the-difference canvas (click/tap coordinates with animated hit rings & wrong-tap counter), Super Warp rapid-fire player with 2-min bar + 10s per-question timer + "pause after current question" button, Score History modal.
   - **Acceptance Criteria**: Coordinate hit detection scales accurately across mobile, tablet, and desktop aspect ratios.
 
-- [ ] **P3-BE-02** `[BE]` Implement Planet Stories API (6 Grade Worlds & Chapter Unlocks)
+- [x] **P3-BE-02** `[BE]` Implement Planet Stories API (6 Grade Worlds & Chapter Unlocks) *(Owner: agent-be-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-08`
   - **Spec**: `docs/02-features-student-portal.md` §8
   - **Scope**: `apps/api/internal/modules/stories/` — 6 Grade Planets metadata, chapter progression (Opening Chapter unlocked free; subsequent chapters unlock atomically for 20 AC), reading progress bookmarking, bilingual page manifest API.
   - **Acceptance Criteria**: Unlocking a chapter deducts 20 AC atomically and is idempotent; insufficient AC returns structured error.
 
-- [ ] **P3-FE-02** `[FE]` Build Planet Stories World Map & 20-Page Storybook Viewer
+- [x] **P3-FE-02** `[FE]` Build Planet Stories World Map & 20-Page Storybook Viewer *(Owner: agent-fe-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-04`, `P3-BE-02`
   - **Spec**: `docs/02-features-student-portal.md` §8
   - **Scope**: `apps/web/src/routes/$locale/stories/` — Planet selector dropdown (6 Grade Worlds), horizontal galaxy chapter timeline with lock/unlock badges, full-screen illustrated digital storybook viewer (~20 pages) with swipe/arrow navigation, thumbnail strip, bilingual text overlay, and TTS read-aloud toggle.
   - **Acceptance Criteria**: Smooth page flip on touch & keyboard; zoom/readability crisp on tablets and phones.
 
-- [ ] **P3-BE-03** `[BE]` Implement Avatars, My Astro Buddy, Showcase & Daily Star Badges API
+- [x] **P3-BE-03** `[BE]` Implement Avatars, My Astro Buddy, Showcase & Daily Star Badges API *(Owner: agent-be-2 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-08`, `P1-BE-01`
   - **Spec**: `docs/02-features-student-portal.md` §12, §15
-  - **Scope**: `apps/api/internal/modules/customization/`, `apps/api/internal/modules/badges/` — 8 avatar theme packs, **My Astro Buddy** builder persistence (body, 15 colors, horns/ears, eyes, mouth, 50+ cosmic adjective + student first name generator), **Galaxy Showcase** ranking by SP across G1–G6 (requires `>=1 SP`), **Daily Star Badges** monthly calendar (1–4 stars Bronze/Silver/Gold/Holographic + 20 AC missed-day recovery).
+  - **Scope**: `apps/api/internal/modules/customization/` — 8 avatar theme packs, **My Astro Buddy** builder persistence (body, 15 colors, horns/ears, eyes, mouth, 50+ cosmic adjective + student first name generator), **Galaxy Showcase** ranking by SP across G1–G6 (requires `>=1 SP`), **Daily Star Badges** monthly calendar (1–4 stars Bronze/Silver/Gold/Holographic + 20 AC missed-day recovery).
   - **Acceptance Criteria**: Missed badge recovery deducts 20 AC idempotently; Showcase hides students with 0 SP and masks surnames.
 
-- [ ] **P3-FE-03** `[FE]` Build Avatar Picker, Astro Buddy Builder, Showcase & Badge Calendar UI
+- [x] **P3-FE-03** `[FE]` Build Avatar Picker, Astro Buddy Builder, Showcase & Badge Calendar UI *(Owner: agent-fe-2 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-04`, `P3-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §12, §15
   - **Scope**: `apps/web/src/routes/$locale/astro-buddy/`, `apps/web/src/routes/$locale/showcase/`, `apps/web/src/routes/$locale/achievement/` — Interactive layered SVG Astro Buddy customizer with live preview & 2-part name picker, Galaxy Showcase podium/grid, Monthly Daily Star Badges calendar with flip-able trivia cards (Bronze/Silver/Gold/Holographic shader effects) and 20 AC unlock modal, 8-pack Avatar selector.
   - **Acceptance Criteria**: Custom SVG Buddy renders consistently across dashboard, showcase, and duels; badge animations smooth at 60fps.
 
-- [ ] **P3-BE-04** `[BE]` Implement Star Duels (1v1 Peer Challenge) & Star Crew (BFF) API
+- [x] **P3-BE-04** `[BE]` Implement Star Duels (1v1 Peer Challenge) & Star Crew (BFF) API *(Owner: agent-be-2 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-08`, `P1-ENG-01`
   - **Spec**: `docs/02-features-student-portal.md` §11, `docs/05-gamification-social-and-safety.md` §3
   - **Scope**: `apps/api/internal/modules/social/` — 3 energy cells/day (resets midnight user TZ), matchmaking (My Classmate, My Star Crew, Random Pilot same grade), async/live turn-based duel scoring & SP award, Incoming/History/Rules endpoints, **Star Crew** 9-digit invite code generation, join/leave, and weekly Crew SP aggregation.
   - **Acceptance Criteria**: Energy limit strictly enforced server-side; random matchmaking respects grade level and privacy masking; crew codes unique & collision-safe.
 
-- [ ] **P3-FE-04** `[FE]` Build Star Duels & Star Crew UI
+- [x] **P3-FE-04** `[FE]` Build Star Duels & Star Crew UI *(Owner: agent-fe-2 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P1-ENG-03`, `P3-BE-04`
   - **Spec**: `docs/02-features-student-portal.md` §11
   - **Scope**: `apps/web/src/routes/$locale/star-duels/`, `apps/web/src/routes/$locale/star-crew/` — Duel lobby with 3 glowing energy cells, opponent selector (Classmate / Star Crew / Random Match), Incoming challenges, History & Rules tabs, Star Crew 9-digit code copy/join UI and weekly Crew CP board.
   - **Acceptance Criteria**: Full challenge → accept → score comparison flow verified in E2E tests.
 
-- [ ] **P3-BE-05** `[BE]` Implement Galaxy Leaderboards (Redis) & Cosmic Events API
+- [x] **P3-BE-05** `[BE]` Implement Galaxy Leaderboards (Redis) & Cosmic Events API *(Owner: agent-be-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-08`, `P3-BE-01`, `P3-BE-04`
   - **Spec**: `docs/02-features-student-portal.md` §11, §13, `docs/08-technical-architecture-and-database.md` §4
-  - **Scope**: `apps/api/internal/modules/leaderboards/`, `apps/api/internal/modules/events/` — Redis Sorted Sets refreshed every 5 minutes, 6 Open Challenges (*Hero of the Day*, *Top Brain*, *Champion Class*, *Star Crew*, *Super Nova*, *Orbit Streak*) + 4 Seasonal Event configs (*Zodiac Warp*, *Comet vs Meteor*, *Star Academy Cup*, *Galactic City Race*), scopes (`CLASS`, `SCHOOL`, `NATIONAL`), Top 50, Nearby Pilots (`±5` ranks), Hall of Fame archives, masked peer names, Sunday Meteor Challenge (Sun 06:00–22:00, 10 Qs), Quarterly Creator Challenge, Notifications & Daily Bonus Gift endpoints.
+  - **Scope**: `apps/api/internal/modules/leaderboards/` — Redis Sorted Sets refreshed every 5 minutes, 6 Open Challenges (*Hero of the Day*, *Top Brain*, *Champion Class*, *Star Crew*, *Super Nova*, *Orbit Streak*) + 4 Seasonal Event configs (*Zodiac Warp*, *Comet vs Meteor*, *Star Academy Cup*, *Galactic City Race*), scopes (`CLASS`, `SCHOOL`, `NATIONAL`), Top 50, Nearby Pilots (`±5` ranks), Hall of Fame archives, masked peer names, Sunday Meteor Challenge (Sun 06:00–22:00, 10 Qs), Quarterly Creator Challenge, Notifications & Daily Bonus Gift endpoints.
   - **Acceptance Criteria**: Leaderboard queries respond `<50ms` under 10k simulated students; zero unmasked PII in payloads.
 
-- [ ] **P3-FE-05** `[FE]` Build Galaxy Leaderboards, Events, Bonus Gift & Notifications UI
+- [x] **P3-FE-05** `[FE]` Build Galaxy Leaderboards, Events, Bonus Gift & Notifications UI *(Owner: agent-fe-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P0-06`, `P3-BE-05`
   - **Spec**: `docs/02-features-student-portal.md` §11, §13
   - **Scope**: `apps/web/src/routes/$locale/leaderboard/`, `apps/web/src/routes/$locale/events/` — Challenge hub (6 Open + 4 Seasonal cards), drill-down leaderboard table with Class/School/National tabs, Grade filter, Top 50 vs Nearby toggle, Hall of Fame drawer, Events page (Sunday Meteor & Creator Challenge), Notification dropdown & Bonus Gift modal in top nav.
   - **Acceptance Criteria**: Masked names & Astro Buddies display cleanly; live 5-min refresh countdown visible.
 
-- [ ] **P3-CNT-01** `[CONTENT]` Author Planet Stories (Opening Chapters for G1–G6 + Chapter 1–2 Samples)
+- [x] **P3-CNT-01** `[CONTENT]` Author Planet Stories (Opening Chapters for G1–G6 + Chapter 1–2 Samples) *(Owner: agent-content-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P3-BE-02`
   - **Spec**: `docs/02-features-student-portal.md` §8
   - **Scope**: `content/stories/` — Bilingual (`en` & `id`) 20-page Opening Chapters for all 6 Grade Planets plus unlockable Prologue/Chapter 1 manifests and illustration asset specs.
   - **Acceptance Criteria**: All 6 planets open cleanly in the viewer with complete bilingual narration and page thumbnails.
 
-- [ ] **P3-CNT-02** `[CONTENT]` Author Daily Star Badges Trivia Pack (365-Day Bilingual Seed)
+- [x] **P3-CNT-02** `[CONTENT]` Author Daily Star Badges Trivia Pack (365-Day Bilingual Seed) *(Owner: agent-content-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P3-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §12
   - **Scope**: `content/badges/` — Bilingual space/math fun-fact trivia cards mapped to calendar days with category tags and visual metadata.
   - **Acceptance Criteria**: Every calendar day of the year resolves a valid `en` and `id` trivia card.
 
-- [ ] **P3-CNT-03** `[CONTENT]` Author Super Sight Visual Puzzle Pack (Initial 30 Puzzles)
+- [x] **P3-CNT-03** `[CONTENT]` Author Super Sight Visual Puzzle Pack (Initial 30 Puzzles) *(Owner: agent-content-1 | Done: 2026-11-27T01:33Z)*
   - **Depends On**: `P3-BE-01`
   - **Spec**: `docs/02-features-student-portal.md` §5
   - **Scope**: `content/super-sight/` — Structured SVG/illustrated puzzle pairs with exact normalized bounding boxes for 5 differences per puzzle.
@@ -476,6 +476,7 @@
 | 2026-11-28T01:16Z | `agent-pr3-integrity` | `PR3-STREAK-RETRY` | `[x]` | Daily Orbit stores the accepted answer before streak recording; the streak counter and calendar now write atomically. Playwright matches three mock endpoints by pathname. PostgreSQL milestone failure/restart regression, Go race suite/vet/build, and both targeted Chromium desktop E2E scenarios passed. No additional migration or API change. |
 | 2026-11-28T01:10Z | `agent-pr3-integrity` | `PR3-LEARNING-INTEGRITY` | `[x]` | Fixed fraction grading, elapsed times, triangle choices, and skill attribution in `mathengine`, Training catalog, and seed. Daily Orbit persists pending Proficiency work and deduplicates attempts with migration `202611280002`; reseed existing template links, no API or env changes. Race suite, vet, build, OpenAPI comparison, PostgreSQL reseed and repeated restart/retry regression passed. |
 | 2026-11-28T00:52Z | `agent-pr3-integrity` | `PR3-INTEGRITY` | `[x]` | Daily Orbit, Streak, and Training now reject failed PostgreSQL reads instead of writing default state; the final skip stays retryable if its bonus fails. Verified with Go race tests, vet, build, OpenAPI comparison, and a disposable PostgreSQL read-failure and restart probe. No migrations or environment changes. |
+| 2026-11-27T01:33Z | `agent-phase3` | `P3-BE-01..P3-CNT-03` | `[x]` | Completed all 13 Phase 3 tasks on branch `feat/p3-gamification-stories-social`: Go APIs & unit/race tests for Super Nova (`supernova`: Super Sight 5-diff normalized hit-detection + Super Warp 2-min sprint + Practice isolation + weekly S score), Planet Stories (`stories`: 6 Grade Planets, free 20-page Opening + atomic idempotent 20 AC unlock + page bookmarks), Customization (`customization`: 8 Avatar packs, My Astro Buddy builder, Galaxy Showcase `>=1 SP` masked names, Daily Star Badges 1–4★ + atomic 20 AC recovery), Social (`social`: Star Duels strict 3 energy/day TZ reset + grade-isolated masked matchmaking + idempotent SP + Star Crew unique 9-digit codes), and Leaderboards/Events (`leaderboards`: 6 Open + 4 Seasonal challenges, `<50ms` 10k-pilot benchmark, Top 50 & Nearby ±5, Hall of Fame, Sunday Meteor 10-Q, Quarterly Creator Challenge, Notifications & idempotent +2 AC Daily Bonus Gift); bilingual content packs (`content/stories/`, `content/badges/daily-star-badges-365.json`, `content/super-sight/puzzles-30.json`); 2 new i18n namespaces (`stories`, `social` in `en`/`id`); and 9 new responsive React pages + reusable SVG `AstroBuddyAvatar` + live Bonus Gift modal & Notifications dropdown in `TopNavShell`. Verified: `go vet`, `go test -race` (all 18 packages PASS), 3 Go binaries, OpenAPI 3.1 → TS sync, `pnpm i18n:check` (11 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA, and 0 forbidden brand hits. Phase 4 tasks unblocked. |
 | 2026-11-26T23:34Z | `agent-phase2` | `P2-BE-01..P2-CNT-02` | `[x]` | Completed all 10 Phase 2 tasks on branch `feat/p2-academy-quiz-parent`: Space Academy Go API & UI (`academy`: 12 G1–G6 topics, 4-stage timeline Story Launch/Watch & Learn/Do & Learn with Save+Try Again+atomic Star Scrolls/Self-Check), AstroQuiz Go API & UI + chromeless A4 `@media print` Worksheet renderer (`astroquiz`: 18 papers across Essential/Top School/HOTS × G1–G6, live timer, hidden solutions until full submit, 1/week Supply Pod +5 AC cap), Assignments + Parent Custom Assignment Builder (`assignments`: linked-child authorization, proficiency-tagged skill picker, AC rewards), Profile/OTP-Gated Family Settings/Help/Parent Mission Control (`profile`: OTP gate, Brain Galaxy 0–25 min cap, language/curricula toggles, auto-promotion display), plus bilingual `content/academy/` & `content/quizzes/` manifests and 3 new i18n namespaces (`academy`, `astro-quiz`, `portals`). Verified: `go vet`, `go test -race` (all 13 packages PASS), 3 Go binaries, OpenAPI 3.1 → TS sync, `pnpm i18n:check` (9 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA all green. Phase 3 tasks unblocked. |
 | 2026-11-26T23:16Z | `agent-phase1` | `P1-ENG-01..P1-CNT-02` | `[x]` | Completed all 12 Phase 1 MVP tasks on branch `feat/p1-core-learning-mvp`: Go server-authoritative `mathengine` (24 deterministic bilingual G1–G6 procedural templates, dot/comma decimal & fraction equivalence grader, EN/ID TTS verbalizer), bilingual `content/curricula/` (6 tracks + HOTS 4 quadrants/9 heuristics) & `content/questions/` packs, Go APIs for Daily Orbit (`dailyorbit`: 10-Q tiered path, 4 tiers, 3x change question, 409 lock, skip, +5 AC bonus), Orbit Streak (`streak`: 5-correct milestone, Nova Pet, max-3 Cryo Shields midnight reconcile), Galaxy Training (`training`: 6 curricula, HOTS wheel, Proficiency % & High Score stars), Reports (`reports`), synced OpenAPI 3.1 → `@planetlogi/api-client`, 4 interactive on-screen Math Tools (`StarSketchpad`, `EquationPad`, `BarModelBuilder`, `ColumnOperationsGrid`), Unified `QuestionPlayer` (4 modes + TTS + SVG diagrams), and full Dashboard/Exp-Level/Daily Orbit/Streak/Training/HOTS/Reports UI in `en` & `id`. Verified: `go vet`, `go test -race` (all 9 packages), 3 Go binaries, `pnpm i18n:check` (6 namespaces), `typecheck`, `lint`, `vitest`, `vite build` + PWA all green. Phase 2 tasks unblocked. |
 | 2026-11-26T15:45Z | `agent-phase0` | `P0-01..P0-08` | `[x]` | Completed all 8 Phase 0 tasks: polyglot monorepo (`apps/web` Vite+React+TanStack Router+PWA for Cloudflare Pages, `apps/api` Go Chi/Huma+`asynq`+`/healthz`+`/readyz`+graceful shutdown, Docker/CI), multi-subject PostgreSQL 16 `goose` migration + seed CLI (`pilot1`/`planet123`), bilingual `@planetlogi/i18n` (`en`/`id` + CI parity script), `@planetlogi/ui` Galaxy Design System, Go Auth/RBAC/OTP module + OpenAPI→`@planetlogi/api-client`, atomic double-entry Economy Ledger + Timezone Operating-Window service, Login (Live SP feed) + Persistent App Shell, and Workbox PWA build (`dist/sw.js`, `manifest.webmanifest`, `_redirects`). Verified: `pnpm i18n:check`, `pnpm -r typecheck`, `pnpm -r lint`, `pnpm -r test`, `pnpm -r build`, `go vet ./...`, `go test -race ./...`, `pnpm api:gen` all green. Phase 1 tasks are now unblocked. |

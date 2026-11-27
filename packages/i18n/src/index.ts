@@ -7,6 +7,8 @@ import enPlayer from "../locales/en/player.json";
 import enAcademy from "../locales/en/academy.json";
 import enAstroQuiz from "../locales/en/astro-quiz.json";
 import enPortals from "../locales/en/portals.json";
+import enStories from "../locales/en/stories.json";
+import enSocial from "../locales/en/social.json";
 import idCommon from "../locales/id/common.json";
 import idAuth from "../locales/id/auth.json";
 import idDashboard from "../locales/id/dashboard.json";
@@ -16,6 +18,8 @@ import idPlayer from "../locales/id/player.json";
 import idAcademy from "../locales/id/academy.json";
 import idAstroQuiz from "../locales/id/astro-quiz.json";
 import idPortals from "../locales/id/portals.json";
+import idStories from "../locales/id/stories.json";
+import idSocial from "../locales/id/social.json";
 
 export * from "./config";
 export * from "./format";
@@ -31,6 +35,8 @@ export const resources = {
     academy: enAcademy,
     "astro-quiz": enAstroQuiz,
     portals: enPortals,
+    stories: enStories,
+    social: enSocial,
   },
   id: {
     common: idCommon,
@@ -42,5 +48,7 @@ export const resources = {
     academy: idAcademy,
     "astro-quiz": idAstroQuiz,
     portals: idPortals,
+    stories: idStories,
+    social: idSocial,
   },
 } as const;

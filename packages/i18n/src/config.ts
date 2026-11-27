@@ -13,6 +13,8 @@ export const I18N_NAMESPACES = [
   "academy",
   "astro-quiz",
   "portals",
+  "stories",
+  "social",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 

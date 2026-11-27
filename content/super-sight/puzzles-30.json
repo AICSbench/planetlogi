@@ -1,0 +1,1175 @@
+{
+  "version": "1.0.0",
+  "puzzles": [
+    {
+      "id": "ss-puzzle-01",
+      "title": {
+        "en": "Cosmic Observatory #1",
+        "id": "Observatorium Kosmik #1"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-02",
+      "title": {
+        "en": "Cosmic Observatory #2",
+        "id": "Observatorium Kosmik #2"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-03",
+      "title": {
+        "en": "Cosmic Observatory #3",
+        "id": "Observatorium Kosmik #3"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-04",
+      "title": {
+        "en": "Cosmic Observatory #4",
+        "id": "Observatorium Kosmik #4"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-05",
+      "title": {
+        "en": "Cosmic Observatory #5",
+        "id": "Observatorium Kosmik #5"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-06",
+      "title": {
+        "en": "Cosmic Observatory #6",
+        "id": "Observatorium Kosmik #6"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-07",
+      "title": {
+        "en": "Cosmic Observatory #7",
+        "id": "Observatorium Kosmik #7"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-08",
+      "title": {
+        "en": "Cosmic Observatory #8",
+        "id": "Observatorium Kosmik #8"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-09",
+      "title": {
+        "en": "Cosmic Observatory #9",
+        "id": "Observatorium Kosmik #9"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-10",
+      "title": {
+        "en": "Cosmic Observatory #10",
+        "id": "Observatorium Kosmik #10"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-11",
+      "title": {
+        "en": "Cosmic Observatory #11",
+        "id": "Observatorium Kosmik #11"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-12",
+      "title": {
+        "en": "Cosmic Observatory #12",
+        "id": "Observatorium Kosmik #12"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-13",
+      "title": {
+        "en": "Cosmic Observatory #13",
+        "id": "Observatorium Kosmik #13"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-14",
+      "title": {
+        "en": "Cosmic Observatory #14",
+        "id": "Observatorium Kosmik #14"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-15",
+      "title": {
+        "en": "Cosmic Observatory #15",
+        "id": "Observatorium Kosmik #15"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-16",
+      "title": {
+        "en": "Cosmic Observatory #16",
+        "id": "Observatorium Kosmik #16"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-17",
+      "title": {
+        "en": "Cosmic Observatory #17",
+        "id": "Observatorium Kosmik #17"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-18",
+      "title": {
+        "en": "Cosmic Observatory #18",
+        "id": "Observatorium Kosmik #18"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-19",
+      "title": {
+        "en": "Cosmic Observatory #19",
+        "id": "Observatorium Kosmik #19"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-20",
+      "title": {
+        "en": "Cosmic Observatory #20",
+        "id": "Observatorium Kosmik #20"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-21",
+      "title": {
+        "en": "Cosmic Observatory #21",
+        "id": "Observatorium Kosmik #21"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-22",
+      "title": {
+        "en": "Cosmic Observatory #22",
+        "id": "Observatorium Kosmik #22"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-23",
+      "title": {
+        "en": "Cosmic Observatory #23",
+        "id": "Observatorium Kosmik #23"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-24",
+      "title": {
+        "en": "Cosmic Observatory #24",
+        "id": "Observatorium Kosmik #24"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-25",
+      "title": {
+        "en": "Cosmic Observatory #25",
+        "id": "Observatorium Kosmik #25"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-26",
+      "title": {
+        "en": "Cosmic Observatory #26",
+        "id": "Observatorium Kosmik #26"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-27",
+      "title": {
+        "en": "Cosmic Observatory #27",
+        "id": "Observatorium Kosmik #27"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-28",
+      "title": {
+        "en": "Cosmic Observatory #28",
+        "id": "Observatorium Kosmik #28"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.18,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.5,
+          "y": 0.22,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.82,
+          "y": 0.28,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.3,
+          "y": 0.72,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.74,
+          "y": 0.75,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-29",
+      "title": {
+        "en": "Cosmic Observatory #29",
+        "id": "Observatorium Kosmik #29"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.22,
+          "y": 0.3,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.6,
+          "y": 0.2,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.8,
+          "y": 0.55,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.25,
+          "y": 0.76,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.58,
+          "y": 0.78,
+          "radius": 0.08
+        }
+      ]
+    },
+    {
+      "id": "ss-puzzle-30",
+      "title": {
+        "en": "Cosmic Observatory #30",
+        "id": "Observatorium Kosmik #30"
+      },
+      "targets": [
+        {
+          "id": 1,
+          "x": 0.15,
+          "y": 0.45,
+          "radius": 0.08
+        },
+        {
+          "id": 2,
+          "x": 0.42,
+          "y": 0.25,
+          "radius": 0.08
+        },
+        {
+          "id": 3,
+          "x": 0.75,
+          "y": 0.24,
+          "radius": 0.08
+        },
+        {
+          "id": 4,
+          "x": 0.48,
+          "y": 0.7,
+          "radius": 0.08
+        },
+        {
+          "id": 5,
+          "x": 0.82,
+          "y": 0.76,
+          "radius": 0.08
+        }
+      ]
+    }
+  ]
+}

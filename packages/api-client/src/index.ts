@@ -363,6 +363,237 @@ export interface ParentChildOverview {
   strengthSkills: SkillView[];
 }
 
+// Phase 3 DTOs
+export interface DiffTarget {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  found: boolean;
+}
+
+export interface SuperSightSession {
+  sessionId: string;
+  puzzleId: string;
+  title: string;
+  foundCount: number;
+  wrongCount: number;
+  maxWrong: number;
+  score: number;
+  completed: boolean;
+  foundPoints: DiffTarget[];
+  timeLimitSec: number;
+}
+
+export interface SuperNovaHubSummary {
+  isOpen: boolean;
+  windowNotice?: string;
+  weeklyDiamondScore: number;
+  history: Array<{
+    id: string;
+    mode: "SUPER_SIGHT" | "SUPER_WARP";
+    isPractice: boolean;
+    score: number;
+    recordedAt: string;
+  }>;
+}
+
+export interface SuperWarpStart {
+  sessionId: string;
+  isPractice: boolean;
+  durationSec: number;
+  autoSkipSec: number;
+  questions: Array<{ index: number; question: RenderedQuestion }>;
+}
+
+export interface StoryChapterSummary {
+  code: string;
+  index: number;
+  title: string;
+  unlockCostAc: number;
+  unlocked: boolean;
+  lastPageRead: number;
+  pageCount: number;
+}
+
+export interface PlanetWorld {
+  grade: number;
+  code: string;
+  name: string;
+  accentColor: string;
+  chapters: StoryChapterSummary[];
+}
+
+export interface StoryChapterViewer {
+  planetCode: string;
+  planetName: string;
+  chapterCode: string;
+  title: string;
+  accentColor: string;
+  lastPageRead: number;
+  pages: Array<{ page: number; sceneTheme: string; text: string }>;
+}
+
+export interface AstroBuddyConfig {
+  bodyShape: "round" | "star" | "pear" | "cube";
+  colorHex: string;
+  hornsStyle: "antennae" | "cat_ears" | "comet_horns" | "halo";
+  eyesStyle: "bright" | "starry" | "cyclops" | "visor";
+  mouthStyle: "smile" | "grin" | "cat" | "whistle";
+  adjective: string;
+  fullName: string;
+  avatarPackId: string;
+  avatarItemId: string;
+}
+
+export interface AvatarPack {
+  id: string;
+  name: string;
+  items: string[];
+}
+
+export interface ShowcaseEntry {
+  rank: number;
+  maskedName: string;
+  grade: number;
+  starPoints: number;
+  buddy: AstroBuddyConfig;
+}
+
+export interface DailyBadgeCard {
+  date: string;
+  dayOfMonth: number;
+  tier: number;
+  tierName: string;
+  category: string;
+  triviaTitle: string;
+  triviaFact: string;
+  recoverCostAc: number;
+}
+
+export interface OpponentProfile {
+  id: string;
+  maskedName: string;
+  grade: number;
+  relation: "CLASSMATE" | "CREW" | "RANDOM";
+  buddyColor: string;
+  buddyName: string;
+  weeklySp: number;
+}
+
+export interface DuelRecord {
+  id: string;
+  mode: "CLASSMATE" | "CREW" | "RANDOM";
+  direction: "OUTGOING" | "INCOMING";
+  opponent: OpponentProfile;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  outcome?: "WIN" | "DRAW" | "LOSS";
+  playerScore: number;
+  opponentScore: number;
+  rewardSp: number;
+  createdAt: string;
+  completedAt?: string;
+  questions?: RenderedQuestion[];
+}
+
+export interface DuelLobby {
+  localDate: string;
+  energyLeft: number;
+  energyMax: number;
+  opponents: OpponentProfile[];
+  incoming: DuelRecord[];
+  history: DuelRecord[];
+  rules: string[];
+}
+
+export interface StarCrewView {
+  crewCode: string;
+  formattedCode: string;
+  name: string;
+  weeklyTotalSp: number;
+  members: Array<{
+    studentId: string;
+    maskedName: string;
+    grade: number;
+    buddyColor: string;
+    weeklySp: number;
+    isLeader: boolean;
+  }>;
+}
+
+export interface ChallengeMeta {
+  code: string;
+  category: "OPEN" | "SEASONAL";
+  title: string;
+  description: string;
+  metricLabel: string;
+  icon: string;
+  active: boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  studentId: string;
+  maskedName: string;
+  grade: number;
+  schoolCode: string;
+  classCode: string;
+  buddyColor: string;
+  score: number;
+  isCurrent: boolean;
+}
+
+export interface LeaderboardBoard {
+  challenge: ChallengeMeta;
+  scope: "CLASS" | "SCHOOL" | "NATIONAL";
+  grade: number;
+  viewMode: "TOP50" | "NEARBY";
+  totalPilots: number;
+  currentRank: number;
+  refreshedAt: string;
+  nextRefreshSec: number;
+  entries: LeaderboardEntry[];
+  hallOfFame: Array<{
+    season: string;
+    challenge: string;
+    winnerName: string;
+    grade: number;
+    score: number;
+  }>;
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  body: string;
+  category: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface BonusGiftStatus {
+  localDate: string;
+  claimed: boolean;
+  rewardAc: number;
+}
+
+export interface CreatorSubmission {
+  id: string;
+  authorMask: string;
+  grade: number;
+  title: string;
+  summary: string;
+  submittedAt: string;
+}
+
+export interface EventsHub {
+  sundayMeteorOpen: boolean;
+  sundayWindowNotice: string;
+  creatorQuarter: string;
+  creatorTheme: string;
+  creatorEntries: CreatorSubmission[];
+}
+
 export class ApiError extends Error {
   status: number;
   detail?: string;
@@ -672,6 +903,169 @@ export function createApiClient(baseUrl: string) {
       return request<ParentChildOverview>(
         `/api/v1/parent/overview?locale=${locale}${childId ? `&childId=${encodeURIComponent(childId)}` : ""}`
       );
+    },
+
+    // Phase 3: Super Nova
+    getSuperNovaHub(locale: string) {
+      return request<SuperNovaHubSummary>(`/api/v1/super-nova/hub?locale=${locale}`);
+    },
+    startSuperSight(isPractice: boolean, locale: string) {
+      return request<SuperSightSession>(`/api/v1/super-nova/super-sight/start?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ isPractice }),
+      });
+    },
+    tapSuperSight(sessionId: string, x: number, y: number, locale: string) {
+      return request<{ hit: boolean; session: SuperSightSession }>(
+        `/api/v1/super-nova/super-sight/tap?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ sessionId, x, y }) }
+      );
+    },
+    startSuperWarp(isPractice: boolean, grade: number, locale: string) {
+      return request<SuperWarpStart>(
+        `/api/v1/super-nova/super-warp/start?grade=${grade}&locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ isPractice }) }
+      );
+    },
+    finishSuperWarp(sessionId: string, answers: Record<number, Record<string, string>>, locale: string) {
+      return request<{ score: number; hub: SuperNovaHubSummary }>(
+        `/api/v1/super-nova/super-warp/finish?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ sessionId, answers }) }
+      );
+    },
+
+    // Phase 3: Planet Stories
+    getStoryPlanets(locale: string) {
+      return request<{ planets: PlanetWorld[] }>(`/api/v1/stories/planets?locale=${locale}`);
+    },
+    openStoryChapter(code: string, locale: string) {
+      return request<StoryChapterViewer>(
+        `/api/v1/stories/chapters/${encodeURIComponent(code)}?locale=${locale}`
+      );
+    },
+    unlockStoryChapter(code: string, locale: string) {
+      return request<StoryChapterViewer>(
+        `/api/v1/stories/chapters/${encodeURIComponent(code)}/unlock?locale=${locale}`,
+        { method: "POST" }
+      );
+    },
+    bookmarkStoryPage(code: string, page: number) {
+      return request<{ ok: boolean }>(`/api/v1/stories/chapters/${encodeURIComponent(code)}/bookmark`, {
+        method: "PATCH",
+        body: JSON.stringify({ page }),
+      });
+    },
+
+    // Phase 3: Customization, Astro Buddy, Showcase & Daily Star Badges
+    getCustomizationOptions(locale: string) {
+      return request<{
+        buddy: AstroBuddyConfig;
+        avatarPacks: AvatarPack[];
+        colors: string[];
+        adjectives: string[];
+      }>(`/api/v1/customization/options?locale=${locale}`);
+    },
+    saveAstroBuddy(config: AstroBuddyConfig) {
+      return request<AstroBuddyConfig>("/api/v1/customization/buddy", {
+        method: "PUT",
+        body: JSON.stringify(config),
+      });
+    },
+    getGalaxyShowcase(grade: number) {
+      return request<{ entries: ShowcaseEntry[] }>(`/api/v1/showcase?grade=${grade}`);
+    },
+    getDailyBadgesCalendar(month: string, locale: string) {
+      return request<{ cards: DailyBadgeCard[] }>(
+        `/api/v1/badges/calendar?month=${encodeURIComponent(month)}&locale=${locale}`
+      );
+    },
+    recoverDailyBadge(date: string, locale: string) {
+      return request<DailyBadgeCard>(`/api/v1/badges/recover?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ date }),
+      });
+    },
+
+    // Phase 3: Star Duels & Star Crew
+    getDuelLobby(grade: number, locale: string) {
+      return request<DuelLobby>(`/api/v1/duels/lobby?grade=${grade}&locale=${locale}`);
+    },
+    startDuel(mode: "CLASSMATE" | "CREW" | "RANDOM", opponentId: string | undefined, grade: number, locale: string) {
+      return request<{ duel: DuelRecord; energyLeft: number }>(
+        `/api/v1/duels/start?grade=${grade}&locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ mode, opponentId }) }
+      );
+    },
+    acceptDuel(id: string, locale: string) {
+      return request<DuelRecord>(`/api/v1/duels/${encodeURIComponent(id)}/accept?locale=${locale}`, {
+        method: "POST",
+      });
+    },
+    submitDuel(id: string, answers: Record<number, Record<string, string>>, locale: string) {
+      return request<DuelRecord>(`/api/v1/duels/${encodeURIComponent(id)}/submit?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ answers }),
+      });
+    },
+    getStarCrew(grade: number) {
+      return request<StarCrewView>(`/api/v1/crew?grade=${grade}`);
+    },
+    joinStarCrew(crewCode: string, grade: number) {
+      return request<StarCrewView>(`/api/v1/crew/join?grade=${grade}`, {
+        method: "POST",
+        body: JSON.stringify({ crewCode }),
+      });
+    },
+    leaveStarCrew(grade: number) {
+      return request<StarCrewView>(`/api/v1/crew/leave?grade=${grade}`, { method: "POST" });
+    },
+
+    // Phase 3: Galaxy Leaderboards, Cosmic Events, Notifications & Bonus Gift
+    getLeaderboardChallenges(locale: string) {
+      return request<{ challenges: ChallengeMeta[] }>(
+        `/api/v1/leaderboards/challenges?locale=${locale}`
+      );
+    },
+    getLeaderboardBoard(
+      challenge: string,
+      opts: { scope: string; filterGrade: number; viewMode: string; locale: string }
+    ) {
+      return request<LeaderboardBoard>(
+        `/api/v1/leaderboards/${encodeURIComponent(challenge)}?scope=${opts.scope}&filterGrade=${opts.filterGrade}&viewMode=${opts.viewMode}&locale=${opts.locale}`
+      );
+    },
+    getNotifications(locale: string) {
+      return request<{ items: NotificationItem[] }>(`/api/v1/notifications?locale=${locale}`);
+    },
+    markNotificationsRead() {
+      return request<{ ok: boolean }>("/api/v1/notifications/read", { method: "POST" });
+    },
+    getBonusGift() {
+      return request<BonusGiftStatus>("/api/v1/bonus-gift");
+    },
+    claimBonusGift() {
+      return request<BonusGiftStatus>("/api/v1/bonus-gift/claim", { method: "POST" });
+    },
+    getEventsHub(locale: string) {
+      return request<EventsHub>(`/api/v1/events/hub?locale=${locale}`);
+    },
+    startSundayMeteor(grade: number, locale: string) {
+      return request<{ sessionId: string; questions: RenderedQuestion[] }>(
+        `/api/v1/events/sunday-meteor/start?grade=${grade}&locale=${locale}`,
+        { method: "POST" }
+      );
+    },
+    submitSundayMeteor(sessionId: string, answers: Record<number, Record<string, string>>, locale: string) {
+      return request<{ sessionId: string; correct: number; total: number; rewardSp: number }>(
+        `/api/v1/events/sunday-meteor/submit?locale=${locale}`,
+        { method: "POST", body: JSON.stringify({ sessionId, answers }) }
+      );
+    },
+    submitCreatorChallenge(title: string, summary: string, grade: number) {
+      return request<CreatorSubmission>(`/api/v1/events/creator-challenge/submit?grade=${grade}`, {
+        method: "POST",
+        body: JSON.stringify({ title, summary }),
+      });
     },
   };
 }

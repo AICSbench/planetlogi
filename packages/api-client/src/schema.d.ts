@@ -378,6 +378,159 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/badges/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Monthly Daily Star Badges trivia card calendar (Bronze/Silver/Gold/Holographic) */
+        get: operations["badges-calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/badges/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unlock a missed Daily Star Badge for 20 Astro Coins */
+        post: operations["badges-recover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bonus-gift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Daily Bonus Gift status */
+        get: operations["bonus-gift-status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bonus-gift/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim Daily Bonus Gift (+2 Astro Coins, idempotent once per day) */
+        post: operations["bonus-gift-claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get or initialize the student's Star Crew (BFF) with 9-digit invite code */
+        get: operations["crew-get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crew/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Join another pilot's Star Crew using a 9-digit invite code */
+        post: operations["crew-join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crew/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave current Star Crew and create a fresh personal crew */
+        post: operations["crew-leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customization/buddy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save My Astro Buddy customization and Avatar choice */
+        put: operations["customization-save-buddy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customization/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get 8 Avatar theme packs, 15 cosmic colors, 50 adjectives, and current Astro Buddy */
+        get: operations["customization-options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/daily-orbit/change-question": {
         parameters: {
             query?: never;
@@ -474,6 +627,210 @@ export interface paths {
         get: operations["daily-orbit-today"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/duels/lobby": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Star Duels lobby with daily energy cells, masked opponents, incoming & history */
+        get: operations["duels-lobby"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/duels/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Launch a 1v1 Star Duel (consumes 1 of 3 daily energy cells) */
+        post: operations["duels-start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/duels/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept an incoming Star Duel challenge */
+        post: operations["duels-accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/duels/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grade Star Duel answers and award Star Points */
+        post: operations["duels-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/creator-challenge/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a Quarterly Creator Challenge entry (masked author name) */
+        post: operations["events-creator-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/hub": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Cosmic Events hub (Sunday Meteor Challenge + Quarterly Creator Challenge) */
+        get: operations["events-hub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/sunday-meteor/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a 10-question Sunday Meteor Challenge set */
+        post: operations["events-sunday-meteor-start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/sunday-meteor/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grade Sunday Meteor Challenge answers and award SP */
+        post: operations["events-sunday-meteor-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leaderboards/challenges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List 6 Open Challenges and 4 Seasonal Challenges */
+        get: operations["leaderboards-challenges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/leaderboards/{challenge}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Galaxy Leaderboard (Class/School/National, Top 50 or Nearby +/-5, masked names) */
+        get: operations["leaderboards-board"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List student notifications */
+        get: operations["notifications-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark all notifications as read */
+        post: operations["notifications-mark-read"];
         delete?: never;
         options?: never;
         head?: never;
@@ -582,6 +939,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/showcase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Galaxy Showcase ranked by Star Points across Grades 1-6 (requires >=1 SP) */
+        get: operations["showcase-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stories/chapters/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open an unlocked 20-page Planet Stories digital storybook */
+        get: operations["stories-open-chapter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stories/chapters/{code}/bookmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Bookmark current storybook page number */
+        patch: operations["stories-bookmark"];
+        trace?: never;
+    };
+    "/api/v1/stories/chapters/{code}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Atomically deduct 20 Astro Coins to unlock a Planet Stories chapter */
+        post: operations["stories-unlock-chapter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/stories/planets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all 6 Planet Stories worlds and chapter unlock statuses */
+        get: operations["stories-list-planets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/streak/calendar": {
         parameters: {
             query?: never;
@@ -627,6 +1069,91 @@ export interface paths {
         get: operations["streak-status"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/super-nova/hub": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Super Nova weekly diamond S score and score history */
+        get: operations["supernova-hub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/super-nova/super-sight/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a Super Sight spot-the-difference puzzle (5 diffs, max 5 wrong, 5 min) */
+        post: operations["supernova-sight-start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/super-nova/super-sight/tap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a normalized (0..1) tap coordinate on the Super Sight canvas */
+        post: operations["supernova-sight-tap"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/super-nova/super-warp/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grade Super Warp answers and update weekly S score if Challenge mode */
+        post: operations["supernova-warp-finish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/super-nova/super-warp/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a 2-minute Super Warp rapid-fire math sprint */
+        post: operations["supernova-warp-start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -878,6 +1405,23 @@ export interface components {
             assignment: components["schemas"]["AssignmentDetail"];
             result: components["schemas"]["GradeResult"];
         };
+        AstroBuddyConfig: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AstroBuddyConfig.json
+             */
+            readonly $schema?: string;
+            adjective: string;
+            avatarItemId: string;
+            avatarPackId: string;
+            bodyShape: string;
+            colorHex: string;
+            eyesStyle: string;
+            fullName: string;
+            hornsStyle: string;
+            mouthStyle: string;
+        };
         "Astroquiz-listResponse": {
             /**
              * Format: uri
@@ -927,9 +1471,82 @@ export interface components {
             readonly $schema?: string;
             user: components["schemas"]["Principal"];
         };
+        AvatarPack: {
+            id: string;
+            items: string[] | null;
+            name: string;
+        };
+        "Badges-calendarResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Badges-calendarResponse.json
+             */
+            readonly $schema?: string;
+            cards: components["schemas"]["DailyBadgeCard"][] | null;
+        };
+        "Badges-recoverRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Badges-recoverRequest.json
+             */
+            readonly $schema?: string;
+            date: string;
+        };
+        BonusGiftStatus: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/BonusGiftStatus.json
+             */
+            readonly $schema?: string;
+            claimed: boolean;
+            localDate: string;
+            /** Format: int64 */
+            rewardAc: number;
+        };
         CalendarEntry: {
             date: string;
             status: string;
+        };
+        ChallengeMeta: {
+            active: boolean;
+            category: string;
+            code: string;
+            description: string;
+            icon: string;
+            metricLabel: string;
+            title: string;
+        };
+        ChapterSummary: {
+            code: string;
+            /** Format: int64 */
+            index: number;
+            /** Format: int64 */
+            lastPageRead: number;
+            /** Format: int64 */
+            pageCount: number;
+            title: string;
+            /** Format: int64 */
+            unlockCostAc: number;
+            unlocked: boolean;
+        };
+        ChapterViewer: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ChapterViewer.json
+             */
+            readonly $schema?: string;
+            accentColor: string;
+            chapterCode: string;
+            /** Format: int64 */
+            lastPageRead: number;
+            pages: components["schemas"]["StoryPage"][] | null;
+            planetCode: string;
+            planetName: string;
+            title: string;
         };
         ChildProfile: {
             avatarItemId: string;
@@ -942,12 +1559,59 @@ export interface components {
             schoolName: string;
             studentId: string;
         };
+        CreatorSubmission: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/CreatorSubmission.json
+             */
+            readonly $schema?: string;
+            authorMask: string;
+            /** Format: int64 */
+            grade: number;
+            id: string;
+            /** Format: date-time */
+            submittedAt: string;
+            summary: string;
+            title: string;
+        };
+        "Crew-joinRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Crew-joinRequest.json
+             */
+            readonly $schema?: string;
+            crewCode: string;
+        };
+        CrewMember: {
+            buddyColor: string;
+            /** Format: int64 */
+            grade: number;
+            isLeader: boolean;
+            maskedName: string;
+            studentId: string;
+            /** Format: int64 */
+            weeklySp: number;
+        };
         CurriculumSummary: {
             code: string;
             description: string;
             name: string;
             /** Format: int64 */
             skillCount: number;
+        };
+        "Customization-optionsResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Customization-optionsResponse.json
+             */
+            readonly $schema?: string;
+            adjectives: string[] | null;
+            avatarPacks: components["schemas"]["AvatarPack"][] | null;
+            buddy: components["schemas"]["AstroBuddyConfig"];
+            colors: string[] | null;
         };
         "Daily-orbit-change-questionRequest": {
             /**
@@ -1036,11 +1700,41 @@ export interface components {
             session: components["schemas"]["SessionView"];
             slot: components["schemas"]["SlotView"];
         };
+        DailyBadgeCard: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/DailyBadgeCard.json
+             */
+            readonly $schema?: string;
+            category: string;
+            date: string;
+            /** Format: int64 */
+            dayOfMonth: number;
+            /** Format: int64 */
+            recoverCostAc: number;
+            /** Format: int64 */
+            tier: number;
+            tierName: string;
+            triviaFact: string;
+            triviaTitle: string;
+        };
         DiagramSpec: {
             params: {
                 [key: string]: unknown;
             };
             type: string;
+        };
+        DiffTarget: {
+            found: boolean;
+            /** Format: int64 */
+            id: number;
+            /** Format: double */
+            radius: number;
+            /** Format: double */
+            x: number;
+            /** Format: double */
+            y: number;
         };
         DoLearnQuestion: {
             draftAnswer?: {
@@ -1052,6 +1746,83 @@ export interface components {
             question: components["schemas"]["RenderedQuestion"];
             solved: boolean;
             workedSolution?: components["schemas"]["WorkedSolution"];
+        };
+        DuelLobby: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/DuelLobby.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            energyLeft: number;
+            /** Format: int64 */
+            energyMax: number;
+            history: components["schemas"]["DuelRecord"][] | null;
+            incoming: components["schemas"]["DuelRecord"][] | null;
+            localDate: string;
+            opponents: components["schemas"]["OpponentProfile"][] | null;
+            rules: string[] | null;
+        };
+        DuelRecord: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/DuelRecord.json
+             */
+            readonly $schema?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            createdAt: string;
+            direction: string;
+            id: string;
+            mode: string;
+            opponent: components["schemas"]["OpponentProfile"];
+            /** Format: int64 */
+            opponentScore: number;
+            outcome?: string;
+            /** Format: int64 */
+            playerScore: number;
+            questions?: components["schemas"]["RenderedQuestion"][] | null;
+            /** Format: int64 */
+            rewardSp: number;
+            status: string;
+        };
+        "Duels-startRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Duels-startRequest.json
+             */
+            readonly $schema?: string;
+            /** @default RANDOM */
+            mode: string;
+            opponentId?: string;
+        };
+        "Duels-startResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Duels-startResponse.json
+             */
+            readonly $schema?: string;
+            duel: components["schemas"]["DuelRecord"];
+            /** Format: int64 */
+            energyLeft: number;
+        };
+        "Duels-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Duels-submitRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
         };
         ErrorDetail: {
             /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
@@ -1100,6 +1871,43 @@ export interface components {
              */
             type: string;
         };
+        "Events-creator-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Events-creator-submitRequest.json
+             */
+            readonly $schema?: string;
+            summary: string;
+            title: string;
+        };
+        "Events-sunday-meteor-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Events-sunday-meteor-submitRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            sessionId: string;
+        };
+        EventsHub: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/EventsHub.json
+             */
+            readonly $schema?: string;
+            creatorEntries: components["schemas"]["CreatorSubmission"][] | null;
+            creatorQuarter: string;
+            creatorTheme: string;
+            sundayMeteorOpen: boolean;
+            sundayWindowNotice: string;
+        };
         FamilySettings: {
             billingEnabled: boolean;
             /** Format: int64 */
@@ -1125,6 +1933,15 @@ export interface components {
             heuristics: components["schemas"]["HeuristicNode"][] | null;
             name: string;
         };
+        HallOfFameEntry: {
+            challenge: string;
+            /** Format: int64 */
+            grade: number;
+            /** Format: int64 */
+            score: number;
+            season: string;
+            winnerName: string;
+        };
         HeuristicNode: {
             code: string;
             name: string;
@@ -1145,11 +1962,70 @@ export interface components {
             tier9To10: components["schemas"]["SkillView"][] | null;
             unplayed: components["schemas"]["SkillView"][] | null;
         };
+        HubSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/HubSummary.json
+             */
+            readonly $schema?: string;
+            history: components["schemas"]["ScoreHistoryEntry"][] | null;
+            isOpen: boolean;
+            /** Format: int64 */
+            weeklyDiamondScore: number;
+            windowNotice?: string;
+        };
         InputPart: {
             key: string;
             label?: string;
             prefix?: string;
             suffix?: string;
+        };
+        LeaderboardBoard: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/LeaderboardBoard.json
+             */
+            readonly $schema?: string;
+            challenge: components["schemas"]["ChallengeMeta"];
+            /** Format: int64 */
+            currentRank: number;
+            entries: components["schemas"]["LeaderboardEntry"][] | null;
+            /** Format: int64 */
+            grade: number;
+            hallOfFame: components["schemas"]["HallOfFameEntry"][] | null;
+            /** Format: int64 */
+            nextRefreshSec: number;
+            /** Format: date-time */
+            refreshedAt: string;
+            scope: string;
+            /** Format: int64 */
+            totalPilots: number;
+            viewMode: string;
+        };
+        LeaderboardEntry: {
+            buddyColor: string;
+            classCode: string;
+            /** Format: int64 */
+            grade: number;
+            isCurrent: boolean;
+            maskedName: string;
+            /** Format: int64 */
+            rank: number;
+            schoolCode: string;
+            /** Format: int64 */
+            score: number;
+            studentId: string;
+        };
+        "Leaderboards-challengesResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Leaderboards-challengesResponse.json
+             */
+            readonly $schema?: string;
+            challenges: components["schemas"]["ChallengeMeta"][] | null;
         };
         LessonDetail: {
             /**
@@ -1231,6 +2107,44 @@ export interface components {
         MCQOption: {
             key: string;
             label: string;
+        };
+        NotificationItem: {
+            body: string;
+            category: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            read: boolean;
+            title: string;
+        };
+        "Notifications-listResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Notifications-listResponse.json
+             */
+            readonly $schema?: string;
+            items: components["schemas"]["NotificationItem"][] | null;
+        };
+        "Notifications-mark-readResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Notifications-mark-readResponse.json
+             */
+            readonly $schema?: string;
+            ok: boolean;
+        };
+        OpponentProfile: {
+            buddyColor: string;
+            buddyName: string;
+            /** Format: int64 */
+            grade: number;
+            id: string;
+            maskedName: string;
+            relation: string;
+            /** Format: int64 */
+            weeklySp: number;
         };
         OtpRequestOutputBody: {
             /**
@@ -1335,6 +2249,14 @@ export interface components {
         ParentProfile: {
             maskedEmail: string;
             maskedPhone: string;
+            name: string;
+        };
+        PlanetWorld: {
+            accentColor: string;
+            chapters: components["schemas"]["ChapterSummary"][] | null;
+            code: string;
+            /** Format: int64 */
+            grade: number;
             name: string;
         };
         PracticeSession: {
@@ -1463,6 +2385,15 @@ export interface components {
             /** Format: int64 */
             totalToday: number;
         };
+        ScoreHistoryEntry: {
+            id: string;
+            isPractice: boolean;
+            mode: string;
+            /** Format: date-time */
+            recordedAt: string;
+            /** Format: int64 */
+            score: number;
+        };
         SelfCheckItem: {
             checked: boolean;
             key: string;
@@ -1494,6 +2425,25 @@ export interface components {
             totalSpEarned: number;
             unlockedTiers: string[] | null;
             windowNotice?: string;
+        };
+        "Showcase-listResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Showcase-listResponse.json
+             */
+            readonly $schema?: string;
+            entries: components["schemas"]["ShowcaseEntry"][] | null;
+        };
+        ShowcaseEntry: {
+            buddy: components["schemas"]["AstroBuddyConfig"];
+            /** Format: int64 */
+            grade: number;
+            maskedName: string;
+            /** Format: int64 */
+            rank: number;
+            /** Format: int64 */
+            starPoints: number;
         };
         SkillView: {
             ageBand?: string;
@@ -1541,6 +2491,20 @@ export interface components {
             diagram?: components["schemas"]["DiagramSpec"];
             text: string;
         };
+        StarCrewView: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/StarCrewView.json
+             */
+            readonly $schema?: string;
+            crewCode: string;
+            formattedCode: string;
+            members: components["schemas"]["CrewMember"][] | null;
+            name: string;
+            /** Format: int64 */
+            weeklyTotalSp: number;
+        };
         Status: {
             /**
              * Format: uri
@@ -1566,6 +2530,40 @@ export interface components {
             /** Format: int64 */
             todayCorrectCount: number;
         };
+        "Stories-bookmarkRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Stories-bookmarkRequest.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            page: number;
+        };
+        "Stories-bookmarkResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Stories-bookmarkResponse.json
+             */
+            readonly $schema?: string;
+            ok: boolean;
+        };
+        "Stories-list-planetsResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Stories-list-planetsResponse.json
+             */
+            readonly $schema?: string;
+            planets: components["schemas"]["PlanetWorld"][] | null;
+        };
+        StoryPage: {
+            /** Format: int64 */
+            page: number;
+            sceneTheme: string;
+            text: string;
+        };
         "Streak-calendarResponse": {
             /**
              * Format: uri
@@ -1584,6 +2582,135 @@ export interface components {
             readonly $schema?: string;
             enabled: boolean;
             timeLocal?: string;
+        };
+        SundayMeteorResult: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SundayMeteorResult.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            correct: number;
+            /** Format: int64 */
+            rewardSp: number;
+            sessionId: string;
+            /** Format: int64 */
+            total: number;
+        };
+        SundayMeteorStart: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SundayMeteorStart.json
+             */
+            readonly $schema?: string;
+            questions: components["schemas"]["RenderedQuestion"][] | null;
+            sessionId: string;
+        };
+        SuperSightSession: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuperSightSession.json
+             */
+            readonly $schema?: string;
+            completed: boolean;
+            /** Format: int64 */
+            foundCount: number;
+            foundPoints: components["schemas"]["DiffTarget"][] | null;
+            /** Format: int64 */
+            maxWrong: number;
+            puzzleId: string;
+            /** Format: int64 */
+            score: number;
+            sessionId: string;
+            /** Format: int64 */
+            timeLimitSec: number;
+            title: string;
+            /** Format: int64 */
+            wrongCount: number;
+        };
+        SuperWarpStart: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SuperWarpStart.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            autoSkipSec: number;
+            /** Format: int64 */
+            durationSec: number;
+            isPractice: boolean;
+            questions: components["schemas"]["WarpQuestion"][] | null;
+            sessionId: string;
+        };
+        "Supernova-sight-startRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-sight-startRequest.json
+             */
+            readonly $schema?: string;
+            isPractice: boolean;
+        };
+        "Supernova-sight-tapRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-sight-tapRequest.json
+             */
+            readonly $schema?: string;
+            sessionId: string;
+            /** Format: double */
+            x: number;
+            /** Format: double */
+            y: number;
+        };
+        "Supernova-sight-tapResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-sight-tapResponse.json
+             */
+            readonly $schema?: string;
+            hit: boolean;
+            session: components["schemas"]["SuperSightSession"];
+        };
+        "Supernova-warp-finishRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-warp-finishRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            sessionId: string;
+        };
+        "Supernova-warp-finishResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-warp-finishResponse.json
+             */
+            readonly $schema?: string;
+            hub: components["schemas"]["HubSummary"];
+            /** Format: int64 */
+            score: number;
+        };
+        "Supernova-warp-startRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Supernova-warp-startRequest.json
+             */
+            readonly $schema?: string;
+            isPractice: boolean;
         };
         TopicSummary: {
             ageBand: string;
@@ -1674,6 +2801,11 @@ export interface components {
             otpCode?: string;
             otpEnabled?: boolean;
             starDuelCurricula?: string[] | null;
+        };
+        WarpQuestion: {
+            /** Format: int64 */
+            index: number;
+            question: components["schemas"]["RenderedQuestion"];
         };
         WorkedSolution: {
             correctAnswers: {
@@ -2499,6 +3631,315 @@ export interface operations {
             };
         };
     };
+    "badges-calendar": {
+        parameters: {
+            query?: {
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Badges-calendarResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "badges-recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Badges-recoverRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyBadgeCard"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "bonus-gift-status": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusGiftStatus"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "bonus-gift-claim": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusGiftStatus"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "crew-get": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarCrewView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "crew-join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Crew-joinRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarCrewView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "crew-leave": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StarCrewView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "customization-save-buddy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AstroBuddyConfig"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AstroBuddyConfig"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "customization-options": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Customization-optionsResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "daily-orbit-change-question": {
         parameters: {
             query?: {
@@ -2735,6 +4176,417 @@ export interface operations {
             };
         };
     };
+    "duels-lobby": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelLobby"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "duels-start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Duels-startRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Duels-startResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "duels-accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelRecord"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "duels-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Duels-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuelRecord"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "events-creator-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Events-creator-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorSubmission"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "events-hub": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventsHub"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "events-sunday-meteor-start": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SundayMeteorStart"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "events-sunday-meteor-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Events-sunday-meteor-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SundayMeteorResult"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "leaderboards-challenges": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Leaderboards-challengesResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "leaderboards-board": {
+        parameters: {
+            query?: {
+                scope?: string;
+                filterGrade?: number;
+                viewMode?: string;
+            };
+            header?: never;
+            path: {
+                challenge: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardBoard"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "notifications-list": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notifications-listResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "notifications-mark-read": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notifications-mark-readResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "parent-overview": {
         parameters: {
             query?: {
@@ -2957,6 +4809,169 @@ export interface operations {
             };
         };
     };
+    "showcase-list": {
+        parameters: {
+            query?: {
+                grade?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Showcase-listResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "stories-open-chapter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterViewer"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "stories-bookmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Stories-bookmarkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stories-bookmarkResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "stories-unlock-chapter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterViewer"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "stories-list-planets": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stories-list-planetsResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "streak-calendar": {
         parameters: {
             query?: {
@@ -3050,6 +5065,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Status"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "supernova-hub": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HubSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "supernova-sight-start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Supernova-sight-startRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuperSightSession"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "supernova-sight-tap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Supernova-sight-tapRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Supernova-sight-tapResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "supernova-warp-finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Supernova-warp-finishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Supernova-warp-finishResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "supernova-warp-start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Supernova-warp-startRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuperWarpStart"];
                 };
             };
             /** @description Error */
