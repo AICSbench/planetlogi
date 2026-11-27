@@ -77,16 +77,18 @@ func TestHealthzAndReadyz(t *testing.T) {
 		})
 
 		sseReq := httptest.NewRequest(http.MethodGet, "/api/v1/duels/stream", nil)
-		sseReq.Header.Set("Accept", "text/event-stream")
 		app.Router.ServeHTTP(httptest.NewRecorder(), sseReq)
 		if sseHasDeadline {
-			t.Fatalf("expected SSE stream request to bypass 30s timeout deadline")
+			t.Fatalf("expected registered stream route to bypass 30s timeout deadline")
 		}
 
+		// Client-supplied headers must NOT be able to opt out of the deadline.
 		jsonReq := httptest.NewRequest(http.MethodGet, "/api/v1/regular", nil)
+		jsonReq.Header.Set("Accept", "text/event-stream")
+		jsonReq.Header.Set("Upgrade", "websocket")
 		app.Router.ServeHTTP(httptest.NewRecorder(), jsonReq)
 		if !jsonHasDeadline {
-			t.Fatalf("expected ordinary HTTP request to carry 30s timeout deadline")
+			t.Fatalf("expected ordinary route to keep 30s deadline regardless of Accept/Upgrade headers")
 		}
 	})
 }

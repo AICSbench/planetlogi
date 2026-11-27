@@ -133,13 +133,9 @@ func requestTimeoutMiddleware(timeout time.Duration) func(http.Handler) http.Han
 	}
 }
 
+// isStreamingRequest decides the timeout exemption from the server-controlled route path only,
+// never from client-supplied headers (Accept / Upgrade), so clients cannot opt out of the deadline.
 func isStreamingRequest(r *http.Request) bool {
-	if strings.Contains(strings.ToLower(r.Header.Get("Accept")), "text/event-stream") {
-		return true
-	}
-	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
-		return true
-	}
 	path := strings.TrimSuffix(r.URL.Path, "/")
 	return strings.HasSuffix(path, "/stream") || strings.HasSuffix(path, "/events")
 }
