@@ -18,10 +18,15 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/assignments"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/astroquiz"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/customization"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/leaderboards"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/profile"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/social"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/stories"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/supernova"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
@@ -71,6 +76,12 @@ func main() {
 	quizSvc := astroquiz.NewServiceWithStore(stateStore, ledger)
 	assignSvc := assignments.NewServiceWithDeps(pool, stateStore, ledger)
 	profileSvc := profile.NewServiceWithPG(pool, reportsH, streakSvc, authSvc, cfg.BillingEnabled)
+	supernovaSvc := supernova.NewServiceWithPG(pool, ledger)
+	supernovaSvc.SetEnforceWindow(cfg.SuperNovaEnforceOpen)
+	storiesSvc := stories.NewServiceWithPG(pool, ledger)
+	customSvc := customization.NewServiceWithPG(pool, ledger)
+	socialSvc := social.NewServiceWithPG(pool, ledger)
+	lbSvc := leaderboards.NewServiceWithPG(pool, ledger)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,
@@ -87,6 +98,11 @@ func main() {
 			astroquiz.NewHandler(quizSvc, authSvc).RegisterRoutes,
 			assignments.NewHandler(assignSvc, authSvc).RegisterRoutes,
 			profile.NewHandler(profileSvc, authSvc).RegisterRoutes,
+			supernova.NewHandler(supernovaSvc, authSvc).RegisterRoutes,
+			stories.NewHandler(storiesSvc, authSvc).RegisterRoutes,
+			customization.NewHandler(customSvc, authSvc).RegisterRoutes,
+			social.NewHandler(socialSvc, authSvc).RegisterRoutes,
+			leaderboards.NewHandler(lbSvc, authSvc).RegisterRoutes,
 		},
 	})
 

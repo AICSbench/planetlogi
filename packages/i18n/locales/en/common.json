@@ -23,7 +23,8 @@
     "settings": "Settings",
     "mySubscription": "My Subscription",
     "help": "Help",
-    "logout": "Logout"
+    "logout": "Logout",
+    "primaryNav": "Primary navigation"
   },
   "apps": {
     "spaceAcademy": "Space Academy",

@@ -11,10 +11,15 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/assignments"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/astroquiz"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/customization"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/leaderboards"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/profile"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/social"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/stories"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/supernova"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/server"
 )
@@ -32,6 +37,11 @@ func main() {
 	quizSvc := astroquiz.NewService(nil)
 	assignSvc := assignments.NewService(nil)
 	profileSvc := profile.NewService(reportsH, streakSvc, authSvc, cfg.BillingEnabled)
+	supernovaSvc := supernova.NewService(nil)
+	storiesSvc := stories.NewService(nil)
+	customSvc := customization.NewService(nil)
+	socialSvc := social.NewService(nil)
+	lbSvc := leaderboards.NewService(nil)
 
 	app := server.New(server.Dependencies{
 		Config: cfg,
@@ -46,6 +56,11 @@ func main() {
 			astroquiz.NewHandler(quizSvc, authSvc).RegisterRoutes,
 			assignments.NewHandler(assignSvc, authSvc).RegisterRoutes,
 			profile.NewHandler(profileSvc, authSvc).RegisterRoutes,
+			supernova.NewHandler(supernovaSvc, authSvc).RegisterRoutes,
+			stories.NewHandler(storiesSvc, authSvc).RegisterRoutes,
+			customization.NewHandler(customSvc, authSvc).RegisterRoutes,
+			social.NewHandler(socialSvc, authSvc).RegisterRoutes,
+			leaderboards.NewHandler(lbSvc, authSvc).RegisterRoutes,
 		},
 	})
 

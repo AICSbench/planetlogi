@@ -428,6 +428,59 @@
         ],
         "type": "object"
       },
+      "AstroBuddyConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/AstroBuddyConfig.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "adjective": {
+            "type": "string"
+          },
+          "avatarItemId": {
+            "type": "string"
+          },
+          "avatarPackId": {
+            "type": "string"
+          },
+          "bodyShape": {
+            "type": "string"
+          },
+          "colorHex": {
+            "type": "string"
+          },
+          "eyesStyle": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "hornsStyle": {
+            "type": "string"
+          },
+          "mouthStyle": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bodyShape",
+          "colorHex",
+          "hornsStyle",
+          "eyesStyle",
+          "mouthStyle",
+          "adjective",
+          "fullName",
+          "avatarPackId",
+          "avatarItemId"
+        ],
+        "type": "object"
+      },
       "Astroquiz-listResponse": {
         "additionalProperties": false,
         "properties": {
@@ -544,6 +597,110 @@
         ],
         "type": "object"
       },
+      "AvatarPack": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "items"
+        ],
+        "type": "object"
+      },
+      "Badges-calendarResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Badges-calendarResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/DailyBadgeCard"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "cards"
+        ],
+        "type": "object"
+      },
+      "Badges-recoverRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Badges-recoverRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "type": "object"
+      },
+      "BonusGiftStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/BonusGiftStatus.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "claimed": {
+            "type": "boolean"
+          },
+          "localDate": {
+            "type": "string"
+          },
+          "rewardAc": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "localDate",
+          "claimed",
+          "rewardAc"
+        ],
+        "type": "object"
+      },
       "CalendarEntry": {
         "additionalProperties": false,
         "properties": {
@@ -557,6 +714,134 @@
         "required": [
           "date",
           "status"
+        ],
+        "type": "object"
+      },
+      "ChallengeMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "category": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "metricLabel": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "category",
+          "title",
+          "description",
+          "metricLabel",
+          "icon",
+          "active"
+        ],
+        "type": "object"
+      },
+      "ChapterSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "index": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastPageRead": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pageCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "unlockCostAc": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "unlocked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "index",
+          "title",
+          "unlockCostAc",
+          "unlocked",
+          "lastPageRead",
+          "pageCount"
+        ],
+        "type": "object"
+      },
+      "ChapterViewer": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/ChapterViewer.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "accentColor": {
+            "type": "string"
+          },
+          "chapterCode": {
+            "type": "string"
+          },
+          "lastPageRead": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/components/schemas/StoryPage"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "planetCode": {
+            "type": "string"
+          },
+          "planetName": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "planetCode",
+          "planetName",
+          "chapterCode",
+          "title",
+          "accentColor",
+          "lastPageRead",
+          "pages"
         ],
         "type": "object"
       },
@@ -601,6 +886,108 @@
         ],
         "type": "object"
       },
+      "CreatorSubmission": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/CreatorSubmission.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "authorMask": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "authorMask",
+          "grade",
+          "title",
+          "summary",
+          "status",
+          "submittedAt"
+        ],
+        "type": "object"
+      },
+      "Crew-joinRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Crew-joinRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "crewCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "crewCode"
+        ],
+        "type": "object"
+      },
+      "CrewMember": {
+        "additionalProperties": false,
+        "properties": {
+          "buddyColor": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isLeader": {
+            "type": "boolean"
+          },
+          "maskedName": {
+            "type": "string"
+          },
+          "studentId": {
+            "type": "string"
+          },
+          "weeklySp": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "studentId",
+          "maskedName",
+          "grade",
+          "buddyColor",
+          "weeklySp",
+          "isLeader"
+        ],
+        "type": "object"
+      },
       "CurriculumSummary": {
         "additionalProperties": false,
         "properties": {
@@ -623,6 +1010,57 @@
           "name",
           "description",
           "skillCount"
+        ],
+        "type": "object"
+      },
+      "Customization-optionsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Customization-optionsResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "adjectives": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "avatarPacks": {
+            "items": {
+              "$ref": "#/components/schemas/AvatarPack"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "buddy": {
+            "$ref": "#/components/schemas/AstroBuddyConfig"
+          },
+          "colors": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "buddy",
+          "avatarPacks",
+          "colors",
+          "adjectives"
         ],
         "type": "object"
       },
@@ -851,6 +1289,58 @@
         ],
         "type": "object"
       },
+      "DailyBadgeCard": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DailyBadgeCard.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "dayOfMonth": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "recoverCostAc": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "tier": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "tierName": {
+            "type": "string"
+          },
+          "triviaFact": {
+            "type": "string"
+          },
+          "triviaTitle": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "dayOfMonth",
+          "tier",
+          "tierName",
+          "category",
+          "triviaTitle",
+          "triviaFact",
+          "recoverCostAc"
+        ],
+        "type": "object"
+      },
       "DiagramSpec": {
         "additionalProperties": false,
         "properties": {
@@ -865,6 +1355,38 @@
         "required": [
           "type",
           "params"
+        ],
+        "type": "object"
+      },
+      "DiffTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "found": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "radius": {
+            "format": "double",
+            "type": "number"
+          },
+          "x": {
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "x",
+          "y",
+          "radius",
+          "found"
         ],
         "type": "object"
       },
@@ -899,6 +1421,228 @@
           "question",
           "solved",
           "lastWrong"
+        ],
+        "type": "object"
+      },
+      "DuelLobby": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DuelLobby.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "energyLeft": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "energyMax": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/DuelRecord"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "incoming": {
+            "items": {
+              "$ref": "#/components/schemas/DuelRecord"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "localDate": {
+            "type": "string"
+          },
+          "opponents": {
+            "items": {
+              "$ref": "#/components/schemas/OpponentProfile"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "localDate",
+          "energyLeft",
+          "energyMax",
+          "opponents",
+          "incoming",
+          "history",
+          "rules"
+        ],
+        "type": "object"
+      },
+      "DuelRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DuelRecord.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "opponent": {
+            "$ref": "#/components/schemas/OpponentProfile"
+          },
+          "opponentScore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "playerScore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/RenderedQuestion"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "rewardSp": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "direction",
+          "opponent",
+          "status",
+          "playerScore",
+          "opponentScore",
+          "rewardSp",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "Duels-startRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Duels-startRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "mode": {
+            "default": "RANDOM",
+            "type": "string"
+          },
+          "opponentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "type": "object"
+      },
+      "Duels-startResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Duels-startResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "duel": {
+            "$ref": "#/components/schemas/DuelRecord"
+          },
+          "energyLeft": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "duel",
+          "energyLeft"
+        ],
+        "type": "object"
+      },
+      "Duels-submitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Duels-submitRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "answers"
         ],
         "type": "object"
       },
@@ -981,6 +1725,109 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "Events-creator-submitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Events-creator-submitRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "summary": {
+            "maxLength": 400,
+            "minLength": 10,
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 100,
+            "minLength": 3,
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "Events-sunday-meteor-submitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Events-sunday-meteor-submitRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "answers"
+        ],
+        "type": "object"
+      },
+      "EventsHub": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/EventsHub.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "creatorEntries": {
+            "items": {
+              "$ref": "#/components/schemas/CreatorSubmission"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "creatorQuarter": {
+            "type": "string"
+          },
+          "creatorTheme": {
+            "type": "string"
+          },
+          "sundayMeteorOpen": {
+            "type": "boolean"
+          },
+          "sundayWindowNotice": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sundayMeteorOpen",
+          "sundayWindowNotice",
+          "creatorQuarter",
+          "creatorTheme",
+          "creatorEntries"
+        ],
         "type": "object"
       },
       "FamilySettings": {
@@ -1093,6 +1940,36 @@
         ],
         "type": "object"
       },
+      "HallOfFameEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "score": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "season": {
+            "type": "string"
+          },
+          "winnerName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "season",
+          "challenge",
+          "winnerName",
+          "grade",
+          "score"
+        ],
+        "type": "object"
+      },
       "HeuristicNode": {
         "additionalProperties": false,
         "properties": {
@@ -1191,6 +2068,60 @@
         ],
         "type": "object"
       },
+      "HubSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/HubSummary.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreHistoryEntry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "historyPage": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "historyPageSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "historyPages": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isOpen": {
+            "type": "boolean"
+          },
+          "weeklyDiamondScore": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowNotice": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "isOpen",
+          "weeklyDiamondScore",
+          "history",
+          "historyPage",
+          "historyPages",
+          "historyPageSize"
+        ],
+        "type": "object"
+      },
       "InputPart": {
         "additionalProperties": false,
         "properties": {
@@ -1209,6 +2140,154 @@
         },
         "required": [
           "key"
+        ],
+        "type": "object"
+      },
+      "LeaderboardBoard": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/LeaderboardBoard.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "challenge": {
+            "$ref": "#/components/schemas/ChallengeMeta"
+          },
+          "currentRank": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "hallOfFame": {
+            "items": {
+              "$ref": "#/components/schemas/HallOfFameEntry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "nextRefreshSec": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "refreshedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "totalPilots": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "viewMode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge",
+          "scope",
+          "grade",
+          "viewMode",
+          "totalPilots",
+          "currentRank",
+          "refreshedAt",
+          "nextRefreshSec",
+          "entries",
+          "hallOfFame"
+        ],
+        "type": "object"
+      },
+      "LeaderboardEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "buddyColor": {
+            "type": "string"
+          },
+          "classCode": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "maskedName": {
+            "type": "string"
+          },
+          "rank": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "schoolCode": {
+            "type": "string"
+          },
+          "score": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "studentId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rank",
+          "studentId",
+          "maskedName",
+          "grade",
+          "schoolCode",
+          "classCode",
+          "buddyColor",
+          "score",
+          "isCurrent"
+        ],
+        "type": "object"
+      },
+      "Leaderboards-challengesResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Leaderboards-challengesResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "challenges": {
+            "items": {
+              "$ref": "#/components/schemas/ChallengeMeta"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "challenges"
         ],
         "type": "object"
       },
@@ -1466,6 +2545,125 @@
         "required": [
           "key",
           "label"
+        ],
+        "type": "object"
+      },
+      "NotificationItem": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "category",
+          "read",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "Notifications-listResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Notifications-listResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationItem"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "Notifications-mark-readResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Notifications-mark-readResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "type": "object"
+      },
+      "OpponentProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "buddyColor": {
+            "type": "string"
+          },
+          "buddyName": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "maskedName": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "weeklySp": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "maskedName",
+          "grade",
+          "relation",
+          "buddyColor",
+          "buddyName",
+          "weeklySp"
         ],
         "type": "object"
       },
@@ -1776,6 +2974,41 @@
           "name",
           "maskedEmail",
           "maskedPhone"
+        ],
+        "type": "object"
+      },
+      "PlanetWorld": {
+        "additionalProperties": false,
+        "properties": {
+          "accentColor": {
+            "type": "string"
+          },
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/ChapterSummary"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "grade",
+          "code",
+          "name",
+          "accentColor",
+          "chapters"
         ],
         "type": "object"
       },
@@ -2180,6 +3413,36 @@
         ],
         "type": "object"
       },
+      "ScoreHistoryEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "isPractice": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "recordedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "score": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "isPractice",
+          "score",
+          "recordedAt"
+        ],
+        "type": "object"
+      },
       "SelfCheckItem": {
         "additionalProperties": false,
         "properties": {
@@ -2292,6 +3555,64 @@
           "completionBonusAwarded",
           "todaySpBreakdown",
           "slots"
+        ],
+        "type": "object"
+      },
+      "Showcase-listResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Showcase-listResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ShowcaseEntry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "type": "object"
+      },
+      "ShowcaseEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "buddy": {
+            "$ref": "#/components/schemas/AstroBuddyConfig"
+          },
+          "grade": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maskedName": {
+            "type": "string"
+          },
+          "rank": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "starPoints": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rank",
+          "maskedName",
+          "grade",
+          "starPoints",
+          "buddy"
         ],
         "type": "object"
       },
@@ -2442,6 +3763,50 @@
         ],
         "type": "object"
       },
+      "StarCrewView": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/StarCrewView.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "crewCode": {
+            "type": "string"
+          },
+          "formattedCode": {
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/CrewMember"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "weeklyTotalSp": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "crewCode",
+          "formattedCode",
+          "name",
+          "weeklyTotalSp",
+          "members"
+        ],
+        "type": "object"
+      },
       "Status": {
         "additionalProperties": false,
         "properties": {
@@ -2504,6 +3869,99 @@
         ],
         "type": "object"
       },
+      "Stories-bookmarkRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Stories-bookmarkRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "page": {
+            "format": "int64",
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page"
+        ],
+        "type": "object"
+      },
+      "Stories-bookmarkResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Stories-bookmarkResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "type": "object"
+      },
+      "Stories-list-planetsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Stories-list-planetsResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "planets": {
+            "items": {
+              "$ref": "#/components/schemas/PlanetWorld"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "planets"
+        ],
+        "type": "object"
+      },
+      "StoryPage": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sceneTheme": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "page",
+          "sceneTheme",
+          "text"
+        ],
+        "type": "object"
+      },
       "Streak-calendarResponse": {
         "additionalProperties": false,
         "properties": {
@@ -2552,6 +4010,341 @@
         },
         "required": [
           "enabled"
+        ],
+        "type": "object"
+      },
+      "SundayMeteorResult": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/SundayMeteorResult.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "correct": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "rewardSp": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sessionId",
+          "correct",
+          "total",
+          "rewardSp"
+        ],
+        "type": "object"
+      },
+      "SundayMeteorStart": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/SundayMeteorStart.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/RenderedQuestion"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "questions"
+        ],
+        "type": "object"
+      },
+      "SuperSightSession": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/SuperSightSession.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "foundCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "foundPoints": {
+            "items": {
+              "$ref": "#/components/schemas/DiffTarget"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "maxWrong": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "puzzleId": {
+            "type": "string"
+          },
+          "score": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "timeLimitSec": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "wrongCount": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sessionId",
+          "puzzleId",
+          "title",
+          "foundCount",
+          "wrongCount",
+          "maxWrong",
+          "score",
+          "completed",
+          "foundPoints",
+          "timeLimitSec"
+        ],
+        "type": "object"
+      },
+      "SuperWarpStart": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/SuperWarpStart.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "autoSkipSec": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "durationSec": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "isPractice": {
+            "type": "boolean"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/WarpQuestion"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "isPractice",
+          "durationSec",
+          "autoSkipSec",
+          "questions"
+        ],
+        "type": "object"
+      },
+      "Supernova-sight-startRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-sight-startRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "isPractice": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isPractice"
+        ],
+        "type": "object"
+      },
+      "Supernova-sight-tapRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-sight-tapRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "x": {
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "sessionId",
+          "x",
+          "y"
+        ],
+        "type": "object"
+      },
+      "Supernova-sight-tapResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-sight-tapResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "hit": {
+            "type": "boolean"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SuperSightSession"
+          }
+        },
+        "required": [
+          "hit",
+          "session"
+        ],
+        "type": "object"
+      },
+      "Supernova-warp-finishRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-warp-finishRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "answers"
+        ],
+        "type": "object"
+      },
+      "Supernova-warp-finishResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-warp-finishResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "hub": {
+            "$ref": "#/components/schemas/HubSummary"
+          },
+          "score": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "score",
+          "hub"
+        ],
+        "type": "object"
+      },
+      "Supernova-warp-startRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Supernova-warp-startRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "isPractice": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isPractice"
         ],
         "type": "object"
       },
@@ -2817,6 +4610,23 @@
             ]
           }
         },
+        "type": "object"
+      },
+      "WarpQuestion": {
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/RenderedQuestion"
+          }
+        },
+        "required": [
+          "index",
+          "question"
+        ],
         "type": "object"
       },
       "WorkedSolution": {
@@ -4392,6 +6202,451 @@
         ]
       }
     },
+    "/api/v1/badges/calendar": {
+      "get": {
+        "operationId": "badges-calendar",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "month",
+            "schema": {
+              "default": "2026-11",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Badges-calendarResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Monthly Daily Star Badges trivia card calendar (Bronze/Silver/Gold/Holographic)",
+        "tags": [
+          "Badges"
+        ]
+      }
+    },
+    "/api/v1/badges/recover": {
+      "post": {
+        "operationId": "badges-recover",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Badges-recoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyBadgeCard"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Unlock a missed Daily Star Badge for 20 Astro Coins",
+        "tags": [
+          "Badges"
+        ]
+      }
+    },
+    "/api/v1/bonus-gift": {
+      "get": {
+        "operationId": "bonus-gift-status",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BonusGiftStatus"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get Daily Bonus Gift status",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/bonus-gift/claim": {
+      "post": {
+        "operationId": "bonus-gift-claim",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BonusGiftStatus"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Claim Daily Bonus Gift (+2 Astro Coins, idempotent once per day)",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/crew": {
+      "get": {
+        "operationId": "crew-get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarCrewView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get or initialize the student's Star Crew (BFF) with 9-digit invite code",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/crew/join": {
+      "post": {
+        "operationId": "crew-join",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Crew-joinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarCrewView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Join another pilot's Star Crew using a 9-digit invite code",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/crew/leave": {
+      "post": {
+        "operationId": "crew-leave",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarCrewView"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Leave current Star Crew and create a fresh personal crew",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/customization/buddy": {
+      "put": {
+        "operationId": "customization-save-buddy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AstroBuddyConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AstroBuddyConfig"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Save My Astro Buddy customization and Avatar choice",
+        "tags": [
+          "Customization"
+        ]
+      }
+    },
+    "/api/v1/customization/options": {
+      "get": {
+        "operationId": "customization-options",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customization-optionsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get 8 Avatar theme packs, 15 cosmic colors, 50 adjectives, and current Astro Buddy",
+        "tags": [
+          "Customization"
+        ]
+      }
+    },
     "/api/v1/daily-orbit/change-question": {
       "post": {
         "operationId": "daily-orbit-change-question",
@@ -4878,6 +7133,612 @@
         ]
       }
     },
+    "/api/v1/duels/lobby": {
+      "get": {
+        "operationId": "duels-lobby",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuelLobby"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get Star Duels lobby with daily energy cells, masked opponents, incoming \u0026 history",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/duels/start": {
+      "post": {
+        "operationId": "duels-start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Duels-startRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Duels-startResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Launch a 1v1 Star Duel (consumes 1 of 3 daily energy cells)",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/duels/{id}/accept": {
+      "post": {
+        "operationId": "duels-accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuelRecord"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Accept an incoming Star Duel challenge",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/duels/{id}/submit": {
+      "post": {
+        "operationId": "duels-submit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Duels-submitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuelRecord"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Grade Star Duel answers and award Star Points",
+        "tags": [
+          "Social"
+        ]
+      }
+    },
+    "/api/v1/events/creator-challenge/submit": {
+      "post": {
+        "operationId": "events-creator-submit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Events-creator-submitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorSubmission"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Submit a Quarterly Creator Challenge entry (masked author name)",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/events/hub": {
+      "get": {
+        "operationId": "events-hub",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsHub"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get Cosmic Events hub (Sunday Meteor Challenge + Quarterly Creator Challenge)",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/events/sunday-meteor/start": {
+      "post": {
+        "operationId": "events-sunday-meteor-start",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SundayMeteorStart"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Start a 10-question Sunday Meteor Challenge set",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/events/sunday-meteor/submit": {
+      "post": {
+        "operationId": "events-sunday-meteor-submit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Events-sunday-meteor-submitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SundayMeteorResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Grade Sunday Meteor Challenge answers and award SP",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/challenges": {
+      "get": {
+        "operationId": "leaderboards-challenges",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Leaderboards-challengesResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List 6 Open Challenges and 4 Seasonal Challenges",
+        "tags": [
+          "Leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/{challenge}": {
+      "get": {
+        "operationId": "leaderboards-board",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "challenge",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "default": "NATIONAL",
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "filterGrade",
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "viewMode",
+            "schema": {
+              "default": "TOP50",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardBoard"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get Galaxy Leaderboard (Class/School/National, Top 50 or Nearby +/-5, masked names)",
+        "tags": [
+          "Leaderboards"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "notifications-list",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notifications-listResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List student notifications",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/read": {
+      "post": {
+        "operationId": "notifications-mark-read",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notifications-mark-readResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Mark all notifications as read",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
     "/api/v1/parent/overview": {
       "get": {
         "operationId": "parent-overview",
@@ -5314,6 +8175,238 @@
         ]
       }
     },
+    "/api/v1/showcase": {
+      "get": {
+        "operationId": "showcase-list",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "grade",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Showcase-listResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Galaxy Showcase ranked by Star Points across Grades 1-6 (requires \u003e=1 SP)",
+        "tags": [
+          "Customization"
+        ]
+      }
+    },
+    "/api/v1/stories/chapters/{code}": {
+      "get": {
+        "operationId": "stories-open-chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterViewer"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Open an unlocked 20-page Planet Stories digital storybook",
+        "tags": [
+          "Stories"
+        ]
+      }
+    },
+    "/api/v1/stories/chapters/{code}/bookmark": {
+      "patch": {
+        "operationId": "stories-bookmark",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Stories-bookmarkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stories-bookmarkResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Bookmark current storybook page number",
+        "tags": [
+          "Stories"
+        ]
+      }
+    },
+    "/api/v1/stories/chapters/{code}/unlock": {
+      "post": {
+        "operationId": "stories-unlock-chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterViewer"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Atomically deduct 20 Astro Coins to unlock a Planet Stories chapter",
+        "tags": [
+          "Stories"
+        ]
+      }
+    },
+    "/api/v1/stories/planets": {
+      "get": {
+        "operationId": "stories-list-planets",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stories-list-planetsResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List all 6 Planet Stories worlds and chapter unlock statuses",
+        "tags": [
+          "Stories"
+        ]
+      }
+    },
     "/api/v1/streak/calendar": {
       "get": {
         "operationId": "streak-calendar",
@@ -5480,6 +8573,213 @@
         "summary": "Get student's Orbit Streak, Nova Pet stage, and Cryo Shields",
         "tags": [
           "Streak"
+        ]
+      }
+    },
+    "/api/v1/super-nova/hub": {
+      "get": {
+        "operationId": "supernova-hub",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubSummary"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get Super Nova weekly diamond S score and score history",
+        "tags": [
+          "SuperNova"
+        ]
+      }
+    },
+    "/api/v1/super-nova/super-sight/start": {
+      "post": {
+        "operationId": "supernova-sight-start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Supernova-sight-startRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperSightSession"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Start a Super Sight spot-the-difference puzzle (5 diffs, max 5 wrong, 5 min)",
+        "tags": [
+          "SuperNova"
+        ]
+      }
+    },
+    "/api/v1/super-nova/super-sight/tap": {
+      "post": {
+        "operationId": "supernova-sight-tap",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Supernova-sight-tapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supernova-sight-tapResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Submit a normalized (0..1) tap coordinate on the Super Sight canvas",
+        "tags": [
+          "SuperNova"
+        ]
+      }
+    },
+    "/api/v1/super-nova/super-warp/finish": {
+      "post": {
+        "operationId": "supernova-warp-finish",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Supernova-warp-finishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supernova-warp-finishResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Grade Super Warp answers and update weekly S score if Challenge mode",
+        "tags": [
+          "SuperNova"
+        ]
+      }
+    },
+    "/api/v1/super-nova/super-warp/start": {
+      "post": {
+        "operationId": "supernova-warp-start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Supernova-warp-startRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperWarpStart"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Start a 2-minute Super Warp rapid-fire math sprint",
+        "tags": [
+          "SuperNova"
         ]
       }
     },

@@ -1,0 +1,116 @@
+{
+  "duels": {
+    "title": "Star Duels (1v1)",
+    "subtitle": "Challenge same-grade pilots in friendly 5-question math duels to earn bonus Star Points!",
+    "energyTitle": "Daily Energy Cells",
+    "energyLeft": "{{left}} / {{max}} Cells Remaining",
+    "noEnergy": "All 3 energy cells used today! They recharge automatically at midnight.",
+    "tabs": {
+      "challenge": "Challenge Pilot",
+      "incoming": "Incoming ({{count}})",
+      "history": "History",
+      "rules": "Rules"
+    },
+    "modes": {
+      "CLASSMATE": "My Classmate",
+      "CREW": "My Star Crew",
+      "RANDOM": "Random Match"
+    },
+    "launchDuel": "Launch Duel",
+    "acceptDuel": "Accept Duel",
+    "submitDuel": "Finish & Compare Scores",
+    "questionProgress": "Duel Question {{current}} of {{total}}",
+    "vsLabel": "VS {{name}}",
+    "resultWin": "Galaxy Victory! You won +{{sp}} SP!",
+    "resultDraw": "Cosmic Draw! You earned +{{sp}} SP!",
+    "resultLoss": "Great Effort! You earned +{{sp}} SP!",
+    "yourScore": "Your Score",
+    "opponentScore": "{{name}}'s Score",
+    "backToLobby": "Back to Duel Lobby",
+    "noIncoming": "No pending incoming challenges right now.",
+    "noHistory": "No completed duels yet. Launch your first Star Duel!",
+    "manageCrew": "Open Star Crew (BFF)",
+    "outcome": {
+      "WIN": "Victory",
+      "DRAW": "Draw",
+      "LOSS": "Defeat"
+    },
+    "answerInput": "Answer for question {{n}}"
+  },
+  "crew": {
+    "title": "Star Crew (BFF)",
+    "subtitle": "Team up with best friends using a safe 9-digit Crew Code and climb the weekly Crew leaderboard!",
+    "yourCode": "Your 9-Digit Crew Code",
+    "copyCode": "Copy Code",
+    "copied": "Copied!",
+    "weeklyTotal": "Weekly Crew SP",
+    "membersTitle": "Crew Pilots",
+    "leaderBadge": "Captain",
+    "joinTitle": "Join a Friend's Star Crew",
+    "joinPlaceholder": "Enter 9-digit code (e.g. 482-910-375)",
+    "joinButton": "Join Crew",
+    "leaveButton": "Leave & Create Fresh Crew",
+    "joinSuccess": "Welcome to your new Star Crew!",
+    "joinError": "Crew code not found or invalid (must be 9 digits)."
+  },
+  "leaderboard": {
+    "title": "Galaxy Leaderboards",
+    "subtitle": "Track rankings across 6 Open Challenges and 4 Seasonal Events with safe masked pilot names.",
+    "openSection": "6 Open Challenges",
+    "seasonalSection": "4 Seasonal Challenges",
+    "scopes": {
+      "CLASS": "Class",
+      "SCHOOL": "School",
+      "NATIONAL": "National"
+    },
+    "allGrades": "All Grades (G1–G6)",
+    "gradeOption": "Grade {{grade}}",
+    "top50": "Top 50",
+    "nearby": "Nearby Pilots (±5)",
+    "refreshIn": "Live refresh in {{sec}}s",
+    "yourRank": "Your Rank: #{{rank}}",
+    "rankCol": "Rank",
+    "pilotCol": "Pilot",
+    "gradeCol": "Grade",
+    "scoreCol": "Score",
+    "youBadge": "YOU",
+    "hallOfFame": "Hall of Fame Archive",
+    "metrics": {
+      "SP": "SP",
+      "Class_SP": "Class SP",
+      "Crew_SP": "Crew SP",
+      "S": "S",
+      "Days": "Days",
+      "Stars": "Stars",
+      "Faction_SP": "Faction SP",
+      "Cup_SP": "Cup SP"
+    }
+  },
+  "events": {
+    "title": "Cosmic Events",
+    "subtitle": "Join the Sunday Meteor Challenge and Quarterly Creator Challenge for bonus rewards!",
+    "sundayTitle": "Sunday Meteor Challenge",
+    "sundayOpen": "LIVE NOW",
+    "sundayPreview": "PREVIEW MODE",
+    "sundayStart": "Launch 10-Question Meteor Run",
+    "sundaySubmit": "Submit Meteor Answers",
+    "sundayDone": "Meteor Run Complete! {{correct}} / {{total}} correct (+{{sp}} SP)",
+    "creatorTitle": "Quarterly Creator Challenge",
+    "creatorQuarter": "Season {{quarter}}",
+    "creatorFormTitle": "Submit Your Math Story Idea",
+    "creatorTitlePlaceholder": "Title (e.g. Asteroid Pizza Fractions)",
+    "creatorSummaryPlaceholder": "Describe your creative math puzzle for elementary pilots...",
+    "creatorSubmit": "Submit Idea",
+    "creatorSubmitted": "Submitted! Your idea will appear in the Creator Showcase after a moderator reviews it.",
+    "creatorGallery": "Featured Pilot Creations"
+  },
+  "shell": {
+    "bonusGiftTitle": "Daily Bonus Gift",
+    "bonusGiftBody": "Claim your free daily Astro Coins reward for logging in today!",
+    "bonusGiftClaim": "Claim +{{ac}} Astro Coins",
+    "bonusGiftClaimed": "Already claimed today! Come back tomorrow.",
+    "bonusGiftSuccess": "Yay! +{{ac}} Astro Coins added to your wallet!",
+    "markAllRead": "Mark all read",
+    "close": "Close"
+  }
+}

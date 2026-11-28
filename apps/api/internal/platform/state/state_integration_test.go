@@ -3,10 +3,12 @@ package state_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
@@ -175,5 +177,68 @@ func TestSaveMergedPreservesConcurrentWrites(t *testing.T) {
 	}
 	if len(got) != 2 || got["assignment-a"] != "assignment-a" || got["assignment-b"] != "assignment-b" {
 		t.Fatalf("concurrent merged writes lost data: %+v", got)
+	}
+}
+
+func TestSharedStateFailedMergeRollsBackAndDeleteIsScoped(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL shared state integration test")
+	}
+	ctx := t.Context()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	store := state.NewPGStore(pool)
+	scope := "shared-state-test-" + uuid.NewString()
+	const key = "crew"
+	for _, s := range []string{scope, scope + "-other"} {
+		t.Cleanup(func() {
+			if err := store.DeleteShared(context.Background(), s, key); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+
+	wantErr := errors.New("rejected roster update")
+	err = store.SaveSharedMerged(ctx, scope, key, func([]byte) (any, error) {
+		return nil, wantErr
+	})
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("merge returned %v; want %v", err, wantErr)
+	}
+	if found, err := store.LoadShared(ctx, scope, key, &[]string{}); found || err != nil {
+		t.Fatalf("failed first merge left a document: found=%t err=%v", found, err)
+	}
+
+	if err := store.SaveShared(ctx, scope, key, []string{"first"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveShared(ctx, scope+"-other", key, []string{"other scope"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveSharedMerged(ctx, scope, key, func(current []byte) (any, error) {
+		var members []string
+		if err := json.Unmarshal(current, &members); err != nil {
+			return nil, err
+		}
+		return append(members, "second"), nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var members []string
+	if found, err := state.NewPGStore(pool).LoadShared(ctx, scope, key, &members); err != nil || !found || len(members) != 2 || members[0] != "first" || members[1] != "second" {
+		t.Fatalf("second store did not see merged roster: found=%t members=%v err=%v", found, members, err)
+	}
+	if err := store.DeleteShared(ctx, scope, key); err != nil {
+		t.Fatal(err)
+	}
+	if found, err := store.LoadShared(ctx, scope, key, &members); found || err != nil {
+		t.Fatalf("deleted roster was visible: found=%t err=%v", found, err)
+	}
+	if found, err := store.LoadShared(ctx, scope+"-other", key, &members); err != nil || !found || len(members) != 1 || members[0] != "other scope" {
+		t.Fatalf("delete affected an unrelated scope: found=%t members=%v err=%v", found, members, err)
 	}
 }

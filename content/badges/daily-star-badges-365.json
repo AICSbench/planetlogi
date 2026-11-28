@@ -1,0 +1,4385 @@
+{
+  "version": "1.0.0",
+  "days": [
+    {
+      "dayOfYear": 1,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #1",
+        "id": "Fakta Bintang #1"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 2,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #2",
+        "id": "Fakta Bintang #2"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 3,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #3",
+        "id": "Fakta Bintang #3"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 4,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #4",
+        "id": "Fakta Bintang #4"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 5,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #5",
+        "id": "Fakta Bintang #5"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 6,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #6",
+        "id": "Fakta Bintang #6"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 7,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #7",
+        "id": "Fakta Bintang #7"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 8,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #8",
+        "id": "Fakta Bintang #8"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 9,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #9",
+        "id": "Fakta Bintang #9"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 10,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #10",
+        "id": "Fakta Bintang #10"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 11,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #11",
+        "id": "Fakta Bintang #11"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 12,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #12",
+        "id": "Fakta Bintang #12"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 13,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #13",
+        "id": "Fakta Bintang #13"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 14,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #14",
+        "id": "Fakta Bintang #14"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 15,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #15",
+        "id": "Fakta Bintang #15"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 16,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #16",
+        "id": "Fakta Bintang #16"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 17,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #17",
+        "id": "Fakta Bintang #17"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 18,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #18",
+        "id": "Fakta Bintang #18"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 19,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #19",
+        "id": "Fakta Bintang #19"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 20,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #20",
+        "id": "Fakta Bintang #20"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 21,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #21",
+        "id": "Fakta Bintang #21"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 22,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #22",
+        "id": "Fakta Bintang #22"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 23,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #23",
+        "id": "Fakta Bintang #23"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 24,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #24",
+        "id": "Fakta Bintang #24"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 25,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #25",
+        "id": "Fakta Bintang #25"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 26,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #26",
+        "id": "Fakta Bintang #26"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 27,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #27",
+        "id": "Fakta Bintang #27"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 28,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #28",
+        "id": "Fakta Bintang #28"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 29,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #29",
+        "id": "Fakta Bintang #29"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 30,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #30",
+        "id": "Fakta Bintang #30"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 31,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #31",
+        "id": "Fakta Bintang #31"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 32,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #32",
+        "id": "Fakta Bintang #32"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 33,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #33",
+        "id": "Fakta Bintang #33"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 34,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #34",
+        "id": "Fakta Bintang #34"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 35,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #35",
+        "id": "Fakta Bintang #35"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 36,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #36",
+        "id": "Fakta Bintang #36"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 37,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #37",
+        "id": "Fakta Bintang #37"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 38,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #38",
+        "id": "Fakta Bintang #38"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 39,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #39",
+        "id": "Fakta Bintang #39"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 40,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #40",
+        "id": "Fakta Bintang #40"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 41,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #41",
+        "id": "Fakta Bintang #41"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 42,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #42",
+        "id": "Fakta Bintang #42"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 43,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #43",
+        "id": "Fakta Bintang #43"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 44,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #44",
+        "id": "Fakta Bintang #44"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 45,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #45",
+        "id": "Fakta Bintang #45"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 46,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #46",
+        "id": "Fakta Bintang #46"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 47,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #47",
+        "id": "Fakta Bintang #47"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 48,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #48",
+        "id": "Fakta Bintang #48"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 49,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #49",
+        "id": "Fakta Bintang #49"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 50,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #50",
+        "id": "Fakta Bintang #50"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 51,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #51",
+        "id": "Fakta Bintang #51"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 52,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #52",
+        "id": "Fakta Bintang #52"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 53,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #53",
+        "id": "Fakta Bintang #53"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 54,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #54",
+        "id": "Fakta Bintang #54"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 55,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #55",
+        "id": "Fakta Bintang #55"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 56,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #56",
+        "id": "Fakta Bintang #56"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 57,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #57",
+        "id": "Fakta Bintang #57"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 58,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #58",
+        "id": "Fakta Bintang #58"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 59,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #59",
+        "id": "Fakta Bintang #59"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 60,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #60",
+        "id": "Fakta Bintang #60"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 61,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #61",
+        "id": "Fakta Bintang #61"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 62,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #62",
+        "id": "Fakta Bintang #62"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 63,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #63",
+        "id": "Fakta Bintang #63"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 64,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #64",
+        "id": "Fakta Bintang #64"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 65,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #65",
+        "id": "Fakta Bintang #65"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 66,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #66",
+        "id": "Fakta Bintang #66"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 67,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #67",
+        "id": "Fakta Bintang #67"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 68,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #68",
+        "id": "Fakta Bintang #68"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 69,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #69",
+        "id": "Fakta Bintang #69"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 70,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #70",
+        "id": "Fakta Bintang #70"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 71,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #71",
+        "id": "Fakta Bintang #71"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 72,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #72",
+        "id": "Fakta Bintang #72"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 73,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #73",
+        "id": "Fakta Bintang #73"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 74,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #74",
+        "id": "Fakta Bintang #74"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 75,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #75",
+        "id": "Fakta Bintang #75"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 76,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #76",
+        "id": "Fakta Bintang #76"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 77,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #77",
+        "id": "Fakta Bintang #77"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 78,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #78",
+        "id": "Fakta Bintang #78"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 79,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #79",
+        "id": "Fakta Bintang #79"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 80,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #80",
+        "id": "Fakta Bintang #80"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 81,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #81",
+        "id": "Fakta Bintang #81"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 82,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #82",
+        "id": "Fakta Bintang #82"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 83,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #83",
+        "id": "Fakta Bintang #83"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 84,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #84",
+        "id": "Fakta Bintang #84"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 85,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #85",
+        "id": "Fakta Bintang #85"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 86,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #86",
+        "id": "Fakta Bintang #86"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 87,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #87",
+        "id": "Fakta Bintang #87"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 88,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #88",
+        "id": "Fakta Bintang #88"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 89,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #89",
+        "id": "Fakta Bintang #89"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 90,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #90",
+        "id": "Fakta Bintang #90"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 91,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #91",
+        "id": "Fakta Bintang #91"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 92,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #92",
+        "id": "Fakta Bintang #92"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 93,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #93",
+        "id": "Fakta Bintang #93"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 94,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #94",
+        "id": "Fakta Bintang #94"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 95,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #95",
+        "id": "Fakta Bintang #95"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 96,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #96",
+        "id": "Fakta Bintang #96"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 97,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #97",
+        "id": "Fakta Bintang #97"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 98,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #98",
+        "id": "Fakta Bintang #98"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 99,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #99",
+        "id": "Fakta Bintang #99"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 100,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #100",
+        "id": "Fakta Bintang #100"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 101,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #101",
+        "id": "Fakta Bintang #101"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 102,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #102",
+        "id": "Fakta Bintang #102"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 103,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #103",
+        "id": "Fakta Bintang #103"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 104,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #104",
+        "id": "Fakta Bintang #104"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 105,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #105",
+        "id": "Fakta Bintang #105"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 106,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #106",
+        "id": "Fakta Bintang #106"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 107,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #107",
+        "id": "Fakta Bintang #107"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 108,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #108",
+        "id": "Fakta Bintang #108"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 109,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #109",
+        "id": "Fakta Bintang #109"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 110,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #110",
+        "id": "Fakta Bintang #110"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 111,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #111",
+        "id": "Fakta Bintang #111"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 112,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #112",
+        "id": "Fakta Bintang #112"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 113,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #113",
+        "id": "Fakta Bintang #113"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 114,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #114",
+        "id": "Fakta Bintang #114"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 115,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #115",
+        "id": "Fakta Bintang #115"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 116,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #116",
+        "id": "Fakta Bintang #116"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 117,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #117",
+        "id": "Fakta Bintang #117"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 118,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #118",
+        "id": "Fakta Bintang #118"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 119,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #119",
+        "id": "Fakta Bintang #119"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 120,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #120",
+        "id": "Fakta Bintang #120"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 121,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #121",
+        "id": "Fakta Bintang #121"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 122,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #122",
+        "id": "Fakta Bintang #122"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 123,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #123",
+        "id": "Fakta Bintang #123"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 124,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #124",
+        "id": "Fakta Bintang #124"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 125,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #125",
+        "id": "Fakta Bintang #125"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 126,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #126",
+        "id": "Fakta Bintang #126"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 127,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #127",
+        "id": "Fakta Bintang #127"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 128,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #128",
+        "id": "Fakta Bintang #128"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 129,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #129",
+        "id": "Fakta Bintang #129"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 130,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #130",
+        "id": "Fakta Bintang #130"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 131,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #131",
+        "id": "Fakta Bintang #131"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 132,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #132",
+        "id": "Fakta Bintang #132"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 133,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #133",
+        "id": "Fakta Bintang #133"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 134,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #134",
+        "id": "Fakta Bintang #134"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 135,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #135",
+        "id": "Fakta Bintang #135"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 136,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #136",
+        "id": "Fakta Bintang #136"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 137,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #137",
+        "id": "Fakta Bintang #137"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 138,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #138",
+        "id": "Fakta Bintang #138"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 139,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #139",
+        "id": "Fakta Bintang #139"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 140,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #140",
+        "id": "Fakta Bintang #140"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 141,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #141",
+        "id": "Fakta Bintang #141"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 142,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #142",
+        "id": "Fakta Bintang #142"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 143,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #143",
+        "id": "Fakta Bintang #143"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 144,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #144",
+        "id": "Fakta Bintang #144"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 145,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #145",
+        "id": "Fakta Bintang #145"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 146,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #146",
+        "id": "Fakta Bintang #146"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 147,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #147",
+        "id": "Fakta Bintang #147"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 148,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #148",
+        "id": "Fakta Bintang #148"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 149,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #149",
+        "id": "Fakta Bintang #149"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 150,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #150",
+        "id": "Fakta Bintang #150"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 151,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #151",
+        "id": "Fakta Bintang #151"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 152,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #152",
+        "id": "Fakta Bintang #152"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 153,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #153",
+        "id": "Fakta Bintang #153"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 154,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #154",
+        "id": "Fakta Bintang #154"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 155,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #155",
+        "id": "Fakta Bintang #155"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 156,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #156",
+        "id": "Fakta Bintang #156"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 157,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #157",
+        "id": "Fakta Bintang #157"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 158,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #158",
+        "id": "Fakta Bintang #158"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 159,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #159",
+        "id": "Fakta Bintang #159"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 160,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #160",
+        "id": "Fakta Bintang #160"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 161,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #161",
+        "id": "Fakta Bintang #161"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 162,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #162",
+        "id": "Fakta Bintang #162"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 163,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #163",
+        "id": "Fakta Bintang #163"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 164,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #164",
+        "id": "Fakta Bintang #164"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 165,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #165",
+        "id": "Fakta Bintang #165"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 166,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #166",
+        "id": "Fakta Bintang #166"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 167,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #167",
+        "id": "Fakta Bintang #167"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 168,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #168",
+        "id": "Fakta Bintang #168"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 169,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #169",
+        "id": "Fakta Bintang #169"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 170,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #170",
+        "id": "Fakta Bintang #170"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 171,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #171",
+        "id": "Fakta Bintang #171"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 172,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #172",
+        "id": "Fakta Bintang #172"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 173,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #173",
+        "id": "Fakta Bintang #173"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 174,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #174",
+        "id": "Fakta Bintang #174"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 175,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #175",
+        "id": "Fakta Bintang #175"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 176,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #176",
+        "id": "Fakta Bintang #176"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 177,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #177",
+        "id": "Fakta Bintang #177"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 178,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #178",
+        "id": "Fakta Bintang #178"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 179,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #179",
+        "id": "Fakta Bintang #179"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 180,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #180",
+        "id": "Fakta Bintang #180"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 181,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #181",
+        "id": "Fakta Bintang #181"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 182,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #182",
+        "id": "Fakta Bintang #182"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 183,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #183",
+        "id": "Fakta Bintang #183"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 184,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #184",
+        "id": "Fakta Bintang #184"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 185,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #185",
+        "id": "Fakta Bintang #185"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 186,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #186",
+        "id": "Fakta Bintang #186"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 187,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #187",
+        "id": "Fakta Bintang #187"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 188,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #188",
+        "id": "Fakta Bintang #188"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 189,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #189",
+        "id": "Fakta Bintang #189"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 190,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #190",
+        "id": "Fakta Bintang #190"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 191,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #191",
+        "id": "Fakta Bintang #191"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 192,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #192",
+        "id": "Fakta Bintang #192"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 193,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #193",
+        "id": "Fakta Bintang #193"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 194,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #194",
+        "id": "Fakta Bintang #194"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 195,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #195",
+        "id": "Fakta Bintang #195"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 196,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #196",
+        "id": "Fakta Bintang #196"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 197,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #197",
+        "id": "Fakta Bintang #197"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 198,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #198",
+        "id": "Fakta Bintang #198"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 199,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #199",
+        "id": "Fakta Bintang #199"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 200,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #200",
+        "id": "Fakta Bintang #200"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 201,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #201",
+        "id": "Fakta Bintang #201"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 202,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #202",
+        "id": "Fakta Bintang #202"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 203,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #203",
+        "id": "Fakta Bintang #203"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 204,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #204",
+        "id": "Fakta Bintang #204"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 205,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #205",
+        "id": "Fakta Bintang #205"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 206,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #206",
+        "id": "Fakta Bintang #206"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 207,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #207",
+        "id": "Fakta Bintang #207"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 208,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #208",
+        "id": "Fakta Bintang #208"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 209,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #209",
+        "id": "Fakta Bintang #209"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 210,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #210",
+        "id": "Fakta Bintang #210"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 211,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #211",
+        "id": "Fakta Bintang #211"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 212,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #212",
+        "id": "Fakta Bintang #212"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 213,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #213",
+        "id": "Fakta Bintang #213"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 214,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #214",
+        "id": "Fakta Bintang #214"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 215,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #215",
+        "id": "Fakta Bintang #215"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 216,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #216",
+        "id": "Fakta Bintang #216"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 217,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #217",
+        "id": "Fakta Bintang #217"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 218,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #218",
+        "id": "Fakta Bintang #218"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 219,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #219",
+        "id": "Fakta Bintang #219"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 220,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #220",
+        "id": "Fakta Bintang #220"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 221,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #221",
+        "id": "Fakta Bintang #221"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 222,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #222",
+        "id": "Fakta Bintang #222"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 223,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #223",
+        "id": "Fakta Bintang #223"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 224,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #224",
+        "id": "Fakta Bintang #224"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 225,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #225",
+        "id": "Fakta Bintang #225"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 226,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #226",
+        "id": "Fakta Bintang #226"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 227,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #227",
+        "id": "Fakta Bintang #227"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 228,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #228",
+        "id": "Fakta Bintang #228"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 229,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #229",
+        "id": "Fakta Bintang #229"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 230,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #230",
+        "id": "Fakta Bintang #230"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 231,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #231",
+        "id": "Fakta Bintang #231"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 232,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #232",
+        "id": "Fakta Bintang #232"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 233,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #233",
+        "id": "Fakta Bintang #233"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 234,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #234",
+        "id": "Fakta Bintang #234"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 235,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #235",
+        "id": "Fakta Bintang #235"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 236,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #236",
+        "id": "Fakta Bintang #236"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 237,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #237",
+        "id": "Fakta Bintang #237"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 238,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #238",
+        "id": "Fakta Bintang #238"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 239,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #239",
+        "id": "Fakta Bintang #239"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 240,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #240",
+        "id": "Fakta Bintang #240"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 241,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #241",
+        "id": "Fakta Bintang #241"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 242,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #242",
+        "id": "Fakta Bintang #242"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 243,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #243",
+        "id": "Fakta Bintang #243"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 244,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #244",
+        "id": "Fakta Bintang #244"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 245,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #245",
+        "id": "Fakta Bintang #245"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 246,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #246",
+        "id": "Fakta Bintang #246"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 247,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #247",
+        "id": "Fakta Bintang #247"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 248,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #248",
+        "id": "Fakta Bintang #248"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 249,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #249",
+        "id": "Fakta Bintang #249"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 250,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #250",
+        "id": "Fakta Bintang #250"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 251,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #251",
+        "id": "Fakta Bintang #251"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 252,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #252",
+        "id": "Fakta Bintang #252"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 253,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #253",
+        "id": "Fakta Bintang #253"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 254,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #254",
+        "id": "Fakta Bintang #254"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 255,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #255",
+        "id": "Fakta Bintang #255"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 256,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #256",
+        "id": "Fakta Bintang #256"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 257,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #257",
+        "id": "Fakta Bintang #257"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 258,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #258",
+        "id": "Fakta Bintang #258"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 259,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #259",
+        "id": "Fakta Bintang #259"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 260,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #260",
+        "id": "Fakta Bintang #260"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 261,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #261",
+        "id": "Fakta Bintang #261"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 262,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #262",
+        "id": "Fakta Bintang #262"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 263,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #263",
+        "id": "Fakta Bintang #263"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 264,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #264",
+        "id": "Fakta Bintang #264"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 265,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #265",
+        "id": "Fakta Bintang #265"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 266,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #266",
+        "id": "Fakta Bintang #266"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 267,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #267",
+        "id": "Fakta Bintang #267"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 268,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #268",
+        "id": "Fakta Bintang #268"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 269,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #269",
+        "id": "Fakta Bintang #269"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 270,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #270",
+        "id": "Fakta Bintang #270"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 271,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #271",
+        "id": "Fakta Bintang #271"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 272,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #272",
+        "id": "Fakta Bintang #272"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 273,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #273",
+        "id": "Fakta Bintang #273"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 274,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #274",
+        "id": "Fakta Bintang #274"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 275,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #275",
+        "id": "Fakta Bintang #275"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 276,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #276",
+        "id": "Fakta Bintang #276"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 277,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #277",
+        "id": "Fakta Bintang #277"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 278,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #278",
+        "id": "Fakta Bintang #278"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 279,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #279",
+        "id": "Fakta Bintang #279"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 280,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #280",
+        "id": "Fakta Bintang #280"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 281,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #281",
+        "id": "Fakta Bintang #281"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 282,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #282",
+        "id": "Fakta Bintang #282"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 283,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #283",
+        "id": "Fakta Bintang #283"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 284,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #284",
+        "id": "Fakta Bintang #284"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 285,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #285",
+        "id": "Fakta Bintang #285"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 286,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #286",
+        "id": "Fakta Bintang #286"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 287,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #287",
+        "id": "Fakta Bintang #287"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 288,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #288",
+        "id": "Fakta Bintang #288"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 289,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #289",
+        "id": "Fakta Bintang #289"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 290,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #290",
+        "id": "Fakta Bintang #290"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 291,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #291",
+        "id": "Fakta Bintang #291"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 292,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #292",
+        "id": "Fakta Bintang #292"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 293,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #293",
+        "id": "Fakta Bintang #293"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 294,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #294",
+        "id": "Fakta Bintang #294"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 295,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #295",
+        "id": "Fakta Bintang #295"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 296,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #296",
+        "id": "Fakta Bintang #296"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 297,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #297",
+        "id": "Fakta Bintang #297"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 298,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #298",
+        "id": "Fakta Bintang #298"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 299,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #299",
+        "id": "Fakta Bintang #299"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 300,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #300",
+        "id": "Fakta Bintang #300"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 301,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #301",
+        "id": "Fakta Bintang #301"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 302,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #302",
+        "id": "Fakta Bintang #302"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 303,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #303",
+        "id": "Fakta Bintang #303"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 304,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #304",
+        "id": "Fakta Bintang #304"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 305,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #305",
+        "id": "Fakta Bintang #305"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 306,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #306",
+        "id": "Fakta Bintang #306"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 307,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #307",
+        "id": "Fakta Bintang #307"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 308,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #308",
+        "id": "Fakta Bintang #308"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 309,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #309",
+        "id": "Fakta Bintang #309"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 310,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #310",
+        "id": "Fakta Bintang #310"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 311,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #311",
+        "id": "Fakta Bintang #311"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 312,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #312",
+        "id": "Fakta Bintang #312"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 313,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #313",
+        "id": "Fakta Bintang #313"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 314,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #314",
+        "id": "Fakta Bintang #314"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 315,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #315",
+        "id": "Fakta Bintang #315"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 316,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #316",
+        "id": "Fakta Bintang #316"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 317,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #317",
+        "id": "Fakta Bintang #317"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 318,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #318",
+        "id": "Fakta Bintang #318"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 319,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #319",
+        "id": "Fakta Bintang #319"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 320,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #320",
+        "id": "Fakta Bintang #320"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 321,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #321",
+        "id": "Fakta Bintang #321"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 322,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #322",
+        "id": "Fakta Bintang #322"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 323,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #323",
+        "id": "Fakta Bintang #323"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 324,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #324",
+        "id": "Fakta Bintang #324"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 325,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #325",
+        "id": "Fakta Bintang #325"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 326,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #326",
+        "id": "Fakta Bintang #326"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 327,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #327",
+        "id": "Fakta Bintang #327"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 328,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #328",
+        "id": "Fakta Bintang #328"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 329,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #329",
+        "id": "Fakta Bintang #329"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 330,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #330",
+        "id": "Fakta Bintang #330"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 331,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #331",
+        "id": "Fakta Bintang #331"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 332,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #332",
+        "id": "Fakta Bintang #332"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 333,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #333",
+        "id": "Fakta Bintang #333"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 334,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #334",
+        "id": "Fakta Bintang #334"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 335,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #335",
+        "id": "Fakta Bintang #335"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 336,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #336",
+        "id": "Fakta Bintang #336"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 337,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #337",
+        "id": "Fakta Bintang #337"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 338,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #338",
+        "id": "Fakta Bintang #338"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 339,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #339",
+        "id": "Fakta Bintang #339"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 340,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #340",
+        "id": "Fakta Bintang #340"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 341,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #341",
+        "id": "Fakta Bintang #341"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 342,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #342",
+        "id": "Fakta Bintang #342"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 343,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #343",
+        "id": "Fakta Bintang #343"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 344,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #344",
+        "id": "Fakta Bintang #344"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 345,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #345",
+        "id": "Fakta Bintang #345"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 346,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #346",
+        "id": "Fakta Bintang #346"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 347,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #347",
+        "id": "Fakta Bintang #347"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 348,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #348",
+        "id": "Fakta Bintang #348"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 349,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #349",
+        "id": "Fakta Bintang #349"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 350,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #350",
+        "id": "Fakta Bintang #350"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 351,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #351",
+        "id": "Fakta Bintang #351"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 352,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #352",
+        "id": "Fakta Bintang #352"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 353,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #353",
+        "id": "Fakta Bintang #353"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 354,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #354",
+        "id": "Fakta Bintang #354"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 355,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #355",
+        "id": "Fakta Bintang #355"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 356,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #356",
+        "id": "Fakta Bintang #356"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 357,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #357",
+        "id": "Fakta Bintang #357"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 358,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #358",
+        "id": "Fakta Bintang #358"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 359,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #359",
+        "id": "Fakta Bintang #359"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    },
+    {
+      "dayOfYear": 360,
+      "category": "Speed",
+      "title": {
+        "en": "Star Fact #360",
+        "id": "Fakta Bintang #360"
+      },
+      "fact": {
+        "en": "Light travels about 300,000 kilometers every single second!",
+        "id": "Cahaya melaju sekitar 300.000 kilometer setiap detiknya!"
+      }
+    },
+    {
+      "dayOfYear": 361,
+      "category": "Space & Numbers",
+      "title": {
+        "en": "Star Fact #361",
+        "id": "Fakta Bintang #361"
+      },
+      "fact": {
+        "en": "Zero was popularized by ancient mathematicians and powers every place-value chart!",
+        "id": "Angka nol dipopulerkan matematikawan kuno dan menjadi kunci nilai tempat!"
+      }
+    },
+    {
+      "dayOfYear": 362,
+      "category": "Geometry",
+      "title": {
+        "en": "Star Fact #362",
+        "id": "Fakta Bintang #362"
+      },
+      "fact": {
+        "en": "Honeycomb cells form hexagons because hexagons pack space with the least wax!",
+        "id": "Sarang lebah berbentuk segi enam karena paling hemat ruang dan lilin!"
+      }
+    },
+    {
+      "dayOfYear": 363,
+      "category": "Planets",
+      "title": {
+        "en": "Star Fact #363",
+        "id": "Fakta Bintang #363"
+      },
+      "fact": {
+        "en": "Jupiter is so large that over 1,300 Earths could fit inside it!",
+        "id": "Jupiter sangat besar hingga lebih dari 1.300 Bumi bisa muat di dalamnya!"
+      }
+    },
+    {
+      "dayOfYear": 364,
+      "category": "Fractions",
+      "title": {
+        "en": "Star Fact #364",
+        "id": "Fakta Bintang #364"
+      },
+      "fact": {
+        "en": "Musical notes like half notes and quarter notes are real-life fractions!",
+        "id": "Not balok seperti not setengah dan seperempat adalah pecahan di dunia nyata!"
+      }
+    },
+    {
+      "dayOfYear": 365,
+      "category": "Patterns",
+      "title": {
+        "en": "Star Fact #365",
+        "id": "Fakta Bintang #365"
+      },
+      "fact": {
+        "en": "Sunflower spirals often follow the famous Fibonacci number sequence!",
+        "id": "Spiral bunga matahari sering mengikuti barisan bilangan Fibonacci!"
+      }
+    }
+  ]
+}

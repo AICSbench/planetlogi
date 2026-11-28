@@ -1,0 +1,116 @@
+{
+  "duels": {
+    "title": "Duel Bintang (1v1)",
+    "subtitle": "Tantang pilot sekelas dalam duel matematika 5 soal yang seru untuk meraih Star Points ekstra!",
+    "energyTitle": "Sel Energi Harian",
+    "energyLeft": "Tersisa {{left}} / {{max}} Sel",
+    "noEnergy": "Ketiga sel energi hari ini sudah terpakai! Energi terisi ulang otomatis tengah malam.",
+    "tabs": {
+      "challenge": "Tantang Pilot",
+      "incoming": "Tantangan Masuk ({{count}})",
+      "history": "Riwayat",
+      "rules": "Aturan"
+    },
+    "modes": {
+      "CLASSMATE": "Teman Sekelas",
+      "CREW": "Kru Bintangku",
+      "RANDOM": "Lawan Acak"
+    },
+    "launchDuel": "Mulai Duel",
+    "acceptDuel": "Terima Duel",
+    "submitDuel": "Selesai & Bandingkan Skor",
+    "questionProgress": "Soal Duel {{current}} dari {{total}}",
+    "vsLabel": "VS {{name}}",
+    "resultWin": "Kemenangan Galaksi! Kamu meraih +{{sp}} SP!",
+    "resultDraw": "Seri Kosmik! Kamu meraih +{{sp}} SP!",
+    "resultLoss": "Usaha Hebat! Kamu meraih +{{sp}} SP!",
+    "yourScore": "Skormu",
+    "opponentScore": "Skor {{name}}",
+    "backToLobby": "Kembali ke Lobi Duel",
+    "noIncoming": "Belum ada tantangan masuk saat ini.",
+    "noHistory": "Belum ada riwayat duel. Mulai Duel Bintang pertamamu!",
+    "manageCrew": "Buka Kru Bintang (BFF)",
+    "outcome": {
+      "WIN": "Menang",
+      "DRAW": "Seri",
+      "LOSS": "Kalah"
+    },
+    "answerInput": "Jawaban soal {{n}}"
+  },
+  "crew": {
+    "title": "Kru Bintang (BFF)",
+    "subtitle": "Bergabung dengan sahabat memakai Kode Kru 9 digit yang aman dan naikkan peringkat Kru mingguan!",
+    "yourCode": "Kode Kru 9 Digit Milikmu",
+    "copyCode": "Salin Kode",
+    "copied": "Tersalin!",
+    "weeklyTotal": "Total SP Mingguan Kru",
+    "membersTitle": "Pilot Kru",
+    "leaderBadge": "Kapten",
+    "joinTitle": "Gabung Kru Bintang Teman",
+    "joinPlaceholder": "Masukkan kode 9 digit (cth. 482-910-375)",
+    "joinButton": "Gabung Kru",
+    "leaveButton": "Keluar & Buat Kru Baru",
+    "joinSuccess": "Selamat datang di Kru Bintang barumu!",
+    "joinError": "Kode kru tidak ditemukan atau tidak valid (harus 9 angka)."
+  },
+  "leaderboard": {
+    "title": "Papan Peringkat Galaksi",
+    "subtitle": "Pantau peringkat di 6 Tantangan Terbuka dan 4 Acara Musiman dengan nama pilot yang disamarkan aman.",
+    "openSection": "6 Tantangan Terbuka",
+    "seasonalSection": "4 Tantangan Musiman",
+    "scopes": {
+      "CLASS": "Kelas",
+      "SCHOOL": "Sekolah",
+      "NATIONAL": "Nasional"
+    },
+    "allGrades": "Semua Kelas (K1–K6)",
+    "gradeOption": "Kelas {{grade}}",
+    "top50": "50 Teratas",
+    "nearby": "Pilot Terdekat (±5)",
+    "refreshIn": "Pembaruan langsung dalam {{sec}} dtk",
+    "yourRank": "Peringkatmu: #{{rank}}",
+    "rankCol": "Peringkat",
+    "pilotCol": "Pilot",
+    "gradeCol": "Kelas",
+    "scoreCol": "Skor",
+    "youBadge": "KAMU",
+    "hallOfFame": "Arsip Hall of Fame",
+    "metrics": {
+      "SP": "SP",
+      "Class_SP": "SP Kelas",
+      "Crew_SP": "SP Kru",
+      "S": "S",
+      "Days": "Hari",
+      "Stars": "Bintang",
+      "Faction_SP": "SP Faksi",
+      "Cup_SP": "SP Piala"
+    }
+  },
+  "events": {
+    "title": "Acara Kosmik",
+    "subtitle": "Ikuti Tantangan Meteor Minggu dan Tantangan Kreator Triwulan untuk hadiah bonus!",
+    "sundayTitle": "Tantangan Meteor Minggu",
+    "sundayOpen": "SEDANG BERLANGSUNG",
+    "sundayPreview": "MODE PRATINJAU",
+    "sundayStart": "Mulai 10 Soal Meteor",
+    "sundaySubmit": "Kirim Jawaban Meteor",
+    "sundayDone": "Lari Meteor Selesai! {{correct}} / {{total}} benar (+{{sp}} SP)",
+    "creatorTitle": "Tantangan Kreator Triwulan",
+    "creatorQuarter": "Musim {{quarter}}",
+    "creatorFormTitle": "Kirim Ide Soal Cerita Matematikamu",
+    "creatorTitlePlaceholder": "Judul (cth. Pecahan Pizza Asteroid)",
+    "creatorSummaryPlaceholder": "Ceritakan ide teka-teki matematika kreatifmu untuk pilot SD...",
+    "creatorSubmit": "Kirim Ide",
+    "creatorSubmitted": "Terkirim! Idemu akan tampil di Galaksi Kreator setelah ditinjau oleh moderator.",
+    "creatorGallery": "Karya Pilot Pilihan"
+  },
+  "shell": {
+    "bonusGiftTitle": "Hadiah Bonus Harian",
+    "bonusGiftBody": "Klaim hadiah Astro Coins harian gratismu karena sudah masuk hari ini!",
+    "bonusGiftClaim": "Klaim +{{ac}} Astro Coins",
+    "bonusGiftClaimed": "Sudah diklaim hari ini! Datang lagi besok ya.",
+    "bonusGiftSuccess": "Hore! +{{ac}} Astro Coins ditambahkan ke dompetmu!",
+    "markAllRead": "Tandai semua dibaca",
+    "close": "Tutup"
+  }
+}

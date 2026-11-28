@@ -14,3 +14,14 @@ describe("web i18n initialization", () => {
     expect(i18n.t("dashboard:pillars.challenges")).toBe("Tantangan Bintang");
   });
 });
+
+describe("Phase 3 translations", () => {
+  it.each([
+    ["en", "Found 3 / 5", "Duel Question 2 of 5"],
+    ["id", "Ditemukan 3 / 5", "Soal Duel 2 dari 5"],
+  ] as const)("loads and interpolates both new namespaces in %s", async (locale, sight, duel) => {
+    await setAppLocale(locale);
+    expect(i18n.t("stories:superNova.sightFound", { found: 3 })).toBe(sight);
+    expect(i18n.t("social:duels.questionProgress", { current: 2, total: 5 })).toBe(duel);
+  });
+});
