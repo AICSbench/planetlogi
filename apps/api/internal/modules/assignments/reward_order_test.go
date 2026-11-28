@@ -277,6 +277,122 @@ func TestSubmitQuestionUsesDurableIDWhenAliasCreatedDuringPersist(t *testing.T) 
 	ledger.mu.Unlock()
 }
 
+func TestLoadReconciliationDropsProgressForDifferentAliasItems(t *testing.T) {
+	ctx := context.Background()
+	store := newAssignmentMemoryStore()
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+
+	store.failNext = true
+	if _, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-diff-alias"); err == nil {
+		t.Fatal("expected create to fail")
+	}
+	var localID string
+	a.mu.Lock()
+	for id, rec := range a.records {
+		if rec.requestID == "req-diff-alias" {
+			localID = id
+		}
+	}
+	a.mu.Unlock()
+	local, err := a.GetDetail(ctx, stuUUID, localID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(local.Questions[0].Question.TemplateCode, local.Questions[0].Question.Seed, "en")
+	store.failNext = true
+	if _, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
+		t.Fatal("expected local save to fail")
+	}
+
+	if _, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_sub_within_20"}, "req-diff-alias"); err != nil {
+		t.Fatal(err)
+	}
+	list, err := a.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].Status != "INCOMPLETE" {
+		t.Fatalf("different-question alias kept discarded progress: %+v", list)
+	}
+	if got := acCredited(ledger); got != 0 {
+		t.Fatalf("discarded local completion was rewarded: %d", got)
+	}
+}
+
+func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
+	ctx := context.Background()
+	base := newAssignmentMemoryStore()
+	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+
+	store.failNext = true
+	if _, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-load-race"); err == nil {
+		t.Fatal("expected create to fail")
+	}
+	var localID string
+	a.mu.Lock()
+	for id, rec := range a.records {
+		if rec.requestID == "req-load-race" {
+			localID = id
+		}
+	}
+	a.mu.Unlock()
+	local, err := a.GetDetail(ctx, stuUUID, localID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(local.Questions[0].Question.TemplateCode, local.Questions[0].Question.Seed, "en")
+	store.failNext = true
+	if _, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
+		t.Fatal("expected local save to fail")
+	}
+
+	store.mu.Lock()
+	store.armed = true
+	store.mu.Unlock()
+	type listResult struct {
+		list []AssignmentSummary
+		err  error
+	}
+	result := make(chan listResult, 1)
+	go func() {
+		list, err := a.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0)
+		result <- listResult{list: list, err: err}
+	}()
+	select {
+	case <-store.entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("ListForStudent did not reach persistence")
+	}
+	durable, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-load-race")
+	if err != nil {
+		t.Fatal(err)
+	}
+	close(store.release)
+	res := <-result
+	if res.err != nil {
+		t.Fatal(res.err)
+	}
+	if len(res.list) != 1 || res.list[0].ID != durable.ID || res.list[0].Status != "COMPLETE" {
+		t.Fatalf("load reconciliation lost progress or used a local ID: %+v", res.list)
+	}
+	ledger.mu.Lock()
+	if len(ledger.applied) != 1 || ledger.applied[0].SourceID != durable.ID {
+		t.Fatalf("load reward used a non-durable ID: %+v", ledger.applied)
+	}
+	ledger.mu.Unlock()
+}
+
 func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
 	current := assignmentState{Records: map[string]assignmentRecordDTO{
 		"durable-id": {

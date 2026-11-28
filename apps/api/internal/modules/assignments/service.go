@@ -244,12 +244,16 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	// A merge may have completed an assignment while this instance was
 	// offline; award any pending completion reward once on load.
 	if s.ledger != nil {
+		type pendingReward struct {
+			id        string
+			requestID string
+		}
 		s.mu.Lock()
-		pending := make([]*assignmentRecord, 0)
+		pending := make([]pendingReward, 0)
 		needsPersist := false
 		for _, rec := range s.records {
 			if rec.studentID == studentID && rec.completed && !rec.rewarded {
-				pending = append(pending, rec)
+				pending = append(pending, pendingReward{id: rec.id, requestID: rec.requestID})
 				if !rec.persisted {
 					needsPersist = true
 				}
@@ -265,8 +269,30 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 				return nil
 			}
 		}
+		// Persistence may have folded a local record into a durable alias.
+		// Resolve the IDs and drop progress the durable record did not keep.
+		s.mu.Lock()
+		resolved := make([]*assignmentRecord, 0, len(pending))
+		for _, p := range pending {
+			var rec *assignmentRecord
+			if p.requestID != "" {
+				for _, candidate := range s.records {
+					if candidate.studentID == studentID && candidate.requestID == p.requestID {
+						rec = candidate
+						break
+					}
+				}
+			}
+			if rec == nil {
+				rec = s.records[p.id]
+			}
+			if rec != nil && rec.completed && !rec.rewarded {
+				resolved = append(resolved, rec)
+			}
+		}
+		s.mu.Unlock()
 		awarded := false
-		for _, rec := range pending {
+		for _, rec := range resolved {
 			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyAC,
@@ -794,24 +820,36 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			return res, detail, err
 		}
 		resolveAliases()
+		// The durable alias may have different questions and discarded the
+		// local completion; only credit a record that is still complete.
+		s.mu.Lock()
+		if rec, ok := s.records[rewardID]; ok && rec.completed && !rec.rewarded {
+			rewardAC = rec.rewardAC
+			detail = renderDetail(rec, locale)
+		} else {
+			needsReward = false
+		}
+		s.mu.Unlock()
 		// The ledger can block on its own transaction; never hold the service
 		// mutex across it. The idempotency key makes a retry safe.
-		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
-			StudentID:      studentID,
-			Currency:       economy.CurrencyAC,
-			Delta:          int64(rewardAC),
-			SourceType:     "ASSIGNMENT_COMPLETE",
-			SourceID:       rewardID,
-			IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rewardID, studentID),
-		}); err != nil {
-			rewardErr = fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
-		} else {
-			s.mu.Lock()
-			if rec, ok := s.records[rewardID]; ok {
-				rec.rewarded = true
-				detail = renderDetail(rec, locale)
+		if needsReward {
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+				StudentID:      studentID,
+				Currency:       economy.CurrencyAC,
+				Delta:          int64(rewardAC),
+				SourceType:     "ASSIGNMENT_COMPLETE",
+				SourceID:       rewardID,
+				IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rewardID, studentID),
+			}); err != nil {
+				rewardErr = fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
+			} else {
+				s.mu.Lock()
+				if rec, ok := s.records[rewardID]; ok {
+					rec.rewarded = true
+					detail = renderDetail(rec, locale)
+				}
+				s.mu.Unlock()
 			}
-			s.mu.Unlock()
 		}
 	}
 
