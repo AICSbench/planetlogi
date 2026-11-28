@@ -66,8 +66,8 @@ type DailyBadgeCard struct {
 // config + earned Daily Star Badge tiers). Stored in the shared phase2_state
 // store so it survives restarts and is visible to every API instance.
 type customizationProgressDoc struct {
-	Buddy  *AstroBuddyConfig  `json:"buddy,omitempty"`
-	Badges map[string]int     `json:"badges,omitempty"` // YYYY-MM-DD -> tier (1..4)
+	Buddy  *AstroBuddyConfig `json:"buddy,omitempty"`
+	Badges map[string]int    `json:"badges,omitempty"` // YYYY-MM-DD -> tier (1..4)
 }
 
 const customizationProgressModule = "customization_progress_v1"
@@ -207,12 +207,35 @@ func (s *Service) SaveBuddy(ctx context.Context, studentID, firstName string, cf
 	return cfg
 }
 
+// showcaseScope stores the Galaxy Showcase entry list in the shared
+// shared_state store, so the entry set is consistent across restarts and API
+// instances and future writes (e.g. moderation-approved entries) persist.
+// Wiring real students' buddies and SP into the showcase (CR-13) is a
+// deferred product decision — this only makes the entry store durable.
+const (
+	showcaseScope = "showcase"
+	showcaseKey   = "entries"
+)
+
 // GetShowcase returns buddies ranked by SP for the selected grade (requires >=1 SP, masked names only).
-func (s *Service) GetShowcase(grade int) []ShowcaseEntry {
+// In durable (PG) mode the entries are loaded from the shared store; the demo
+// seed list is written once on first use, and read errors fall back to the
+// in-memory seed so the endpoint keeps working.
+func (s *Service) GetShowcase(ctx context.Context, grade int) []ShowcaseEntry {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	filtered := make([]ShowcaseEntry, 0, len(s.showcase))
-	for _, e := range s.showcase {
+	entries := s.showcase
+	if s.store != nil {
+		var durable []ShowcaseEntry
+		found, err := s.store.LoadShared(ctx, showcaseScope, showcaseKey, &durable)
+		if err == nil && found && len(durable) > 0 {
+			entries = durable
+		} else if err == nil {
+			_ = s.store.SaveShared(ctx, showcaseScope, showcaseKey, s.showcase)
+		}
+	}
+	filtered := make([]ShowcaseEntry, 0, len(entries))
+	for _, e := range entries {
 		if e.StarPoints < 1 {
 			continue
 		}
@@ -490,7 +513,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/showcase",
 		Summary:     "Galaxy Showcase ranked by Star Points across Grades 1-6 (requires >=1 SP)",
 		Tags:        []string{"Customization"},
-	}, func(_ context.Context, in *struct {
+	}, func(ctx context.Context, in *struct {
 		Grade int `query:"grade" default:"1"`
 	}) (*struct {
 		Body struct {
@@ -502,7 +525,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Entries []ShowcaseEntry `json:"entries"`
 			}
 		}{}
-		out.Body.Entries = h.svc.GetShowcase(in.Grade)
+		out.Body.Entries = h.svc.GetShowcase(ctx, in.Grade)
 		return out, nil
 	})
 

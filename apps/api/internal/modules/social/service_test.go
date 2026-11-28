@@ -2,9 +2,12 @@ package social
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 )
@@ -89,10 +92,11 @@ func TestStarDuelGradingAndIdempotentSP(t *testing.T) {
 
 func TestStarCrewCodeUniquenessAndJoin(t *testing.T) {
 	svc := NewService(economy.NewMemoryLedger())
+	ctx := context.Background()
 
 	seen := make(map[string]bool)
 	for i := 0; i < 20; i++ {
-		c := svc.GetOrCreateCrew("pilot-"+string(rune('a'+i)), "Raka Pratama", 1)
+		c := svc.GetOrCreateCrew(ctx, "pilot-"+string(rune('a'+i)), "Raka Pratama", 1)
 		if len(c.CrewCode) != 9 {
 			t.Fatalf("expected 9-digit crew code, got %q", c.CrewCode)
 		}
@@ -102,7 +106,7 @@ func TestStarCrewCodeUniquenessAndJoin(t *testing.T) {
 		seen[c.CrewCode] = true
 	}
 
-	joined, err := svc.JoinCrew("stu-join", "Siti Rahma", 1, "482-910-375")
+	joined, err := svc.JoinCrew(ctx, "stu-join", "Siti Rahma", 1, "482-910-375")
 	if err != nil {
 		t.Fatalf("JoinCrew failed: %v", err)
 	}
@@ -112,8 +116,195 @@ func TestStarCrewCodeUniquenessAndJoin(t *testing.T) {
 	if joined.WeeklyTotalSP != 68+52+35 {
 		t.Fatalf("unexpected weekly crew SP aggregation: %d", joined.WeeklyTotalSP)
 	}
-	left := svc.LeaveCrew("stu-join", "Siti Rahma", 1)
+	left := svc.LeaveCrew(ctx, "stu-join", "Siti Rahma", 1)
 	if left.CrewCode == "482910375" || len(left.Members) != 1 {
 		t.Fatalf("expected fresh personal crew after leave, got %+v", left)
+	}
+}
+
+func TestDuelIDsUniqueAcrossRestarts(t *testing.T) {
+	// Simulates two fresh processes: duel IDs must never collide, because the
+	// reward ledger idempotency key embeds the duel ID (CR-10 bug class).
+	ledger := economy.NewMemoryLedger()
+	svc1 := NewService(ledger)
+	svc2 := NewService(ledger)
+	ctx := context.Background()
+
+	d1, _, err := svc1.StartDuel(ctx, "stu-1", 1, "Asia/Jakarta", "en", "RANDOM", "")
+	if err != nil {
+		t.Fatalf("StartDuel svc1: %v", err)
+	}
+	d2, _, err := svc2.StartDuel(ctx, "stu-1", 1, "Asia/Jakarta", "en", "RANDOM", "")
+	if err != nil {
+		t.Fatalf("StartDuel svc2: %v", err)
+	}
+	if d1.ID == d2.ID {
+		t.Fatalf("duel ID reused across restarts: %s", d1.ID)
+	}
+	suffix := strings.TrimPrefix(d1.ID, "duel-")
+	if len(suffix) != 16 {
+		t.Fatalf("duel ID should be duel-<16 hex chars>, got %q", d1.ID)
+	}
+
+	l1 := svc1.GetLobby(ctx, "stu-9", 1, "Asia/Jakarta", "en")
+	l2 := svc2.GetLobby(ctx, "stu-9", 1, "Asia/Jakarta", "en")
+	if len(l1.Incoming) != 1 || len(l2.Incoming) != 1 {
+		t.Fatalf("expected one incoming duel per lobby, got %d and %d", len(l1.Incoming), len(l2.Incoming))
+	}
+	if l1.Incoming[0].ID == l2.Incoming[0].ID {
+		t.Fatalf("incoming duel ID reused across restarts: %s", l1.Incoming[0].ID)
+	}
+}
+
+// newSocialTestStudent creates an isolated grade-1 test student (seed pilot1
+// must exist in the database first) and removes it when the test ends.
+func newSocialTestStudent(t *testing.T, pool *pgxpool.Pool) string {
+	t.Helper()
+	var studentID string
+	if err := pool.QueryRow(context.Background(), `
+		INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code)
+		SELECT parent_account_id, 'social-test-' || gen_random_uuid(), password_hash, 'Test Pilot', 'Test Pilot', 1,
+			left(replace(gen_random_uuid()::text, '-', ''), 9)
+		FROM student_profiles WHERE login_id = 'pilot1'
+		RETURNING id::text
+	`).Scan(&studentID); err != nil {
+		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
+	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(context.Background(), `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
+			t.Error(err)
+		}
+	})
+	return studentID
+}
+
+// TestStarDuelsPersistAcrossRestartPG runs only with TEST_DATABASE_URL set:
+// it verifies duel records, completed history, the durable energy counter,
+// and the reward ledger behave consistently across a simulated restart.
+func TestStarDuelsPersistAcrossRestartPG(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL duel persistence test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatalf("pgxpool.New: %v", err)
+	}
+	t.Cleanup(pool.Close)
+	studentID := newSocialTestStudent(t, pool)
+	ledger := economy.NewPGLedger(pool)
+
+	// Fresh students have no wallet row until the ledger creates one on the
+	// first mutation; start from a known 0-SP balance.
+	if _, err := pool.Exec(ctx, `INSERT INTO student_wallets (student_id) VALUES ($1::uuid) ON CONFLICT (student_id) DO NOTHING`, studentID); err != nil {
+		t.Fatalf("init wallet row: %v", err)
+	}
+
+	var spBefore int64
+	if err := pool.QueryRow(ctx, `SELECT total_sp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&spBefore); err != nil {
+		t.Fatalf("read wallet: %v", err)
+	}
+
+	svc1 := NewServiceWithPG(pool, ledger)
+	lobby1 := svc1.GetLobby(ctx, studentID, 1, "Asia/Jakarta", "en")
+	if len(lobby1.Incoming) != 1 {
+		t.Fatalf("expected 1 incoming duel, got %d", len(lobby1.Incoming))
+	}
+	incomingID := lobby1.Incoming[0].ID
+
+	outgoing, _, err := svc1.StartDuel(ctx, studentID, 1, "Asia/Jakarta", "en", "RANDOM", "")
+	if err != nil {
+		t.Fatalf("StartDuel: %v", err)
+	}
+	if _, err := svc1.AcceptIncoming(ctx, studentID, incomingID, "Asia/Jakarta", "en"); err != nil {
+		t.Fatalf("AcceptIncoming: %v", err)
+	}
+	res, err := svc1.SubmitDuel(ctx, studentID, incomingID, "en", map[int]map[string]string{})
+	if err != nil || res.Status != "COMPLETED" {
+		t.Fatalf("SubmitDuel: err=%v status=%s", err, res.Status)
+	}
+
+	// Fresh process = simulated restart.
+	svc2 := NewServiceWithPG(pool, ledger)
+	lobby2 := svc2.GetLobby(ctx, studentID, 1, "Asia/Jakarta", "en")
+	completedFound := false
+	for _, h := range lobby2.History {
+		if h.ID == incomingID && h.Outcome != "" {
+			completedFound = true
+		}
+	}
+	if !completedFound {
+		t.Fatalf("completed duel missing from history after restart: %+v", lobby2.History)
+	}
+	if lobby2.EnergyLeft != DailyEnergyMax-2 {
+		t.Fatalf("durable energy counter lost across restart: left=%d want=%d", lobby2.EnergyLeft, DailyEnergyMax-2)
+	}
+
+	// The accepted duel that was never submitted can still be graded.
+	res2, err := svc2.SubmitDuel(ctx, studentID, outgoing.ID, "en", map[int]map[string]string{})
+	if err != nil || res2.Status != "COMPLETED" {
+		t.Fatalf("SubmitDuel after restart: err=%v status=%s", err, res2.Status)
+	}
+
+	// Replay is idempotent and awards nothing extra.
+	if _, err := svc2.SubmitDuel(ctx, studentID, incomingID, "en", map[int]map[string]string{}); err != nil {
+		t.Fatalf("replay SubmitDuel: %v", err)
+	}
+	var spAfter int64
+	if err := pool.QueryRow(ctx, `SELECT total_sp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&spAfter); err != nil {
+		t.Fatalf("read wallet: %v", err)
+	}
+	if want := spBefore + DuelLossSP*2; spAfter != want {
+		t.Fatalf("expected exactly two duel rewards (%d), wallet went %d -> %d", want, spBefore, spAfter)
+	}
+}
+
+// TestStarCrewPersistsAcrossRestartPG verifies crew codes, rosters, and
+// membership survive a restart.
+func TestStarCrewPersistsAcrossRestartPG(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL crew persistence test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatalf("pgxpool.New: %v", err)
+	}
+	t.Cleanup(pool.Close)
+	pilotA := newSocialTestStudent(t, pool)
+	pilotB := newSocialTestStudent(t, pool)
+
+	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool))
+	crewA := svc1.GetOrCreateCrew(ctx, pilotA, "Test Pilot", 1)
+
+	// A second instance joins via the code — it must find the durable roster.
+	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool))
+	joined, err := svc2.JoinCrew(ctx, pilotB, "Test Pilot", 1, crewA.CrewCode)
+	if err != nil {
+		t.Fatalf("JoinCrew from fresh instance: %v", err)
+	}
+	if len(joined.Members) != 2 {
+		t.Fatalf("expected 2 members after join, got %d", len(joined.Members))
+	}
+
+	// Fresh process for pilot A: same crew code, roster intact.
+	svc3 := NewServiceWithPG(pool, economy.NewPGLedger(pool))
+	crewA2 := svc3.GetOrCreateCrew(ctx, pilotA, "Test Pilot", 1)
+	if crewA2.CrewCode != crewA.CrewCode {
+		t.Fatalf("crew code lost across restart: %s -> %s", crewA.CrewCode, crewA2.CrewCode)
+	}
+	if len(crewA2.Members) != 2 {
+		t.Fatalf("crew roster lost across restart: %d members", len(crewA2.Members))
+	}
+
+	left := svc3.LeaveCrew(ctx, pilotB, "Test Pilot", 1)
+	if len(left.Members) != 1 {
+		t.Fatalf("expected fresh personal crew after leave, got %d members", len(left.Members))
+	}
+	crewA3 := svc3.GetOrCreateCrew(ctx, pilotA, "Test Pilot", 1)
+	if len(crewA3.Members) != 1 {
+		t.Fatalf("expected 1 member after pilot B left, got %d", len(crewA3.Members))
 	}
 }

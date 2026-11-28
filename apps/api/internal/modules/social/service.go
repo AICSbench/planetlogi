@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -53,6 +54,59 @@ type duelEnergyDoc struct {
 }
 
 func duelEnergyModule(localDate string) string { return "duel_energy_" + localDate }
+
+// persistedDuel keeps everything needed to keep a duel playable and gradeable
+// after a restart: the record, its question templates, and the seeds that
+// regenerate the questions for grading.
+type persistedDuel struct {
+	ID        string     `json:"id"`
+	Record    DuelRecord `json:"record"`
+	Templates []string   `json:"templates"`
+	Seeds     []int64    `json:"seeds"`
+}
+
+// duelsStateDoc is the durable per-student Star Duel document (newest duel
+// first, capped at duelsStateCap entries). Stored in the shared phase2_state
+// store so duel records and history survive restarts.
+type duelsStateDoc struct {
+	Duels []persistedDuel `json:"duels"`
+}
+
+const (
+	duelsStateModule = "star_duels_v1"
+	duelsStateCap    = 50
+)
+
+// newDuelID returns a random duel ID so the reward ledger idempotency key
+// (duel:<id>:reward:<student>) stays unique across process restarts instead of
+// colliding with an older duel's key (same bug class as CR-10).
+func newDuelID() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("duel-%d", time.Now().UnixNano())
+	}
+	return "duel-" + hex.EncodeToString(b[:])
+}
+
+// crewStateDoc is the durable Star Crew roster, shared by every member. It
+// lives in the shared_state store (scope "crew") keyed by the 9-digit code,
+// because a crew spans several students.
+type crewStateDoc struct {
+	Code    string       `json:"code"`
+	Name    string       `json:"name"`
+	Members []CrewMember `json:"members"`
+}
+
+// crewMembershipDoc is a student's durable pointer to their crew.
+type crewMembershipDoc struct {
+	Code string `json:"code"`
+}
+
+const (
+	crewScope       = "crew"
+	crewKeyPrefix   = "code:"
+	memberKeyPrefix = "member:"
+)
 
 type OpponentProfile struct {
 	ID         string `json:"id"`
@@ -120,30 +174,36 @@ type crewInternal struct {
 }
 
 type Service struct {
-	mu           sync.Mutex
-	ledger       economy.Ledger
-	pool         *pgxpool.Pool
-	store        *state.PGStore // nil in in-memory (test) mode
-	energyUsed   map[string]int // studentID:YYYY-MM-DD -> used (memory mode only)
-	duels        map[string]*duelInternal
-	studentDuels map[string][]string
-	crewsByCode  map[string]*crewInternal
-	studentCrew  map[string]string // studentID -> crewCode
-	peers        []OpponentProfile
-	seq          int
-	nowClock     func() time.Time
+	mu             sync.Mutex
+	ledger         economy.Ledger
+	pool           *pgxpool.Pool
+	store          *state.PGStore // nil in in-memory (test) mode
+	energyUsed     map[string]int // studentID:YYYY-MM-DD -> used (memory mode only)
+	duels          map[string]*duelInternal
+	studentDuels   map[string][]string
+	duelsLoaded    map[string]bool // studentID -> duel state hydrated from PG
+	duelHydrateErr map[string]bool // studentID -> durable load failed; skip persisting
+	crewsByCode    map[string]*crewInternal
+	studentCrew    map[string]string // studentID -> crewCode
+	crewLoaded     map[string]bool   // studentID -> crew state hydrated from PG
+	peers          []OpponentProfile
+	seq            int
+	nowClock       func() time.Time
 }
 
 // NewService creates an in-memory service for unit tests.
 func NewService(ledger economy.Ledger) *Service {
 	s := &Service{
-		ledger:       ledger,
-		energyUsed:   make(map[string]int),
-		duels:        make(map[string]*duelInternal),
-		studentDuels: make(map[string][]string),
-		crewsByCode:  make(map[string]*crewInternal),
-		studentCrew:  make(map[string]string),
-		nowClock:     time.Now,
+		ledger:         ledger,
+		energyUsed:     make(map[string]int),
+		duels:          make(map[string]*duelInternal),
+		studentDuels:   make(map[string][]string),
+		duelsLoaded:    make(map[string]bool),
+		duelHydrateErr: make(map[string]bool),
+		crewsByCode:    make(map[string]*crewInternal),
+		studentCrew:    make(map[string]string),
+		crewLoaded:     make(map[string]bool),
+		nowClock:       time.Now,
 	}
 	s.peers = seedPeers()
 	s.crewsByCode["482910375"] = &crewInternal{
@@ -157,8 +217,9 @@ func NewService(ledger economy.Ledger) *Service {
 	return s
 }
 
-// NewServiceWithPG creates a production service whose Star Duel energy quota is
-// enforced from durable PostgreSQL state, shared across restarts and instances.
+// NewServiceWithPG creates a production service whose Star Duel energy quota,
+// duel records, and Star Crew state are enforced/stored from durable
+// PostgreSQL state, shared across restarts and instances.
 func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {
 	s := NewService(ledger)
 	s.pool = pool
@@ -218,6 +279,149 @@ func (s *Service) consumeEnergy(ctx context.Context, studentID, localDate string
 	return tx.Commit(ctx)
 }
 
+// hydrateDuels loads the student's durable duel document into the in-memory
+// working set on first touch (once per process, like supernova progress).
+// Caller must hold s.mu.
+func (s *Service) hydrateDuels(ctx context.Context, studentID string) {
+	if s.store == nil || s.duelsLoaded[studentID] {
+		return
+	}
+	s.duelsLoaded[studentID] = true
+	var doc duelsStateDoc
+	found, err := s.store.Load(ctx, studentID, duelsStateModule, &doc)
+	if err != nil {
+		// Keep operating in memory, but do not later overwrite the durable
+		// snapshot with partial data.
+		s.duelHydrateErr[studentID] = true
+		return
+	}
+	if !found {
+		return
+	}
+	ids := make([]string, 0, len(doc.Duels))
+	for _, p := range doc.Duels {
+		if _, exists := s.duels[p.ID]; exists {
+			continue
+		}
+		s.duels[p.ID] = &duelInternal{
+			record:    p.Record,
+			studentID: studentID,
+			templates: p.Templates,
+			seeds:     p.Seeds,
+		}
+		ids = append(ids, p.ID)
+	}
+	// doc.Duels is newest-first, and s.studentDuels keeps that order.
+	s.studentDuels[studentID] = append(ids, s.studentDuels[studentID]...)
+}
+
+// persistDuels writes the student's current duel working set to the durable
+// per-student document. Best-effort: duel records are gameplay state, so a
+// persistence failure never blocks play this process (unlike energy and
+// ledger, which are strictly durable) — at worst the record is re-lost on
+// restart. Caller must hold s.mu.
+func (s *Service) persistDuels(ctx context.Context, studentID string) {
+	if s.store == nil || s.duelHydrateErr[studentID] {
+		return
+	}
+	doc := duelsStateDoc{Duels: make([]persistedDuel, 0, len(s.studentDuels[studentID]))}
+	for _, id := range s.studentDuels[studentID] {
+		if d := s.duels[id]; d != nil && d.studentID == studentID {
+			doc.Duels = append(doc.Duels, persistedDuel{
+				ID:        id,
+				Record:    d.record,
+				Templates: d.templates,
+				Seeds:     d.seeds,
+			})
+		}
+	}
+	if len(doc.Duels) > duelsStateCap {
+		doc.Duels = doc.Duels[:duelsStateCap]
+	}
+	_ = s.store.Save(ctx, studentID, duelsStateModule, doc)
+}
+
+// hydrateCrew loads the student's durable crew membership and crew roster
+// into the in-memory working set on first touch. Caller must hold s.mu.
+func (s *Service) hydrateCrew(ctx context.Context, studentID string) {
+	if s.store == nil || s.crewLoaded[studentID] {
+		return
+	}
+	s.crewLoaded[studentID] = true
+	if code, ok := s.studentCrew[studentID]; ok {
+		// Membership already known in memory; make sure the crew roster is
+		// loaded too (it may have been created by another instance).
+		s.loadCrewDoc(ctx, code)
+		return
+	}
+	var m crewMembershipDoc
+	found, err := s.store.LoadShared(ctx, crewScope, memberKeyPrefix+studentID, &m)
+	if err != nil || !found || m.Code == "" {
+		return
+	}
+	if s.loadCrewDoc(ctx, m.Code) {
+		s.studentCrew[studentID] = m.Code
+	}
+}
+
+// loadCrewDoc loads (or refreshes) the durable crew roster into the in-memory
+// cache. The durable document is authoritative for the roster after any
+// locked merge. Caller must hold s.mu.
+func (s *Service) loadCrewDoc(ctx context.Context, code string) bool {
+	var doc crewStateDoc
+	found, err := s.store.LoadShared(ctx, crewScope, crewKeyPrefix+code, &doc)
+	if err != nil || !found || doc.Code == "" {
+		return false
+	}
+	s.crewsByCode[code] = &crewInternal{code: doc.Code, name: doc.Name, members: doc.Members}
+	return true
+}
+
+// persistNewCrew writes a freshly created crew roster and the student's
+// membership pointer durably. Caller must hold s.mu.
+func (s *Service) persistNewCrew(ctx context.Context, studentID string, crew *crewInternal) {
+	if s.store == nil {
+		return
+	}
+	_ = s.store.SaveShared(ctx, crewScope, crewKeyPrefix+crew.code, crewStateDoc{
+		Code:    crew.code,
+		Name:    crew.name,
+		Members: crew.members,
+	})
+	_ = s.store.SaveShared(ctx, crewScope, memberKeyPrefix+studentID, crewMembershipDoc{Code: crew.code})
+}
+
+// removeMemberDurable removes the student from the durable crew roster under a
+// row lock. When the durable document does not exist yet (for example the
+// in-memory demo seed crew), the in-memory snapshot seeds it. Caller must
+// hold s.mu.
+func (s *Service) removeMemberDurable(ctx context.Context, code, studentID string, base *crewInternal) {
+	if s.store == nil {
+		return
+	}
+	b := crewStateDoc{}
+	if base != nil {
+		b = crewStateDoc{Code: base.code, Name: base.name, Members: append([]CrewMember(nil), base.members...)}
+	}
+	if err := s.store.SaveSharedMerged(ctx, crewScope, crewKeyPrefix+code, func(current []byte) (any, error) {
+		var doc crewStateDoc
+		_ = json.Unmarshal(current, &doc)
+		if doc.Code == "" {
+			doc = b
+		}
+		filtered := make([]CrewMember, 0, len(doc.Members))
+		for _, m := range doc.Members {
+			if m.StudentID != studentID {
+				filtered = append(filtered, m)
+			}
+		}
+		doc.Members = filtered
+		return doc, nil
+	}); err == nil {
+		s.loadCrewDoc(ctx, code)
+	}
+}
+
 func seedPeers() []OpponentProfile {
 	return []OpponentProfile{
 		{ID: "peer-g1-1", MaskedName: "Maya K.", Grade: 1, Relation: "CLASSMATE", BuddyColor: "#22D3EE", BuddyName: "Cosmic Maya", WeeklySP: 68},
@@ -261,7 +465,7 @@ func templatesForGrade(grade int) []string {
 	return out
 }
 
-func (s *Service) ensureIncomingLocked(studentID string, grade int, locale string) {
+func (s *Service) ensureIncomingLocked(ctx context.Context, studentID string, grade int, locale string) {
 	for _, id := range s.studentDuels[studentID] {
 		if d := s.duels[id]; d != nil && d.record.Direction == "INCOMING" {
 			return
@@ -269,7 +473,7 @@ func (s *Service) ensureIncomingLocked(studentID string, grade int, locale strin
 	}
 	opp := s.pickOpponentLocked(grade, "CLASSMATE", "")
 	s.seq++
-	id := fmt.Sprintf("duel-inc-%d", s.seq)
+	id := newDuelID()
 	templates := templatesForGrade(grade)
 	seeds := make([]int64, DuelQuestionCount)
 	qs := make([]mathengine.RenderedQuestion, 0, DuelQuestionCount)
@@ -296,6 +500,7 @@ func (s *Service) ensureIncomingLocked(studentID string, grade int, locale strin
 		seeds:     seeds,
 	}
 	s.studentDuels[studentID] = append([]string{id}, s.studentDuels[studentID]...)
+	s.persistDuels(ctx, studentID)
 }
 
 func (s *Service) pickOpponentLocked(grade int, mode, opponentID string) OpponentProfile {
@@ -328,7 +533,8 @@ func (s *Service) GetLobby(ctx context.Context, studentID string, grade int, tz,
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
-	s.ensureIncomingLocked(studentID, grade, locale)
+	s.hydrateDuels(ctx, studentID)
+	s.ensureIncomingLocked(ctx, studentID, grade, locale)
 	localDate := s.localDateFor(tz)
 	used := s.energyUsedFor(ctx, studentID, localDate)
 	left := DailyEnergyMax - used
@@ -391,6 +597,7 @@ func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
+	s.hydrateDuels(ctx, studentID)
 	localDate := s.localDateFor(tz)
 	if s.energyUsedFor(ctx, studentID, localDate) >= DailyEnergyMax {
 		return DuelRecord{}, 0, ErrNoEnergy
@@ -407,7 +614,7 @@ func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz
 	energyLeft := DailyEnergyMax - s.energyUsedFor(ctx, studentID, localDate)
 
 	s.seq++
-	id := fmt.Sprintf("duel-%d", s.seq)
+	id := newDuelID()
 	templates := templatesForGrade(grade)
 	seeds := make([]int64, DuelQuestionCount)
 	qs := make([]mathengine.RenderedQuestion, 0, DuelQuestionCount)
@@ -435,12 +642,14 @@ func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz
 		seeds:     seeds,
 	}
 	s.studentDuels[studentID] = append([]string{id}, s.studentDuels[studentID]...)
+	s.persistDuels(ctx, studentID)
 	return rec, energyLeft, nil
 }
 
 func (s *Service) AcceptIncoming(ctx context.Context, studentID, duelID, tz, locale string) (DuelRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.hydrateDuels(ctx, studentID)
 	d, ok := s.duels[duelID]
 	if !ok || d.studentID != studentID {
 		return DuelRecord{}, ErrDuelNotFound
@@ -457,6 +666,7 @@ func (s *Service) AcceptIncoming(ctx context.Context, studentID, duelID, tz, loc
 		return DuelRecord{}, err
 	}
 	d.record.Status = "IN_PROGRESS"
+	s.persistDuels(ctx, studentID)
 	qs := make([]mathengine.RenderedQuestion, 0, len(d.templates))
 	for i, tpl := range d.templates {
 		if prob, ok := mathengine.GenerateByCode(tpl, d.seeds[i], locale); ok {
@@ -470,6 +680,7 @@ func (s *Service) AcceptIncoming(ctx context.Context, studentID, duelID, tz, loc
 
 func (s *Service) SubmitDuel(ctx context.Context, studentID, duelID, locale string, answers map[int]map[string]string) (DuelRecord, error) {
 	s.mu.Lock()
+	s.hydrateDuels(ctx, studentID)
 	d, ok := s.duels[duelID]
 	if !ok || d.studentID != studentID {
 		s.mu.Unlock()
@@ -533,25 +744,41 @@ func (s *Service) SubmitDuel(ctx context.Context, studentID, duelID, locale stri
 	d.record.RewardSP = rewardSP
 	d.record.Status = "COMPLETED"
 	d.record.CompletedAt = &now
+	s.persistDuels(ctx, studentID)
 	out := d.record
 	out.Questions = nil
 	s.mu.Unlock()
 	return out, nil
 }
 
-func (s *Service) generateUniqueCrewCodeLocked() string {
+// crewCodeAvailable reports whether a 9-digit code is unused in memory and in
+// the durable crew roster (so restarts cannot hand out a code again).
+// Caller must hold s.mu.
+func (s *Service) crewCodeAvailable(ctx context.Context, code string) bool {
+	if _, exists := s.crewsByCode[code]; exists {
+		return false
+	}
+	if s.store != nil {
+		if found, _ := s.store.LoadShared(ctx, crewScope, crewKeyPrefix+code, &crewStateDoc{}); found {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Service) generateUniqueCrewCode(ctx context.Context) string {
 	for attempt := 0; attempt < 100; attempt++ {
 		n, err := rand.Int(rand.Reader, big.NewInt(900000000))
 		if err != nil {
 			s.seq++
 			code := fmt.Sprintf("%09d", 100000000+s.seq)
-			if _, exists := s.crewsByCode[code]; !exists {
+			if s.crewCodeAvailable(ctx, code) {
 				return code
 			}
 			continue
 		}
 		code := fmt.Sprintf("%09d", 100000000+n.Int64())
-		if _, exists := s.crewsByCode[code]; !exists {
+		if s.crewCodeAvailable(ctx, code) {
 			return code
 		}
 	}
@@ -594,9 +821,12 @@ func buildCrewView(c *crewInternal) StarCrewView {
 	}
 }
 
-func (s *Service) GetOrCreateCrew(studentID, displayName string, grade int) StarCrewView {
+// GetOrCreateCrew returns the student's Star Crew, creating (and durably
+// persisting) a personal crew when they have none.
+func (s *Service) GetOrCreateCrew(ctx context.Context, studentID, displayName string, grade int) StarCrewView {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.hydrateCrew(ctx, studentID)
 	if code, ok := s.studentCrew[studentID]; ok {
 		if crew, exists := s.crewsByCode[code]; exists {
 			return buildCrewView(crew)
@@ -605,7 +835,7 @@ func (s *Service) GetOrCreateCrew(studentID, displayName string, grade int) Star
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
-	code := s.generateUniqueCrewCodeLocked()
+	code := s.generateUniqueCrewCode(ctx)
 	crew := &crewInternal{
 		code: code,
 		name: "Star Crew #" + code[0:3],
@@ -622,12 +852,14 @@ func (s *Service) GetOrCreateCrew(studentID, displayName string, grade int) Star
 	}
 	s.crewsByCode[code] = crew
 	s.studentCrew[studentID] = code
+	s.persistNewCrew(ctx, studentID, crew)
 	return buildCrewView(crew)
 }
 
-func (s *Service) JoinCrew(studentID, displayName string, grade int, rawCode string) (StarCrewView, error) {
+func (s *Service) JoinCrew(ctx context.Context, studentID, displayName string, grade int, rawCode string) (StarCrewView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.hydrateCrew(ctx, studentID)
 	clean := strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(rawCode), "-", ""), " ", "")
 	if len(clean) != 9 {
 		return StarCrewView{}, ErrInvalidCode
@@ -638,6 +870,12 @@ func (s *Service) JoinCrew(studentID, displayName string, grade int, rawCode str
 		}
 	}
 	target, ok := s.crewsByCode[clean]
+	if !ok && s.store != nil {
+		// The roster may live only in the durable store (created by another
+		// instance or before this process started).
+		s.loadCrewDoc(ctx, clean)
+		target, ok = s.crewsByCode[clean]
+	}
 	if !ok {
 		return StarCrewView{}, ErrCrewNotFound
 	}
@@ -655,25 +893,56 @@ func (s *Service) JoinCrew(studentID, displayName string, grade int, rawCode str
 				}
 			}
 			oldCrew.members = filtered
+			s.removeMemberDurable(ctx, oldCode, studentID, oldCrew)
 		}
 	}
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
-	target.members = append(target.members, CrewMember{
+	member := CrewMember{
 		StudentID:  studentID,
 		MaskedName: maskDisplayName(displayName),
 		Grade:      grade,
 		BuddyColor: "#22D3EE",
 		WeeklySP:   35,
 		IsLeader:   false,
-	})
+	}
+	target.members = append(target.members, member)
+	if s.store != nil {
+		// Lock the durable roster and add the member there, so concurrent
+		// joins from other instances cannot drop each other's member. If the
+		// durable document does not exist yet (demo seed crew), the in-memory
+		// snapshot seeds it.
+		if err := s.store.SaveSharedMerged(ctx, crewScope, crewKeyPrefix+clean, func(current []byte) (any, error) {
+			var doc crewStateDoc
+			_ = json.Unmarshal(current, &doc)
+			if doc.Code == "" {
+				doc = crewStateDoc{Code: target.code, Name: target.name, Members: append([]CrewMember(nil), target.members...)}
+			}
+			present := false
+			for _, m := range doc.Members {
+				if m.StudentID == studentID {
+					present = true
+					break
+				}
+			}
+			if !present {
+				doc.Members = append(doc.Members, member)
+			}
+			return doc, nil
+		}); err == nil {
+			s.loadCrewDoc(ctx, clean)
+			target = s.crewsByCode[clean]
+		}
+		_ = s.store.SaveShared(ctx, crewScope, memberKeyPrefix+studentID, crewMembershipDoc{Code: clean})
+	}
 	s.studentCrew[studentID] = clean
 	return buildCrewView(target), nil
 }
 
-func (s *Service) LeaveCrew(studentID, displayName string, grade int) StarCrewView {
+func (s *Service) LeaveCrew(ctx context.Context, studentID, displayName string, grade int) StarCrewView {
 	s.mu.Lock()
+	s.hydrateCrew(ctx, studentID)
 	if oldCode, ok := s.studentCrew[studentID]; ok {
 		if oldCrew, exists := s.crewsByCode[oldCode]; exists {
 			filtered := make([]CrewMember, 0, len(oldCrew.members))
@@ -683,11 +952,15 @@ func (s *Service) LeaveCrew(studentID, displayName string, grade int) StarCrewVi
 				}
 			}
 			oldCrew.members = filtered
+			s.removeMemberDurable(ctx, oldCode, studentID, oldCrew)
 		}
 		delete(s.studentCrew, studentID)
+		if s.store != nil {
+			_ = s.store.DeleteShared(ctx, crewScope, memberKeyPrefix+studentID)
+		}
 	}
 	s.mu.Unlock()
-	return s.GetOrCreateCrew(studentID, displayName, grade)
+	return s.GetOrCreateCrew(ctx, studentID, displayName, grade)
 }
 
 type Handler struct {
@@ -844,7 +1117,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body StarCrewView }{Body: h.svc.GetOrCreateCrew(ident.ID, ident.DisplayName, ident.Grade)}, nil
+		return &struct{ Body StarCrewView }{Body: h.svc.GetOrCreateCrew(ctx, ident.ID, ident.DisplayName, ident.Grade)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -863,7 +1136,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		view, err := h.svc.JoinCrew(ident.ID, ident.DisplayName, ident.Grade, in.Body.CrewCode)
+		view, err := h.svc.JoinCrew(ctx, ident.ID, ident.DisplayName, ident.Grade, in.Body.CrewCode)
 		if err != nil {
 			if errors.Is(err, ErrCrewNotFound) {
 				return nil, huma.Error404NotFound(err.Error())
@@ -884,6 +1157,6 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body StarCrewView }{Body: h.svc.LeaveCrew(ident.ID, ident.DisplayName, ident.Grade)}, nil
+		return &struct{ Body StarCrewView }{Body: h.svc.LeaveCrew(ctx, ident.ID, ident.DisplayName, ident.Grade)}, nil
 	})
 }
