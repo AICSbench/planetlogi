@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR6-BUDDY-ACCESSIBLE-NAME** — Localize the Astro Buddy fallback accessible name. *(Owner: agent-pr6-fixer | Done: 2026-11-28T16:27Z)*
+  - **Depends On**: `P3-BE-03`, `P0-03`
+  - **Spec**: `docs/02-features-student-portal.md` §12.2; `docs/07-i18n-multilanguage-architecture.md`
+  - **Acceptance Criteria**: Missing or empty names use a localized fallback in en/id; custom names remain unchanged, with tests for each locale.
+  - **Handoff**: AstroBuddyAvatar uses the `stories.customization.buddyFallbackName` key in en/id for missing, empty or whitespace-only names. Focused and full web tests, web typecheck/lint/build, and i18n parity passed; no new environment variables or APIs.
+
 - [x] **PR6-CI-TEST-CONTENTION** — Reduce package contention in the PostgreSQL race suite without relaxing leaderboard timing assertions. *(Owner: agent-pr6-fixer | Done: 2026-11-28T16:20Z)*
   - **Depends On**: `PR6-CI-PG-ISOLATION`
   - **Spec**: `docs/08-technical-architecture-and-database.md` §5

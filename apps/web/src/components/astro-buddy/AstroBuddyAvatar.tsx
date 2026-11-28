@@ -1,4 +1,5 @@
 import type { AstroBuddyConfig } from "@planetlogi/api-client";
+import { useTranslation } from "react-i18next";
 
 interface AstroBuddyAvatarProps {
   config: Partial<AstroBuddyConfig>;
@@ -7,6 +8,7 @@ interface AstroBuddyAvatarProps {
 }
 
 export function AstroBuddyAvatar({ config, size = 96, className = "" }: AstroBuddyAvatarProps) {
+  const { t } = useTranslation("stories");
   const body = config.bodyShape ?? "round";
   const color = config.colorHex ?? "#6366F1";
   const horns = config.hornsStyle ?? "antennae";
@@ -20,7 +22,7 @@ export function AstroBuddyAvatar({ config, size = 96, className = "" }: AstroBud
       viewBox="0 0 120 120"
       className={className}
       role="img"
-      aria-label={config.fullName ?? "Astro Buddy"}
+      aria-label={config.fullName?.trim() ? config.fullName : t("customization.buddyFallbackName")}
     >
       <defs>
         <radialGradient id={`glow-${color.replace("#", "")}`} cx="35%" cy="30%" r="70%">

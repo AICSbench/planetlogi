@@ -64,6 +64,7 @@
   },
   "customization": {
     "buddyTitle": "My Astro Buddy & Avatars",
+    "buddyFallbackName": "Astro Buddy",
     "buddySubtitle": "Design your custom SVG space companion and pick your pilot avatar pack!",
     "livePreview": "Live Companion Preview",
     "bodyShape": "Body Shape",

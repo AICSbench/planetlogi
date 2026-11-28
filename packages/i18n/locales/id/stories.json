@@ -64,6 +64,7 @@
   },
   "customization": {
     "buddyTitle": "Astro Buddy & Avatarku",
+    "buddyFallbackName": "Astro Buddy",
     "buddySubtitle": "Rancang teman luar angkasa SVG milikmu dan pilih paket avatar pilot!",
     "livePreview": "Pratinjau Langsung Temanmu",
     "bodyShape": "Bentuk Tubuh",
