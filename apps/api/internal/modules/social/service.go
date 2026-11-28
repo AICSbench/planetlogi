@@ -66,7 +66,7 @@ type persistedDuel struct {
 }
 
 // duelsStateDoc is the durable per-student Star Duel document (newest duel
-// first, capped at duelsStateCap entries). Stored in the shared phase2_state
+// first, with at most duelsStateCap completed entries). Stored in the shared phase2_state
 // store so duel records and history survive restarts.
 type duelsStateDoc struct {
 	Duels []persistedDuel `json:"duels"`
@@ -342,9 +342,18 @@ func (s *Service) persistDuels(ctx context.Context, studentID string) {
 			})
 		}
 	}
-	if len(doc.Duels) > duelsStateCap {
-		doc.Duels = doc.Duels[:duelsStateCap]
+	retained := doc.Duels[:0]
+	completed := 0
+	for _, duel := range doc.Duels {
+		if duel.Record.Status == "COMPLETED" {
+			completed++
+			if completed > duelsStateCap {
+				continue
+			}
+		}
+		retained = append(retained, duel)
 	}
+	doc.Duels = retained
 	_ = s.store.Save(ctx, studentID, duelsStateModule, doc)
 }
 

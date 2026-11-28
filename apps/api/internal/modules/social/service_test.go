@@ -2,6 +2,7 @@ package social
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -181,6 +182,9 @@ func newSocialTestStudent(t *testing.T, pool *pgxpool.Pool) string {
 		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
 	}
 	t.Cleanup(func() {
+		if _, err := pool.Exec(context.Background(), `DELETE FROM shared_state WHERE scope=$1 AND (key=$2 OR (key LIKE 'code:%' AND payload->'members' @> $3::jsonb))`, crewScope, memberKeyPrefix+studentID, `[{"studentId":"`+studentID+`"}]`); err != nil {
+			t.Error(err)
+		}
 		if _, err := pool.Exec(context.Background(), `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
 			t.Error(err)
 		}
@@ -217,6 +221,8 @@ func TestStarDuelsPersistAcrossRestartPG(t *testing.T) {
 	}
 
 	svc1 := NewServiceWithPG(pool, ledger)
+	fixedNow := time.Date(2026, 11, 28, 10, 0, 0, 0, time.UTC)
+	svc1.SetClockForTest(func() time.Time { return fixedNow })
 	lobby1 := svc1.GetLobby(ctx, studentID, 1, "Asia/Jakarta", "en")
 	if len(lobby1.Incoming) != 1 {
 		t.Fatalf("expected 1 incoming duel, got %d", len(lobby1.Incoming))
@@ -237,6 +243,7 @@ func TestStarDuelsPersistAcrossRestartPG(t *testing.T) {
 
 	// Fresh process = simulated restart.
 	svc2 := NewServiceWithPG(pool, ledger)
+	svc2.SetClockForTest(func() time.Time { return fixedNow })
 	lobby2 := svc2.GetLobby(ctx, studentID, 1, "Asia/Jakarta", "en")
 	completedFound := false
 	for _, h := range lobby2.History {
@@ -270,6 +277,42 @@ func TestStarDuelsPersistAcrossRestartPG(t *testing.T) {
 	}
 }
 
+func TestDuelPersistenceRetainsActiveBeyondHistoryCapPG(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	studentID := newSocialTestStudent(t, pool)
+	svc := NewServiceWithPG(pool, nil)
+	for i := 0; i < duelsStateCap+2; i++ {
+		id := fmt.Sprintf("completed-%d", i)
+		svc.duels[id] = &duelInternal{studentID: studentID, record: DuelRecord{ID: id, Status: "COMPLETED"}}
+		svc.studentDuels[studentID] = append(svc.studentDuels[studentID], id)
+	}
+	for _, status := range []string{"PENDING", "IN_PROGRESS"} {
+		id := "active-" + status
+		svc.duels[id] = &duelInternal{studentID: studentID, record: DuelRecord{ID: id, Status: status}}
+		svc.studentDuels[studentID] = append(svc.studentDuels[studentID], id)
+	}
+	svc.persistDuels(ctx, studentID)
+	reloaded := NewServiceWithPG(pool, nil)
+	reloaded.hydrateDuels(ctx, studentID)
+	if got := len(reloaded.studentDuels[studentID]); got != duelsStateCap+2 {
+		t.Fatalf("got %d retained duels", got)
+	}
+	for _, status := range []string{"PENDING", "IN_PROGRESS"} {
+		if reloaded.duels["active-"+status] == nil {
+			t.Fatalf("lost %s duel", status)
+		}
+	}
+}
+
 // TestStarCrewPersistsAcrossRestartPG verifies crew codes, rosters, and
 // membership survive a restart.
 func TestStarCrewPersistsAcrossRestartPG(t *testing.T) {
@@ -288,6 +331,11 @@ func TestStarCrewPersistsAcrossRestartPG(t *testing.T) {
 
 	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool))
 	crewA := svc1.GetOrCreateCrew(ctx, pilotA, "Test Pilot", 1)
+	t.Cleanup(func() {
+		if _, err := pool.Exec(ctx, `DELETE FROM shared_state WHERE scope=$1 AND key=$2`, crewScope, crewKeyPrefix+crewA.CrewCode); err != nil {
+			t.Error(err)
+		}
+	})
 
 	// A second instance joins via the code — it must find the durable roster.
 	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool))

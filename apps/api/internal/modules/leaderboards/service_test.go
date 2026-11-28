@@ -2,11 +2,15 @@ package leaderboards
 
 import (
 	"context"
+	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestLeaderboardsTenThousandPilotsUnder50msAndMaskedPII(t *testing.T) {
@@ -113,5 +117,71 @@ func TestSundayMeteorWindowEnforced(t *testing.T) {
 	})
 	if _, err := svc.StartSundayMeteor(context.Background(), "stu-x", 2, "Asia/Jakarta", "en"); err != ErrEventClosed {
 		t.Fatalf("expected ErrEventClosed outside the Sunday window, got %v", err)
+	}
+}
+
+func TestMeteorAndGiftDurabilityPG(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	var student string
+	err = pool.QueryRow(ctx, `INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code) SELECT parent_account_id, 'meteor-test-' || gen_random_uuid(), password_hash, 'Test', 'Test P.', 1, left(replace(gen_random_uuid()::text, '-', ''), 9) FROM student_profiles WHERE login_id='pilot1' RETURNING id::text`).Scan(&student)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(ctx, `DELETE FROM student_profiles WHERE id=$1::uuid`, student); err != nil {
+			t.Error(err)
+		}
+	})
+	svc := NewServiceWithPG(pool, economy.NewPGLedger(pool))
+	clock := time.Date(2026, 11, 29, 10, 0, 0, 0, time.FixedZone("WIB", 7*3600))
+	svc.SetClockForTest(func() time.Time { return clock })
+	status, err := svc.GetBonusGift(ctx, student, "Asia/Jakarta")
+	if err != nil || status.Claimed {
+		t.Fatalf("missing gift: %+v %v", status, err)
+	}
+	start, err := svc.StartSundayMeteor(ctx, student, 1, "Asia/Jakarta", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := svc.SubmitSundayMeteor(ctx, student, start.SessionID, "Asia/Jakarta", "en", nil)
+	if err != nil || result.RewardSP != 0 {
+		t.Fatalf("zero score: %+v %v", result, err)
+	}
+	reloaded := NewServiceWithPG(pool, economy.NewPGLedger(pool))
+	reloaded.SetClockForTest(func() time.Time { return clock })
+	if _, err := reloaded.StartSundayMeteor(ctx, student, 1, "Asia/Jakarta", "en"); !errors.Is(err, ErrMeteorAlreadyDone) {
+		t.Fatalf("completion not durable: %v", err)
+	}
+	clock = clock.AddDate(0, 0, 7)
+	start, err = reloaded.StartSundayMeteor(ctx, student, 1, "Asia/Jakarta", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sess := reloaded.meteorSess[start.SessionID]
+	prob, ok := mathengine.GenerateByCode(sess.templates[0], sess.seeds[0], "en")
+	if !ok {
+		t.Fatal("template missing")
+	}
+	result, err = reloaded.SubmitSundayMeteor(ctx, student, start.SessionID, "Asia/Jakarta", "en", map[int]map[string]string{0: prob.Solution.CorrectAnswers})
+	if err != nil || result.RewardSP <= 0 {
+		t.Fatalf("positive score: %+v %v", result, err)
+	}
+	var balance int64
+	if err := pool.QueryRow(ctx, `SELECT total_sp FROM student_wallets WHERE student_id=$1::uuid`, student).Scan(&balance); err != nil || balance != result.RewardSP {
+		t.Fatalf("wallet=%d reward=%d err=%v", balance, result.RewardSP, err)
+	}
+	canceled, cancel := context.WithCancel(ctx)
+	cancel()
+	if _, err := reloaded.GetBonusGift(canceled, student, "Asia/Jakarta"); !errors.Is(err, ErrLedgerUnavailable) {
+		t.Fatalf("expected read error, got %v", err)
 	}
 }

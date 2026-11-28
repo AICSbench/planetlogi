@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [!] **PR6-REVIEW-ROUND4-EASY** — Address the owner-approved easy PR #6 findings, excluding the pending ID-format decision. *(Owner: agent-pr6-fixer | Blocked: #10 requires coordinated crew lookup error handling and creation semantics; defer with #11 rather than swallow a read error.)*
+  - **Depends On**: `P3-BE-03`, `P3-BE-04`, `P3-BE-05`
+  - **Spec**: `docs/02-features-student-portal.md` (showcase, Star Duels, Star Crew and events)
+  - **Acceptance Criteria**: Correct showcase persistence and tests, preserve active duels, refresh crew reads without swallowing errors, fix gift lookup errors and zero-reward Meteor completion, and verify relevant tests.
+  - **Handoff**: Implemented showcase, duel retention, test fixture cleanup/clock, bonus status error propagation and zero-reward Meteor completion. PostgreSQL integration tests, Go tests, vet and build pass. #10 remains open; active duels have no expiry policy and can grow without bound. No migration or new environment variable.
+
 - [x] **PR3-REVIEW-ROUND3** — Remove the streak mutex/pool lock-order cycle found on `4876e87`. *(Owner: agent-pr3-integrity | Done: 2026-11-28T03:31Z)*
   - **Depends On**: `PR3-REVIEW-ROUND2`
   - **Spec**: `docs/02-features-student-portal.md` §4

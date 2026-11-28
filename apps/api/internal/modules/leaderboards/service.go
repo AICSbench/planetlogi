@@ -435,33 +435,36 @@ func maskName(full string) string {
 
 // durableBonusClaimed reads the student's durable daily-gift claim record
 // (PG mode). The in-memory map stays the source of truth for test mode.
-func (s *Service) durableBonusClaimed(ctx context.Context, studentID, localDate string) bool {
+func (s *Service) durableBonusClaimed(ctx context.Context, studentID, localDate string) (bool, error) {
 	if s.store == nil {
-		return false
+		return false, nil
 	}
 	var doc bonusGiftDoc
-	if found, err := s.store.Load(ctx, studentID, bonusGiftModule, &doc); err == nil && found {
-		return doc.Claimed[localDate]
+	found, err := s.store.Load(ctx, studentID, bonusGiftModule, &doc)
+	if err != nil {
+		return false, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
 	}
-	return false
+	return found && doc.Claimed[localDate], nil
 }
 
 // GetBonusGift reports today's daily bonus gift status; the claimed flag is
 // read from durable state so it stays correct across restarts and instances.
-func (s *Service) GetBonusGift(ctx context.Context, studentID, tz string) BonusGiftStatus {
+func (s *Service) GetBonusGift(ctx context.Context, studentID, tz string) (BonusGiftStatus, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	localDate := timewindow.LocalDateString(s.nowClock(), tz)
 	key := studentID + ":" + localDate
 	claimed := s.bonusClaimed[key]
-	if durable := s.durableBonusClaimed(ctx, studentID, localDate); durable {
-		claimed = true
+	durable, err := s.durableBonusClaimed(ctx, studentID, localDate)
+	if err != nil {
+		return BonusGiftStatus{}, err
 	}
+	claimed = claimed || durable
 	return BonusGiftStatus{
 		LocalDate: localDate,
 		Claimed:   claimed,
 		RewardAC:  DailyBonusGiftAC,
-	}
+	}, nil
 }
 
 func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (BonusGiftStatus, error) {
@@ -470,9 +473,11 @@ func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (Bon
 	key := studentID + ":" + localDate
 	claimed := s.bonusClaimed[key]
 	s.mu.Unlock()
-	if durable := s.durableBonusClaimed(ctx, studentID, localDate); durable {
-		claimed = true
+	durable, err := s.durableBonusClaimed(ctx, studentID, localDate)
+	if err != nil {
+		return BonusGiftStatus{}, err
 	}
+	claimed = claimed || durable
 	if claimed {
 		return BonusGiftStatus{LocalDate: localDate, Claimed: true, RewardAC: DailyBonusGiftAC}, ErrAlreadyClaimedToday
 	}
@@ -739,17 +744,19 @@ func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, 
 			return SundayMeteorResult{}, err
 		}
 		defer func() { _ = tx.Rollback(ctx) }()
-		if _, err := economy.ApplyBatchInTx(ctx, tx, s.ledger, []economy.MutationRequest{
-			{
-				StudentID:      studentID,
-				Currency:       economy.CurrencySP,
-				Delta:          rewardSP,
-				SourceType:     "SUNDAY_METEOR",
-				SourceID:       sessionID,
-				IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
-			},
-		}); err != nil {
-			return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+		if rewardSP > 0 {
+			if _, err := economy.ApplyBatchInTx(ctx, tx, s.ledger, []economy.MutationRequest{
+				{
+					StudentID:      studentID,
+					Currency:       economy.CurrencySP,
+					Delta:          rewardSP,
+					SourceType:     "SUNDAY_METEOR",
+					SourceID:       sessionID,
+					IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
+				},
+			}); err != nil {
+				return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+			}
 		}
 		if err := s.store.SaveMergedTx(ctx, tx, studentID, meteorDailyModule, func(current []byte) (any, error) {
 			var doc meteorDailyDoc
@@ -1010,7 +1017,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body BonusGiftStatus }{Body: h.svc.GetBonusGift(ctx, ident.ID, ident.Timezone)}, nil
+		status, err := h.svc.GetBonusGift(ctx, ident.ID, ident.Timezone)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("bonus gift status unavailable")
+		}
+		return &struct{ Body BonusGiftStatus }{Body: status}, nil
 	})
 
 	huma.Register(api, huma.Operation{

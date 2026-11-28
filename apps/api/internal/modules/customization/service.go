@@ -231,7 +231,7 @@ func (s *Service) GetShowcase(ctx context.Context, grade int) []ShowcaseEntry {
 	if s.store != nil {
 		var durable []ShowcaseEntry
 		found, err := s.store.LoadShared(ctx, showcaseScope, showcaseKey, &durable)
-		if err == nil && found && len(durable) > 0 {
+		if err == nil && found {
 			entries = durable
 		} else if err == nil {
 			_ = s.store.SaveShared(ctx, showcaseScope, showcaseKey, s.showcase)
