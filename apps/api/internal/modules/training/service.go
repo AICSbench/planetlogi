@@ -325,7 +325,9 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 		answered:     make(map[int]bool),
 	}
 	s.sessions[sessID] = sess
-	s.saveSessionPG(context.Background(), sess, target.grade)
+	if err := s.saveSessionPG(context.Background(), sess, target.grade); err != nil {
+		return PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
+	}
 
 	return PracticeSession{
 		SessionID: sessID,
@@ -379,8 +381,12 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 		if gradeRes.IsCorrect {
 			sess.correct++
 		}
-		s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct)
-		s.saveSessionPG(ctx, sess, 0)
+		if err := s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct); err != nil {
+			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist skill stats: %w", err)
+		}
+		if err := s.saveSessionPG(ctx, sess, 0); err != nil {
+			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
+		}
 	}
 
 	view := PracticeSession{
@@ -395,13 +401,13 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 
 // RecordSkillAttempt records a single skill attempt from Daily Orbit or other modes
 // so Proficiency % reports aggregate cross-mode performance.
-func (s *Service) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) {
+func (s *Service) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.recordSkillAttemptLocked(studentID, skillCode, isCorrect, 0)
+	return s.recordSkillAttemptLocked(studentID, skillCode, isCorrect, 0)
 }
 
-func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrect bool, sessionScore int) {
+func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrect bool, sessionScore int) error {
 	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
 	st := stMap[skillCode]
 	if st == nil {
@@ -416,7 +422,7 @@ func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrec
 		st.bestSessionScore = sessionScore
 		st.bestStars = StarsForScore(sessionScore)
 	}
-	s.saveSkillStatPG(context.Background(), studentID, skillCode, st)
+	return s.saveSkillStatPG(context.Background(), studentID, skillCode, st)
 }
 
 func (s *Service) toSkillView(entry skillCatalogEntry, stMap map[string]*skillStat, locale string) SkillView {

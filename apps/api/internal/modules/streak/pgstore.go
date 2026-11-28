@@ -132,13 +132,13 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 	return rec, true
 }
 
-func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *record, changedDate string) {
+func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *record, changedDate string) error {
 	if s.pool == nil || !isUUID(studentID) {
-		return
+		return nil
 	}
 	subjID, err := s.subjectIDPG(ctx)
 	if err != nil {
-		return
+		return err
 	}
 
 	var lastComp any
@@ -150,7 +150,7 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 		todayDt = rec.todayDate
 	}
 
-	_, _ = s.pool.Exec(ctx, `
+	if _, err := s.pool.Exec(ctx, `
 		INSERT INTO student_streaks
 			(student_id, subject_id, current_streak, longest_streak, cryo_shields, nova_pet_stage,
 			 last_completed_local_date, reminder_enabled, today_correct_count, today_local_date, reminder_time_local, updated_at)
@@ -168,17 +168,22 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 			updated_at = NOW()
 	`, studentID, subjID, rec.status.CurrentStreak, rec.status.LongestStreak, rec.status.CryoShields,
 		rec.status.NovaPetStage, lastComp, rec.status.ReminderEnabled, rec.status.TodayCorrectCount,
-		todayDt, rec.status.ReminderTimeLocal)
+		todayDt, rec.status.ReminderTimeLocal); err != nil {
+		return err
+	}
 
 	if changedDate != "" {
 		if st, ok := rec.calendar[changedDate]; ok {
-			_, _ = s.pool.Exec(ctx, `
+			if _, err := s.pool.Exec(ctx, `
 				INSERT INTO streak_calendar_days (student_id, subject_id, local_date, status)
 				VALUES ($1::uuid, $2::uuid, $3::date, $4)
 				ON CONFLICT (student_id, subject_id, local_date) DO UPDATE SET status = EXCLUDED.status
-			`, studentID, subjID, changedDate, string(st))
+			`, studentID, subjID, changedDate, string(st)); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // ReconcileAllMidnight reconciles missed days for all students persisted in PostgreSQL
@@ -217,7 +222,9 @@ func (s *Service) ReconcileAllMidnight(ctx context.Context, now time.Time) (int,
 	}
 
 	for _, t := range targets {
-		s.ReconcileMidnight(t.id, t.tz, now)
+		if _, err := s.reconcileMidnightErr(ctx, t.id, t.tz, now); err != nil {
+			return 0, err
+		}
 	}
 	return len(targets), nil
 }

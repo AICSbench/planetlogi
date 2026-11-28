@@ -126,7 +126,7 @@
   - **Depends On**: `P1-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §14, `docs/04-curriculum-and-pedagogy.md` §4
   - **Scope**: `apps/api/internal/modules/reports/` — Filterable Proficiency Report across all 6 curricula & Grades 1–6 (4 mastery buckets + per-topic skill grids) and High Score Report (star tiers 9–10, 6–8, 4–5, 1–3 out of 10).
-  - **Acceptance Criteria**: Aggregations accurately reflect student attempts across Daily Orbit and Galaxy Training; response cached per student with instant invalidation on attempt.
+  - **Acceptance Criteria**: Proficiency % report accurately reflects student attempts across Daily Orbit and Galaxy Training; High Score star-tier report (9–10, 6–8, 4–5, 1–3 out of 10) reflects 10-question Galaxy Training sessions; response cached per student with instant invalidation on attempt.
 
 - [x] **P1-FE-01** `[FE]` Build Student Dashboard (4-Pillar Hub) & Profile/XP Card *(Owner: agent-fe-1 | Done: 2026-11-26T23:16Z)*
   - **Depends On**: `P0-06`, `P0-08`

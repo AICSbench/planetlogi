@@ -137,7 +137,7 @@ type internalSession struct {
 }
 
 type SkillAttemptRecorder interface {
-	RecordSkillAttempt(studentID, skillCode string, isCorrect bool)
+	RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error
 }
 
 type Service struct {
@@ -190,8 +190,7 @@ func stageForIndex(idx int) (name, shape string, sp int) {
 }
 
 func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
-	p, ok := s.prefs[studentID]
-	if !ok {
+	if s.pool != nil && isUUID(studentID) {
 		if pgPrefs, loaded := s.loadPrefsPG(context.Background(), studentID); loaded {
 			if grade >= 1 && grade <= 6 {
 				pgPrefs.grade = grade
@@ -199,6 +198,9 @@ func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 			s.prefs[studentID] = pgPrefs
 			return pgPrefs
 		}
+	}
+	p, ok := s.prefs[studentID]
+	if !ok {
 		if grade < 1 || grade > 6 {
 			grade = 1
 		}
@@ -209,7 +211,7 @@ func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 			totalSP:         12,
 		}
 		s.prefs[studentID] = p
-		s.savePrefsPG(context.Background(), studentID, p)
+		_ = s.savePrefsPG(context.Background(), studentID, p)
 	}
 	return p
 }
@@ -268,12 +270,14 @@ func filterTemplatesByTierAndCurricula(pool []mathengine.TemplateMeta, tier Tier
 
 func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDate string) *internalSession {
 	key := studentID + ":" + localDate
+	if s.pool != nil && isUUID(studentID) {
+		if pgSess, loaded := s.loadSessionPG(context.Background(), studentID, localDate); loaded {
+			s.sessions[key] = pgSess
+			return pgSess
+		}
+	}
 	if sess, ok := s.sessions[key]; ok {
 		return sess
-	}
-	if pgSess, loaded := s.loadSessionPG(context.Background(), studentID, localDate); loaded {
-		s.sessions[key] = pgSess
-		return pgSess
 	}
 	prefs := s.getPrefsLocked(studentID, grade)
 	gradePool := mathengine.TemplatesForGrade(prefs.grade)
@@ -304,7 +308,7 @@ func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDat
 		slots:     slots,
 	}
 	s.sessions[key] = sess
-	s.saveSessionPG(context.Background(), studentID, sess)
+	_ = s.saveSessionPG(context.Background(), studentID, sess)
 	return sess
 }
 
@@ -402,11 +406,17 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 	} else {
 		slot.status = SlotWrong
 	}
-	if s.attemptRec != nil && prob.Question.SkillCode != "" {
-		s.attemptRec.RecordSkillAttempt(studentID, prob.Question.SkillCode, gradeRes.IsCorrect)
+	if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
+		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
 	}
-	s.saveSessionPG(ctx, studentID, sess)
-	s.savePrefsPG(ctx, studentID, prefs)
+	if err := s.savePrefsPG(ctx, studentID, prefs); err != nil {
+		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
+	}
+	if s.attemptRec != nil && prob.Question.SkillCode != "" {
+		if err := s.attemptRec.RecordSkillAttempt(studentID, prob.Question.SkillCode, gradeRes.IsCorrect); err != nil {
+			return SlotView{}, SessionView{}, fmt.Errorf("record skill attempt: %w", err)
+		}
+	}
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -448,7 +458,9 @@ func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz,
 			})
 		}
 	}
-	s.saveSessionPG(ctx, studentID, sess)
+	if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
+		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
+	}
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -511,7 +523,9 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 	slot.templateCode = picked.Code
 	slot.seed += 313
 	sess.changeQuestionUsed++
-	s.saveSessionPG(context.Background(), studentID, sess)
+	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
+	}
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -538,8 +552,12 @@ func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier T
 			}
 		}
 	}
-	s.savePrefsPG(context.Background(), studentID, prefs)
-	s.saveSessionPG(context.Background(), studentID, sess)
+	if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
+		return SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
+	}
+	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+		return SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
+	}
 	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 
@@ -568,8 +586,12 @@ func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, c
 			}
 		}
 	}
-	s.savePrefsPG(context.Background(), studentID, prefs)
-	s.saveSessionPG(context.Background(), studentID, sess)
+	if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
+		return SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
+	}
+	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+		return SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
+	}
 	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 

@@ -35,11 +35,8 @@ func isUUID(s string) bool {
 }
 
 func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) map[string]*skillStat {
-	if stMap, ok := s.stats[studentID]; ok {
-		return stMap
-	}
-	stMap := make(map[string]*skillStat)
 	if s.pool != nil && isUUID(studentID) {
+		stMap := make(map[string]*skillStat)
 		rows, err := s.pool.Query(ctx, `
 			SELECT skill_code, recent_results, best_session_score, best_stars
 			FROM training_skill_stats
@@ -61,19 +58,25 @@ func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) map
 					}
 				}
 			}
+			s.stats[studentID] = stMap
+			return stMap
 		}
 	}
+	if stMap, ok := s.stats[studentID]; ok {
+		return stMap
+	}
+	stMap := make(map[string]*skillStat)
 	s.stats[studentID] = stMap
 	return stMap
 }
 
-func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode string, st *skillStat) {
+func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode string, st *skillStat) error {
 	if s.pool == nil || !isUUID(studentID) || st == nil {
-		return
+		return nil
 	}
 	resultsRaw, err := json.Marshal(st.recentWindow)
 	if err != nil {
-		return
+		return err
 	}
 	correct := 0
 	for _, ok := range st.recentWindow {
@@ -82,7 +85,7 @@ func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode stri
 		}
 	}
 	pct, tier := ComputeProficiency(st.recentWindow)
-	_, _ = s.pool.Exec(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO training_skill_stats
 			(student_id, skill_code, recent_results, recent_window_count, recent_correct_count,
 			 proficiency_pct, proficiency_tier, best_session_score, best_stars, updated_at)
@@ -97,6 +100,7 @@ func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode stri
 			best_stars = EXCLUDED.best_stars,
 			updated_at = NOW()
 	`, studentID, skillCode, resultsRaw, len(st.recentWindow), correct, pct, string(tier), st.bestSessionScore, st.bestStars)
+	return err
 }
 
 func (s *Service) loadSessionPG(ctx context.Context, sessionID string) (*activePractice, bool) {
@@ -139,16 +143,16 @@ func (s *Service) loadSessionPG(ctx context.Context, sessionID string) (*activeP
 	}, true
 }
 
-func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade int) {
+func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade int) error {
 	if s.pool == nil || sess == nil || !isUUID(sess.studentID) {
-		return
+		return nil
 	}
 	raw, err := json.Marshal(pgPracticePayload{
 		Seeds:    sess.seeds,
 		Answered: sess.answered,
 	})
 	if err != nil {
-		return
+		return err
 	}
 	var baseSeed int64
 	if len(sess.seeds) > 0 {
@@ -157,7 +161,7 @@ func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
-	_, _ = s.pool.Exec(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO training_practice_sessions
 			(id, student_id, skill_code, grade, mode, seed, answered, correct_count)
 		VALUES ($1, $2::uuid, $3, $4, 'PRACTICE', $5, $6::jsonb, $7)
@@ -165,6 +169,7 @@ func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade
 			answered = EXCLUDED.answered,
 			correct_count = EXCLUDED.correct_count
 	`, sess.sessionID, sess.studentID, sess.skillCode, grade, baseSeed, raw, sess.correct)
+	return err
 }
 
 func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {

@@ -75,12 +75,14 @@ func NewServiceWithPG(pool *pgxpool.Pool) *Service {
 }
 
 func (s *Service) getOrCreateLocked(studentID string) *record {
-	r, ok := s.records[studentID]
-	if !ok {
+	if s.pool != nil && isUUID(studentID) {
 		if pgRec, loaded := s.loadRecordPG(context.Background(), studentID); loaded {
 			s.records[studentID] = pgRec
 			return pgRec
 		}
+	}
+	r, ok := s.records[studentID]
+	if !ok {
 		r = &record{
 			status: Status{
 				CurrentStreak:        3,
@@ -158,13 +160,18 @@ func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, 
 		r.calendar[localDate] = DayCompleted
 		changedDate = localDate
 	}
-	s.saveRecordPG(context.Background(), studentID, r, changedDate)
+	_ = s.saveRecordPG(context.Background(), studentID, r, changedDate)
 	return r.status
 }
 
 // ReconcileMidnight evaluates yesterday (D-1) in the student's timezone:
 // consumes 1 Cryo Shield if missed and shields > 0; otherwise resets streak to 0.
 func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status {
+	st, _ := s.reconcileMidnightErr(context.Background(), studentID, tz, now)
+	return st
+}
+
+func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string, now time.Time) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	r := s.getOrCreateLocked(studentID)
@@ -172,7 +179,7 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
 
 	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen || r.calendar[yesterday] == DayMissed {
-		return r.status
+		return r.status, nil
 	}
 	if r.status.CurrentStreak > 0 {
 		if r.status.CryoShields > 0 {
@@ -186,8 +193,10 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 	}
 	r.status.TodayCorrectCount = 0
 	r.todayDate = timewindow.LocalDateString(now, tz)
-	s.saveRecordPG(context.Background(), studentID, r, yesterday)
-	return r.status
+	if err := s.saveRecordPG(ctx, studentID, r, yesterday); err != nil {
+		return Status{}, err
+	}
+	return r.status, nil
 }
 
 // GrantCryoShield adds shields up to the strict cap of 3.
@@ -202,7 +211,7 @@ func (s *Service) GrantCryoShield(studentID string, count int) Status {
 	if r.status.CryoShields < 0 {
 		r.status.CryoShields = 0
 	}
-	s.saveRecordPG(context.Background(), studentID, r, "")
+	_ = s.saveRecordPG(context.Background(), studentID, r, "")
 	return r.status
 }
 
@@ -214,7 +223,7 @@ func (s *Service) SetReminder(studentID string, enabled bool, timeLocal string) 
 	if timeLocal != "" {
 		r.status.ReminderTimeLocal = timeLocal
 	}
-	s.saveRecordPG(context.Background(), studentID, r, "")
+	_ = s.saveRecordPG(context.Background(), studentID, r, "")
 	return r.status
 }
 

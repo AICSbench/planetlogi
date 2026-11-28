@@ -87,15 +87,15 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 	}, true
 }
 
-func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentPrefs) {
+func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentPrefs) error {
 	if s.pool == nil || !isUUID(studentID) || p == nil {
-		return
+		return nil
 	}
 	curriculaRaw, err := json.Marshal(p.activeCurricula)
 	if err != nil {
-		return
+		return err
 	}
-	_, _ = s.pool.Exec(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO daily_orbit_prefs (student_id, grade, tier, active_curricula, total_sp, updated_at)
 		VALUES ($1::uuid, $2, $3, $4::jsonb, $5, NOW())
 		ON CONFLICT (student_id) DO UPDATE SET
@@ -105,6 +105,7 @@ func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentP
 			total_sp = EXCLUDED.total_sp,
 			updated_at = NOW()
 	`, studentID, p.grade, string(p.tier), curriculaRaw, p.totalSP)
+	return err
 }
 
 func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string) (*internalSession, bool) {
@@ -158,13 +159,13 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 	}, true
 }
 
-func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *internalSession) {
+func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *internalSession) error {
 	if s.pool == nil || !isUUID(studentID) || sess == nil {
-		return
+		return nil
 	}
 	subjID, err := s.subjectIDPG(ctx)
 	if err != nil {
-		return
+		return err
 	}
 
 	payload := pgSessionPayload{
@@ -187,10 +188,10 @@ func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *int
 	}
 	raw, err := json.Marshal(payload)
 	if err != nil {
-		return
+		return err
 	}
 
-	_, _ = s.pool.Exec(ctx, `
+	_, err = s.pool.Exec(ctx, `
 		INSERT INTO daily_orbit_sessions
 			(student_id, subject_id, local_date, tier, questions_json, change_question_used, correct_count, total_sp_earned, completed_at)
 		VALUES ($1::uuid, $2::uuid, $3::date, $4, $5::jsonb, $6, $7, $8, CASE WHEN $9 >= 10 THEN NOW() ELSE NULL END)
@@ -202,4 +203,5 @@ func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *int
 			total_sp_earned = EXCLUDED.total_sp_earned,
 			completed_at = COALESCE(daily_orbit_sessions.completed_at, EXCLUDED.completed_at)
 	`, studentID, subjID, sess.localDate, string(sess.tier), raw, sess.changeQuestionUsed, sess.correctCount, sess.totalSPEarned, sess.completedCount)
+	return err
 }

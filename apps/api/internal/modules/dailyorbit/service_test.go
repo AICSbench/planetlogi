@@ -2,8 +2,12 @@ package dailyorbit
 
 import (
 	"context"
+	"errors"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
@@ -78,14 +82,19 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 
 type mockAttemptRecorder struct {
 	calls []string
+	err   error
 }
 
-func (m *mockAttemptRecorder) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) {
+func (m *mockAttemptRecorder) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error {
+	if m.err != nil {
+		return m.err
+	}
 	if isCorrect {
 		m.calls = append(m.calls, studentID+":"+skillCode+":ok")
 	} else {
 		m.calls = append(m.calls, studentID+":"+skillCode+":err")
 	}
+	return nil
 }
 
 func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
@@ -104,5 +113,51 @@ func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
 	}
 	if len(rec.calls) != 1 || rec.calls[0] != "stu-2:"+sl.Question.SkillCode+":ok" {
 		t.Fatalf("expected attempt recorder to receive stu-2:%s:ok, got %v", sl.Question.SkillCode, rec.calls)
+	}
+
+	// Verify persistence/recorder error is propagated instead of silently ignored
+	rec.err = errors.New("db write failed")
+	sl2 := today.Slots[1]
+	prob2, _ := mathengine.GenerateByCode(sl2.Question.TemplateCode, sl2.Question.Seed, "en")
+	if _, _, err := svc.SubmitAnswer(context.Background(), "stu-2", 1, "Asia/Jakarta", "en", sl2.Index, prob2.Solution.CorrectAnswers, sl2.Question.TemplateCode, sl2.Question.Seed); err == nil {
+		t.Fatalf("expected SubmitAnswer to propagate attempt recorder error")
+	}
+}
+
+func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL restart integration test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatalf("pgxpool.New: %v", err)
+	}
+	defer pool.Close()
+
+	var studentID string
+	if err := pool.QueryRow(ctx, `SELECT id::text FROM student_profiles LIMIT 1`).Scan(&studentID); err != nil {
+		t.Fatalf("seed student missing: %v", err)
+	}
+
+	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
+	fixedNow := time.Date(2099, 1, 2, 10, 0, 0, 0, loc)
+
+	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
+	svc1.nowClock = func() time.Time { return fixedNow }
+	today := svc1.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	sl := today.Slots[0]
+	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
+	if _, _, err := svc1.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed); err != nil && !errors.Is(err, ErrAlreadyAnswered) {
+		t.Fatalf("submit PG error: %v", err)
+	}
+
+	// Simulate fresh server restart with empty in-memory maps
+	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
+	svc2.nowClock = func() time.Time { return fixedNow }
+	reloaded := svc2.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	if reloaded.CompletedCount < 1 || reloaded.Slots[0].Status == SlotPending {
+		t.Fatalf("expected persisted slot 1 after restart, got completed=%d status=%s", reloaded.CompletedCount, reloaded.Slots[0].Status)
 	}
 }
