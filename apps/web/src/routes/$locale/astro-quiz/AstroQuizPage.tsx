@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -90,6 +90,12 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   });
   const secondsSince = (sentAt: number) => Math.max(0, Math.floor((Date.now() - sentAt) / 1000));
 
+  const checkpointRef = useRef<PaperPayload | null>(null);
+  useEffect(() => {
+    checkpointRef.current =
+      activePaperCode && attempt?.status !== "SUBMITTED" ? payload(drafts) : null;
+  });
+
   const saveMutation = useMutation({
     mutationFn: (p: PaperPayload) =>
       apiClient.saveAstroQuizPaper(p.paperCode, p.elapsedSec, p.drafts, p.locale),
@@ -120,6 +126,18 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
       if (p.paperCode === activePaperCode) setActionError(t("astro-quiz:submitError"));
     },
   });
+
+  // Periodic checkpoints keep the server-measured timer current even when
+  // the learner works for more than the 15-minute idle gap without saving.
+  const saveCheckpoint = saveMutation.mutate;
+  useEffect(() => {
+    if (!activePaperCode || attempt?.status === "SUBMITTED") return;
+    const id = window.setInterval(() => {
+      const next = checkpointRef.current;
+      if (next && next.elapsedSec > 0) saveCheckpoint(next);
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [activePaperCode, attempt?.status, saveCheckpoint]);
 
   if (activePaperCode && attemptQuery.isError) {
     return (
@@ -217,6 +235,15 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">
                 {t("astro-quiz:supplyPodBadge")}
               </span>
+            ) : !attempt.supplyPodClaimedThisWeek ? (
+              <GalaxyButton
+                variant="gold"
+                onClick={() => submitMutation.mutate(payload(drafts))}
+                disabled={submitMutation.isPending}
+              >
+                <Gift className="h-4 w-4" aria-hidden="true" />
+                <span>{t("astro-quiz:retrySupplyPod")}</span>
+              </GalaxyButton>
             ) : null}
           </GalaxyCard>
         ) : null}

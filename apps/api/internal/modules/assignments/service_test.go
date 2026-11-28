@@ -248,6 +248,29 @@ func TestAssignmentFinalSubmissionPersistsAfterRetry(t *testing.T) {
 	}
 }
 
+func TestAssignmentListReloadsRecordsWrittenByAnotherInstance(t *testing.T) {
+	const studentID = "44444444-4444-4444-4444-444444444444"
+	store := newAssignmentMemoryStore()
+	writer := NewServiceWithDeps(nil, store, nil)
+	writer.LinkParentChild("par-1", studentID)
+	reader := NewServiceWithDeps(nil, store, nil)
+	ctx := context.Background()
+
+	if list, err := reader.ListForStudent(ctx, studentID, "ALL", "ALL", 0); err != nil || len(list) != 0 {
+		t.Fatalf("prime reader cache: list=%v err=%v", list, err)
+	}
+	if _, err := writer.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "From another instance", "2026-12-01", []string{"g1_add_within_20"}, "req-cross-instance"); err != nil {
+		t.Fatal(err)
+	}
+	list, err := reader.ListForStudent(ctx, studentID, "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].Title != "From another instance" {
+		t.Fatalf("reader did not reload the persisted assignment: %+v", list)
+	}
+}
+
 func TestMergeAssignmentStateDerivesCompletion(t *testing.T) {
 	current := assignmentState{Records: map[string]assignmentRecordDTO{
 		"asgn-x": {

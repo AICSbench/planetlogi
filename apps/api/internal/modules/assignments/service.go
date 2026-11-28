@@ -103,7 +103,6 @@ type Service struct {
 	ledger      economy.Ledger
 	pool        *pgxpool.Pool
 	store       state.Store
-	loaded      map[string]bool
 	records     map[string]*assignmentRecord
 	parentLinks map[string][]string // parentID -> []studentID
 }
@@ -115,7 +114,6 @@ func NewService(ledger economy.Ledger) *Service {
 		parentLinks: map[string][]string{
 			"demo-parent": {"demo-pilot1"},
 		},
-		loaded: make(map[string]bool),
 	}
 	svc.seedDefaults("demo-pilot1")
 	return svc
@@ -212,31 +210,34 @@ func (d assignmentRecordDTO) toRecord() *assignmentRecord {
 	}
 }
 
-// ensureStudentLoaded reads the student's assignments once; the mutex is never
-// held while the store performs a query.
+// ensureStudentLoaded refreshes the student's assignments from the store and merges
+// records written by other instances; the mutex is never held while the store queries.
 func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) error {
 	if s.store == nil || !isUUID(studentID) {
 		return nil
 	}
-	s.mu.Lock()
-	if s.loaded[studentID] {
-		s.mu.Unlock()
-		return nil
-	}
-	s.mu.Unlock()
 	var st assignmentState
 	if _, err := s.store.Load(ctx, studentID, "assignments", &st); err != nil {
 		return err
 	}
 	s.mu.Lock()
-	if s.loaded[studentID] {
-		s.mu.Unlock()
-		return nil
+	for id, dto := range st.Records {
+		if local, ok := s.records[id]; ok {
+			// Keep newer local submissions while importing records written by
+			// another instance.
+			merged := mergeAssignmentRecord(dto, toRecordDTO(local))
+			rec := merged.toRecord()
+			if !local.persisted {
+				rec.persisted = false
+			}
+			if local.revision > 0 {
+				rec.revision = local.revision
+			}
+			s.records[id] = rec
+		} else {
+			s.records[id] = dto.toRecord()
+		}
 	}
-	for _, dto := range st.Records {
-		s.records[dto.ID] = dto.toRecord()
-	}
-	s.loaded[studentID] = true
 	s.mu.Unlock()
 
 	// A merge may have completed an assignment while this instance was

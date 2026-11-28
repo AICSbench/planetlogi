@@ -38,5 +38,6 @@
     "IN_PROGRESS": "Sedang dikerjakan",
     "SUBMITTED": "Sudah dikirim"
   },
-  "timerLimitReached": "Batas waktu 24 jam telah tercapai. Simpan atau kirim kertas sekarang."
+  "timerLimitReached": "Batas waktu 24 jam telah tercapai. Simpan atau kirim kertas sekarang.",
+  "retrySupplyPod": "Coba Lagi Kapsul Hadiah"
 }

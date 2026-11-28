@@ -42,7 +42,6 @@ export function useAccountScope(): string {
 export function currentSessionGeneration(): number {
   return sessionGeneration;
 }
-}
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

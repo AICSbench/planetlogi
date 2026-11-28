@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Flag, HelpCircle, PlayCircle, Sparkles, Volume2 } from "lucide-react";
 import type { RenderedQuestion, WorkedSolution } from "@planetlogi/api-client";
@@ -55,6 +55,7 @@ function QuestionPlayerInner({
   const [feedbackText, setFeedbackText] = useState("");
   const [savedNotice, setSavedNotice] = useState(false);
   const [retryUnlocked, setRetryUnlocked] = useState(false);
+  const draftRevision = useRef(0);
 
   const effectiveLocked =
     (locked && !(mode === "SPACE_ACADEMY" && retryUnlocked && isCorrect === false)) || submitting;
@@ -71,6 +72,8 @@ function QuestionPlayerInner({
 
   function handleFieldChange(key: string, val: string) {
     const next = { ...answers, [key]: val };
+    draftRevision.current += 1;
+    setSavedNotice(false);
     setDraftAnswers(next);
     onDraftChange?.(next);
   }
@@ -253,10 +256,11 @@ function QuestionPlayerInner({
                 variant="secondary"
                 disabled={submitting}
                 onClick={async () => {
+                  const revision = draftRevision.current;
                   setSavedNotice(false);
                   try {
                     await onSaveDraft(answers);
-                    setSavedNotice(true);
+                    if (draftRevision.current === revision) setSavedNotice(true);
                   } catch {
                     // Keep "Save draft" available; the page shows the error.
                   }

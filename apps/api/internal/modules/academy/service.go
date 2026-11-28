@@ -1028,7 +1028,7 @@ func (h *Handler) resolveStudent(ctx context.Context, in AuthIn, mutating bool) 
 	}
 	p, err := h.authSvc.ResolvePrincipal(ctx, tok)
 	if err != nil {
-		return "", locale, auth.ErrInvalidCredentials
+		return "", locale, err
 	}
 	if mutating && p.Role != auth.RoleStudent {
 		return "", locale, auth.ErrForbidden
