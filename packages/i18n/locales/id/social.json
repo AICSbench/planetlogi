@@ -29,7 +29,13 @@
     "backToLobby": "Kembali ke Lobi Duel",
     "noIncoming": "Belum ada tantangan masuk saat ini.",
     "noHistory": "Belum ada riwayat duel. Mulai Duel Bintang pertamamu!",
-    "manageCrew": "Buka Kru Bintang (BFF)"
+    "manageCrew": "Buka Kru Bintang (BFF)",
+    "outcome": {
+      "WIN": "Menang",
+      "DRAW": "Seri",
+      "LOSS": "Kalah"
+    },
+    "answerInput": "Jawaban soal {{n}}"
   },
   "crew": {
     "title": "Kru Bintang (BFF)",
@@ -68,7 +74,17 @@
     "gradeCol": "Kelas",
     "scoreCol": "Skor",
     "youBadge": "KAMU",
-    "hallOfFame": "Arsip Hall of Fame"
+    "hallOfFame": "Arsip Hall of Fame",
+    "metrics": {
+      "SP": "SP",
+      "Class_SP": "SP Kelas",
+      "Crew_SP": "SP Kru",
+      "S": "S",
+      "Days": "Hari",
+      "Stars": "Bintang",
+      "Faction_SP": "SP Faksi",
+      "Cup_SP": "SP Piala"
+    }
   },
   "events": {
     "title": "Acara Kosmik",
@@ -85,7 +101,7 @@
     "creatorTitlePlaceholder": "Judul (cth. Pecahan Pizza Asteroid)",
     "creatorSummaryPlaceholder": "Ceritakan ide teka-teki matematika kreatifmu untuk pilot SD...",
     "creatorSubmit": "Kirim Ide",
-    "creatorSubmitted": "Terkirim! Idemu sekarang tampil di Galeri Kreator.",
+    "creatorSubmitted": "Terkirim! Idemu akan tampil di Galaksi Kreator setelah ditinjau oleh moderator.",
     "creatorGallery": "Karya Pilot Pilihan"
   },
   "shell": {

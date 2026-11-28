@@ -179,7 +179,7 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
           </div>
 
           {/* Primary Navigation Links (visible on tablet/desktop) */}
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1">
+          <nav aria-label={t("nav.primaryNav")} className="hidden lg:flex items-center gap-1">
             {primaryLinks.map((item) => {
               const targetPath = `/${locale}/${item.slug}`;
               const active = pathname === targetPath;
@@ -224,6 +224,9 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
               title={t("nav.bonusGift")}
               aria-label={t("nav.bonusGift")}
               onClick={() => {
+                // Auth guard: the gift modal (and its claim mutation) is for
+                // signed-in students only.
+                if (!user) return;
                 setOpenMenu(null);
                 setBonusToast(null);
                 setShowBonusModal(true);
@@ -470,8 +473,13 @@ export function TopNavShell({ locale, children }: TopNavShellProps) {
                 </p>
               ) : (
                 <GalaxyButton
-                  onClick={() => claimBonusMut.mutate()}
-                  disabled={claimBonusMut.isPending}
+                  onClick={() => {
+                    // Auth guard: never fire the claim request without a
+                    // signed-in student session.
+                    if (!user) return;
+                    claimBonusMut.mutate();
+                  }}
+                  disabled={claimBonusMut.isPending || !user}
                 >
                   {t("social:shell.bonusGiftClaim", { ac: bonusQuery.data?.rewardAc ?? 2 })}
                 </GalaxyButton>

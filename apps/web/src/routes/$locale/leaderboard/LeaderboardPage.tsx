@@ -32,7 +32,15 @@ export function LeaderboardPage({ locale }: { locale: Locale }) {
   }, []);
 
   const baseRefresh = boardQuery.data?.nextRefreshSec ?? 300;
-  const countdown = Math.max(1, baseRefresh - (elapsed % baseRefresh));
+  // Refetch the board exactly when the live-refresh countdown reaches zero.
+  useEffect(() => {
+    if (elapsed > 0 && elapsed % baseRefresh === 0) {
+      void boardQuery.refetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only on countdown boundary
+  }, [elapsed, baseRefresh]);
+
+  const countdown = baseRefresh - (elapsed % baseRefresh);
 
   const challenges = challengesQuery.data?.challenges ?? [];
   const openChallenges = challenges.filter((c) => c.category === "OPEN");
@@ -178,7 +186,7 @@ export function LeaderboardPage({ locale }: { locale: Locale }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-indigo-400/10">
-                {(board?.entries ?? []).slice(0, 20).map((row) => (
+                {(board?.entries ?? []).slice(0, 50).map((row) => (
                   <tr
                     key={`${row.rank}-${row.studentId}`}
                     className={row.isCurrent ? "bg-indigo-500/20 font-bold" : ""}
@@ -199,7 +207,13 @@ export function LeaderboardPage({ locale }: { locale: Locale }) {
                     </td>
                     <td className="py-2.5 pr-3 text-slate-300">G{row.grade}</td>
                     <td className="py-2.5 text-right font-extrabold text-cyan-200 planetlogi-tabular">
-                      {row.score} {board?.challenge.metricLabel}
+                      {row.score}{" "}
+                      {board?.challenge.metricLabel
+                        ? t(
+                            `leaderboard.metrics.${board.challenge.metricLabel.replace(/\s+/g, "_")}`,
+                            { defaultValue: board.challenge.metricLabel }
+                          )
+                        : null}
                     </td>
                   </tr>
                 ))}

@@ -1,20 +1,32 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Eye, Gem, History, Pause, Play, Zap } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
 import type { SuperSightSession, SuperWarpStart } from "@planetlogi/api-client";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient } from "../../../store/authStore";
+
+// Normalized (0..1) coordinates of the five difference targets, matching the
+// server-side Super Sight puzzle layout.
+const INTERACTIVE_TARGETS = [
+  { id: 1, nx: 0.18, ny: 0.25, cx: 72, cy: 65 },
+  { id: 2, nx: 0.5, ny: 0.22, cx: 200, cy: 57 },
+  { id: 3, nx: 0.82, ny: 0.28, cx: 328, cy: 73 },
+  { id: 4, nx: 0.3, ny: 0.72, cx: 120, cy: 187 },
+  { id: 5, nx: 0.74, ny: 0.75, cx: 296, cy: 195 },
+];
 
 function CosmicSceneSVG({
   variant,
   foundIds,
   onTapNormalized,
+  targetLabel,
 }: {
   variant: "A" | "B";
   foundIds?: number[];
   onTapNormalized?: (x: number, y: number) => void;
+  targetLabel?: (id: number) => string;
 }) {
   function handleClick(e: MouseEvent<SVGSVGElement>) {
     if (!onTapNormalized) return;
@@ -25,6 +37,10 @@ function CosmicSceneSVG({
   }
 
   const found = new Set(foundIds ?? []);
+
+  // Keyboard-operable hotspots over the five difference targets so the Super
+  // Sight canvas is fully usable without a pointer (CR-15).
+  const keyboardTargets = INTERACTIVE_TARGETS.filter((tgt) => onTapNormalized && !found.has(tgt.id));
 
   return (
     <svg
@@ -89,6 +105,31 @@ function CosmicSceneSVG({
         )}
         {found.has(5) ? <circle cx="296" cy="195" r="28" fill="none" stroke="#10B981" strokeWidth="4" /> : null}
       </g>
+
+      {/* Keyboard hotspots: focusable overlays over the remaining targets */}
+      {keyboardTargets.map((tgt) => (
+        <rect
+          key={tgt.id}
+          x={tgt.cx - 32}
+          y={tgt.cy - 22}
+          width={64}
+          height={44}
+          rx={10}
+          fill="transparent"
+          stroke="#22D3EE"
+          strokeDasharray="5 5"
+          strokeWidth="2"
+          role="button"
+          tabIndex={0}
+          aria-label={targetLabel ? targetLabel(tgt.id) : `Target ${tgt.id}`}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onTapNormalized?.(tgt.nx, tgt.ny);
+            }
+          }}
+        />
+      ))}
     </svg>
   );
 }
@@ -96,8 +137,6 @@ function CosmicSceneSVG({
 export function SuperNovaPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation("stories");
   const qc = useQueryClient();
-  const user = useAuthStore((s) => s.user);
-  const grade = user?.grade ?? 1;
 
   const [isPractice, setIsPractice] = useState(false);
   const [sightSess, setSightSess] = useState<SuperSightSession | null>(null);
@@ -113,10 +152,18 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
   const [pauseQueued, setPauseQueued] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [warpResult, setWarpResult] = useState<number | null>(null);
+  const [hubPage, setHubPage] = useState(1);
+
+  // Ref mirror so the timer effect can merge the current unsubmitted input
+  // when the global deadline auto-finishes the session.
+  const warpInputRef = useRef("");
+  useEffect(() => {
+    warpInputRef.current = warpInput;
+  }, [warpInput]);
 
   const hubQuery = useQuery({
-    queryKey: ["super-nova-hub", locale],
-    queryFn: () => apiClient.getSuperNovaHub(locale),
+    queryKey: ["super-nova-hub", locale, hubPage],
+    queryFn: () => apiClient.getSuperNovaHub(locale, hubPage),
   });
 
   const startSightMut = useMutation({
@@ -141,7 +188,7 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
   });
 
   const startWarpMut = useMutation({
-    mutationFn: () => apiClient.startSuperWarp(isPractice, grade, locale),
+    mutationFn: () => apiClient.startSuperWarp(isPractice, locale),
     onSuccess: (w) => {
       setWarpSess(w);
       setWarpIdx(0);
@@ -160,8 +207,28 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
       apiClient.finishSuperWarp(warpSess!.sessionId, ans, locale),
     onSuccess: (res) => {
       setWarpResult(res.score);
-      qc.setQueryData(["super-nova-hub", locale], res.hub);
+      void qc.invalidateQueries({ queryKey: ["super-nova-hub"] });
     },
+  });
+
+  // Finish the warp, merging the current unsubmitted input so a student who
+  // hits Finish (or runs out of time) still keeps their typed answer.
+  function finishWarpNow() {
+    if (!warpSess || warpResult !== null) return;
+    const current = warpSess.questions[warpIdx];
+    const typed = warpInputRef.current.trim();
+    const merged =
+      current && typed
+        ? { ...warpAnswers, [current.index]: { answer: typed } }
+        : warpAnswers;
+    finishWarpMut.mutate(merged);
+  }
+
+  // Ref mirror so the timer interval can call the latest finish logic without
+  // re-creating itself on every keystroke.
+  const finishWarpNowRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    finishWarpNowRef.current = finishWarpNow;
   });
 
   // Super Sight countdown
@@ -177,28 +244,29 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
     const id = window.setInterval(() => {
       setWarpGlobalSec((g) => {
         if (g <= 1) {
-          finishWarpMut.mutate(warpAnswers);
+          finishWarpNowRef.current();
           return 0;
         }
         return g - 1;
       });
       setWarpQSec((q) => {
         if (q <= 1) {
-          // Auto-skip to next question
-          if (pauseQueued) {
-            setIsPaused(true);
-            setPauseQueued(false);
-            return warpSess.autoSkipSec;
-          }
+          // Skip the expired question FIRST, then honor a queued pause, so the
+          // resumed session grants the fresh auto-skip timer to the NEXT
+          // question — never a full timer to the already-expired one.
           setWarpIdx((curr) => {
             const next = curr + 1;
             if (next >= warpSess.questions.length) {
-              finishWarpMut.mutate(warpAnswers);
+              finishWarpNowRef.current();
               return curr;
             }
+            if (pauseQueued) {
+              setIsPaused(true);
+              setPauseQueued(false);
+            }
+            setWarpInput("");
             return next;
           });
-          setWarpInput("");
           return warpSess.autoSkipSec;
         }
         return q - 1;
@@ -274,6 +342,7 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
             <CosmicSceneSVG
               variant="B"
               foundIds={sightSess.foundPoints.map((p) => p.id)}
+              targetLabel={(id) => t("superNova.sightTarget", { n: id })}
               onTapNormalized={(x, y) => {
                 if (!sightSess.completed && !tapSightMut.isPending) {
                   tapSightMut.mutate({ x, y });
@@ -351,10 +420,11 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
                 type="text"
                 value={warpInput}
                 onChange={(e) => setWarpInput(e.target.value)}
+                aria-label={t("superNova.answerLabel")}
                 autoFocus
                 className="min-h-12 flex-1 rounded-xl border border-indigo-400/35 bg-[#0B1026] px-4 text-lg font-bold text-white"
               />
-              <GalaxyButton type="submit">OK</GalaxyButton>
+              <GalaxyButton type="submit">{t("superNova.submitAnswer")}</GalaxyButton>
             </form>
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
               <button
@@ -365,7 +435,7 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
                 <Pause className="h-4 w-4" />
                 {pauseQueued ? t("superNova.warpPauseQueued") : t("superNova.warpPauseAfter")}
               </button>
-              <GalaxyButton variant="secondary" onClick={() => finishWarpMut.mutate(warpAnswers)}>
+              <GalaxyButton variant="secondary" onClick={finishWarpNow}>
                 {t("superNova.warpFinish")}
               </GalaxyButton>
             </div>
@@ -459,17 +529,43 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
           <h2 className="text-lg font-bold text-white">{t("superNova.historyTitle")}</h2>
         </div>
         {hub?.history?.length ? (
-          <div className="divide-y divide-indigo-400/15">
-            {hub.history.map((h) => (
-              <div key={h.id} className="flex items-center justify-between py-2.5 text-sm">
-                <span className="font-semibold text-white">
-                  {h.mode === "SUPER_SIGHT" ? t("superNova.sightTitle") : t("superNova.warpTitle")}{" "}
-                  {h.isPractice ? `(${t("superNova.practiceMode")})` : ""}
+          <>
+            <div className="divide-y divide-indigo-400/15">
+              {hub.history.map((h) => (
+                <div key={h.id} className="flex items-center justify-between py-2.5 text-sm">
+                  <span className="font-semibold text-white">
+                    {h.mode === "SUPER_SIGHT" ? t("superNova.sightTitle") : t("superNova.warpTitle")}{" "}
+                    {h.isPractice ? `(${t("superNova.practiceMode")})` : ""}
+                  </span>
+                  <span className="font-bold text-cyan-300 planetlogi-tabular">+{h.score} S</span>
+                </div>
+              ))}
+            </div>
+            {hub.historyPages && hub.historyPages > 1 ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <GalaxyButton
+                  variant="secondary"
+                  disabled={(hub.historyPage ?? 1) >= hub.historyPages}
+                  onClick={() => setHubPage((p) => p + 1)}
+                >
+                  {t("superNova.historyOlder")}
+                </GalaxyButton>
+                <span className="text-xs font-semibold text-slate-400 planetlogi-tabular">
+                  {t("superNova.historyPageLabel", {
+                    page: hub.historyPage ?? 1,
+                    total: hub.historyPages,
+                  })}
                 </span>
-                <span className="font-bold text-cyan-300 planetlogi-tabular">+{h.score} S</span>
+                <GalaxyButton
+                  variant="secondary"
+                  disabled={(hub.historyPage ?? 1) <= 1}
+                  onClick={() => setHubPage((p) => Math.max(1, p - 1))}
+                >
+                  {t("superNova.historyNewer")}
+                </GalaxyButton>
               </div>
-            ))}
-          </div>
+            ) : null}
+          </>
         ) : (
           <p className="text-sm text-slate-400">{t("superNova.historyEmpty")}</p>
         )}

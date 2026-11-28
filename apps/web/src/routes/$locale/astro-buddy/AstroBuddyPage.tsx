@@ -74,7 +74,10 @@ export function AstroBuddyPage({ locale }: { locale: Locale }) {
             {t("customization.livePreview")}
           </p>
           <AstroBuddyAvatar config={draft} size={180} />
-          <h2 className="text-2xl font-extrabold text-white">{draft.adjective} {firstName}</h2>
+          <h2 className="text-2xl font-extrabold text-white">
+            {t(`customization.adjectives.${draft.adjective}`, { defaultValue: draft.adjective })}{" "}
+            {firstName}
+          </h2>
           <GalaxyButton
             onClick={() =>
               saveMut.mutate({ ...draft, fullName: `${draft.adjective} ${firstName}` })
@@ -210,7 +213,7 @@ export function AstroBuddyPage({ locale }: { locale: Locale }) {
             >
               {adjectives.map((adj) => (
                 <option key={adj} value={adj}>
-                  {adj} {firstName}
+                  {t(`customization.adjectives.${adj}`, { defaultValue: adj })} {firstName}
                 </option>
               ))}
             </select>

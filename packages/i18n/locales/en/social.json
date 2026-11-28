@@ -29,7 +29,13 @@
     "backToLobby": "Back to Duel Lobby",
     "noIncoming": "No pending incoming challenges right now.",
     "noHistory": "No completed duels yet. Launch your first Star Duel!",
-    "manageCrew": "Open Star Crew (BFF)"
+    "manageCrew": "Open Star Crew (BFF)",
+    "outcome": {
+      "WIN": "Victory",
+      "DRAW": "Draw",
+      "LOSS": "Defeat"
+    },
+    "answerInput": "Answer for question {{n}}"
   },
   "crew": {
     "title": "Star Crew (BFF)",
@@ -68,7 +74,17 @@
     "gradeCol": "Grade",
     "scoreCol": "Score",
     "youBadge": "YOU",
-    "hallOfFame": "Hall of Fame Archive"
+    "hallOfFame": "Hall of Fame Archive",
+    "metrics": {
+      "SP": "SP",
+      "Class_SP": "Class SP",
+      "Crew_SP": "Crew SP",
+      "S": "S",
+      "Days": "Days",
+      "Stars": "Stars",
+      "Faction_SP": "Faction SP",
+      "Cup_SP": "Cup SP"
+    }
   },
   "events": {
     "title": "Cosmic Events",
@@ -85,7 +101,7 @@
     "creatorTitlePlaceholder": "Title (e.g. Asteroid Pizza Fractions)",
     "creatorSummaryPlaceholder": "Describe your creative math puzzle for elementary pilots...",
     "creatorSubmit": "Submit Idea",
-    "creatorSubmitted": "Submitted! Your idea is now in the Creator Showcase.",
+    "creatorSubmitted": "Submitted! Your idea will appear in the Creator Showcase after a moderator reviews it.",
     "creatorGallery": "Featured Pilot Creations"
   },
   "shell": {

@@ -23,7 +23,8 @@
     "settings": "Pengaturan",
     "mySubscription": "Langganan Saya",
     "help": "Bantuan",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "primaryNav": "Navigasi utama"
   },
   "apps": {
     "spaceAcademy": "Akademi Antariksa",

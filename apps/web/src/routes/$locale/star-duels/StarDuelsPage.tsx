@@ -7,28 +7,26 @@ import type { Locale } from "@planetlogi/i18n";
 import type { DuelRecord } from "@planetlogi/api-client";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { AstroBuddyAvatar } from "../../../components/astro-buddy/AstroBuddyAvatar";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient } from "../../../store/authStore";
 
 export function StarDuelsPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation("social");
   const qc = useQueryClient();
-  const user = useAuthStore((s) => s.user);
-  const grade = user?.grade ?? 1;
 
   const [tab, setTab] = useState<"challenge" | "incoming" | "history" | "rules">("challenge");
   const [activeDuel, setActiveDuel] = useState<DuelRecord | null>(null);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, Record<string, string>>>({});
   const [completedDuel, setCompletedDuel] = useState<DuelRecord | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const lobbyQuery = useQuery({
-    queryKey: ["duels-lobby", grade, locale],
-    queryFn: () => apiClient.getDuelLobby(grade, locale),
+    queryKey: ["duels-lobby", locale],
+    queryFn: () => apiClient.getDuelLobby(locale),
   });
 
   const startMut = useMutation({
     mutationFn: (vars: { mode: "CLASSMATE" | "CREW" | "RANDOM"; opponentId?: string }) =>
-      apiClient.startDuel(vars.mode, vars.opponentId, grade, locale),
+      apiClient.startDuel(vars.mode, vars.opponentId, locale),
     onSuccess: (res) => {
       setActiveDuel(res.duel);
       setAnswers({});
@@ -52,8 +50,12 @@ export function StarDuelsPage({ locale }: { locale: Locale }) {
   const submitMut = useMutation({
     mutationFn: (duelId: string) => {
       const payload: Record<number, Record<string, string>> = {};
-      Object.entries(answers).forEach(([idx, val]) => {
-        payload[Number(idx)] = { answer: val.trim() };
+      Object.entries(answers).forEach(([idx, fields]) => {
+        const trimmed: Record<string, string> = {};
+        Object.entries(fields).forEach(([key, val]) => {
+          trimmed[key] = val.trim();
+        });
+        payload[Number(idx)] = trimmed;
       });
       return apiClient.submitDuel(duelId, payload, locale);
     },
@@ -123,12 +125,67 @@ export function StarDuelsPage({ locale }: { locale: Locale }) {
                 {t("duels.questionProgress", { current: idx + 1, total: activeDuel.questions!.length })}
               </p>
               <p className="text-base sm:text-lg font-bold text-white">{q.stem}</p>
-              <input
-                type="text"
-                value={answers[idx] ?? ""}
-                onChange={(e) => setAnswers((a) => ({ ...a, [idx]: e.target.value }))}
-                className="min-h-11 w-full sm:w-64 rounded-xl border border-indigo-400/35 bg-[#0B1026] px-4 text-base font-bold text-white"
-              />
+              {q.inputType === "mcq" && q.options ? (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {q.options.map((opt) => {
+                    const selected = answers[idx]?.choice === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() =>
+                          setAnswers((a) => ({ ...a, [idx]: { ...a[idx], choice: opt.key } }))
+                        }
+                        className={`min-h-11 rounded-xl border px-3 py-2 text-left text-sm font-bold transition-colors cursor-pointer ${
+                          selected
+                            ? "border-[#6366F1] bg-[#6366F1]/30 text-white"
+                            : "border-indigo-400/35 bg-[#0B1026] text-slate-200 hover:border-indigo-300"
+                        }`}
+                      >
+                        <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/25 text-xs font-extrabold text-white">
+                          {opt.key}
+                        </span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-end gap-4">
+                  {(q.parts ?? [{ key: "answer" }]).map((part) => (
+                    <div key={part.key} className="space-y-1">
+                      {part.label ? (
+                        <label
+                          htmlFor={`duel-ans-${idx}-${part.key}`}
+                          className="block text-xs font-bold uppercase text-cyan-200"
+                        >
+                          {part.label}
+                        </label>
+                      ) : null}
+                      <div className="flex items-center gap-2">
+                        {part.prefix ? (
+                          <span className="text-base font-bold text-slate-300">{part.prefix}</span>
+                        ) : null}
+                        <input
+                          id={`duel-ans-${idx}-${part.key}`}
+                          type="text"
+                          inputMode={q.inputType === "fraction" ? "text" : "decimal"}
+                          value={answers[idx]?.[part.key] ?? ""}
+                          onChange={(e) =>
+                            setAnswers((a) => ({ ...a, [idx]: { ...a[idx], [part.key]: e.target.value } }))
+                          }
+                          placeholder={q.inputType === "fraction" ? "e.g. 3/4" : "?"}
+                          className="min-h-11 w-full sm:w-40 rounded-xl border border-indigo-400/35 bg-[#0B1026] px-4 text-base font-bold text-white"
+                        />
+                        {part.suffix ? (
+                          <span className="text-base font-semibold text-slate-300">{part.suffix}</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </GalaxyCard>
           ))}
         </div>
@@ -281,7 +338,8 @@ export function StarDuelsPage({ locale }: { locale: Locale }) {
               <GalaxyCard key={h.id} className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="font-bold text-white">
-                    {t("duels.vsLabel", { name: h.opponent.maskedName })} — {h.outcome}
+                    {t("duels.vsLabel", { name: h.opponent.maskedName })} —{" "}
+                    {t(`duels.outcome.${h.outcome}`)}
                   </p>
                   <p className="text-xs text-slate-300">
                     {h.playerScore} - {h.opponentScore}

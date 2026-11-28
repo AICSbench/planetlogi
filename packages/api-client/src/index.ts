@@ -396,6 +396,9 @@ export interface SuperNovaHubSummary {
     score: number;
     recordedAt: string;
   }>;
+  historyPage?: number;
+  historyPages?: number;
+  historyPageSize?: number;
 }
 
 export interface SuperWarpStart {
@@ -906,8 +909,8 @@ export function createApiClient(baseUrl: string) {
     },
 
     // Phase 3: Super Nova
-    getSuperNovaHub(locale: string) {
-      return request<SuperNovaHubSummary>(`/api/v1/super-nova/hub?locale=${locale}`);
+    getSuperNovaHub(locale: string, page = 1) {
+      return request<SuperNovaHubSummary>(`/api/v1/super-nova/hub?locale=${locale}&page=${page}`);
     },
     startSuperSight(isPractice: boolean, locale: string) {
       return request<SuperSightSession>(`/api/v1/super-nova/super-sight/start?locale=${locale}`, {
@@ -921,11 +924,11 @@ export function createApiClient(baseUrl: string) {
         { method: "POST", body: JSON.stringify({ sessionId, x, y }) }
       );
     },
-    startSuperWarp(isPractice: boolean, grade: number, locale: string) {
-      return request<SuperWarpStart>(
-        `/api/v1/super-nova/super-warp/start?grade=${grade}&locale=${locale}`,
-        { method: "POST", body: JSON.stringify({ isPractice }) }
-      );
+    startSuperWarp(isPractice: boolean, locale: string) {
+      return request<SuperWarpStart>(`/api/v1/super-nova/super-warp/start?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ isPractice }),
+      });
     },
     finishSuperWarp(sessionId: string, answers: Record<number, Record<string, string>>, locale: string) {
       return request<{ score: number; hub: SuperNovaHubSummary }>(
@@ -987,14 +990,14 @@ export function createApiClient(baseUrl: string) {
     },
 
     // Phase 3: Star Duels & Star Crew
-    getDuelLobby(grade: number, locale: string) {
-      return request<DuelLobby>(`/api/v1/duels/lobby?grade=${grade}&locale=${locale}`);
+    getDuelLobby(locale: string) {
+      return request<DuelLobby>(`/api/v1/duels/lobby?locale=${locale}`);
     },
-    startDuel(mode: "CLASSMATE" | "CREW" | "RANDOM", opponentId: string | undefined, grade: number, locale: string) {
-      return request<{ duel: DuelRecord; energyLeft: number }>(
-        `/api/v1/duels/start?grade=${grade}&locale=${locale}`,
-        { method: "POST", body: JSON.stringify({ mode, opponentId }) }
-      );
+    startDuel(mode: "CLASSMATE" | "CREW" | "RANDOM", opponentId: string | undefined, locale: string) {
+      return request<{ duel: DuelRecord; energyLeft: number }>(`/api/v1/duels/start?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ mode, opponentId }),
+      });
     },
     acceptDuel(id: string, locale: string) {
       return request<DuelRecord>(`/api/v1/duels/${encodeURIComponent(id)}/accept?locale=${locale}`, {
@@ -1049,9 +1052,9 @@ export function createApiClient(baseUrl: string) {
     getEventsHub(locale: string) {
       return request<EventsHub>(`/api/v1/events/hub?locale=${locale}`);
     },
-    startSundayMeteor(grade: number, locale: string) {
+    startSundayMeteor(locale: string) {
       return request<{ sessionId: string; questions: RenderedQuestion[] }>(
-        `/api/v1/events/sunday-meteor/start?grade=${grade}&locale=${locale}`,
+        `/api/v1/events/sunday-meteor/start?locale=${locale}`,
         { method: "POST" }
       );
     },
@@ -1061,8 +1064,8 @@ export function createApiClient(baseUrl: string) {
         { method: "POST", body: JSON.stringify({ sessionId, answers }) }
       );
     },
-    submitCreatorChallenge(title: string, summary: string, grade: number) {
-      return request<CreatorSubmission>(`/api/v1/events/creator-challenge/submit?grade=${grade}`, {
+    submitCreatorChallenge(title: string, summary: string, locale: string) {
+      return request<CreatorSubmission>(`/api/v1/events/creator-challenge/submit?locale=${locale}`, {
         method: "POST",
         body: JSON.stringify({ title, summary }),
       });

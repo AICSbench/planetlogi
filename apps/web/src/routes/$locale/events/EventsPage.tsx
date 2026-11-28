@@ -5,13 +5,11 @@ import { Flame, Sparkles } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
 import type { RenderedQuestion } from "@planetlogi/api-client";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient } from "../../../store/authStore";
 
 export function EventsPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation("social");
   const qc = useQueryClient();
-  const user = useAuthStore((s) => s.user);
-  const grade = user?.grade ?? 1;
 
   const [meteorSess, setMeteorSess] = useState<{ sessionId: string; questions: RenderedQuestion[] } | null>(null);
   const [meteorAnswers, setMeteorAnswers] = useState<Record<number, string>>({});
@@ -27,7 +25,7 @@ export function EventsPage({ locale }: { locale: Locale }) {
   });
 
   const startMeteorMut = useMutation({
-    mutationFn: () => apiClient.startSundayMeteor(grade, locale),
+    mutationFn: () => apiClient.startSundayMeteor(locale),
     onSuccess: (s) => {
       setMeteorSess(s);
       setMeteorAnswers({});
@@ -50,7 +48,7 @@ export function EventsPage({ locale }: { locale: Locale }) {
   });
 
   const creatorMut = useMutation({
-    mutationFn: () => apiClient.submitCreatorChallenge(title, summary, grade),
+    mutationFn: () => apiClient.submitCreatorChallenge(title, summary, locale),
     onSuccess: () => {
       setTitle("");
       setSummary("");
