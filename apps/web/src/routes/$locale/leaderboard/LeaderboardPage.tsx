@@ -13,7 +13,7 @@ export function LeaderboardPage({ locale }: { locale: Locale }) {
   const [scope, setScope] = useState<"CLASS" | "SCHOOL" | "NATIONAL">("NATIONAL");
   const [filterGrade, setFilterGrade] = useState<number>(0);
   const [viewMode, setViewMode] = useState<"TOP50" | "NEARBY">("TOP50");
-  const [countdown, setCountdown] = useState(300);
+  const [elapsed, setElapsed] = useState(0);
 
   const challengesQuery = useQuery({
     queryKey: ["lb-challenges", locale],
@@ -27,15 +27,12 @@ export function LeaderboardPage({ locale }: { locale: Locale }) {
   });
 
   useEffect(() => {
-    if (boardQuery.data?.nextRefreshSec) {
-      setCountdown(boardQuery.data.nextRefreshSec);
-    }
-  }, [boardQuery.data?.nextRefreshSec]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => setCountdown((c) => (c > 1 ? c - 1 : 300)), 1000);
+    const id = window.setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => window.clearInterval(id);
   }, []);
+
+  const baseRefresh = boardQuery.data?.nextRefreshSec ?? 300;
+  const countdown = Math.max(1, baseRefresh - (elapsed % baseRefresh));
 
   const challenges = challengesQuery.data?.challenges ?? [];
   const openChallenges = challenges.filter((c) => c.category === "OPEN");

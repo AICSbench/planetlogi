@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Check, Sparkles } from "lucide-react";
@@ -23,7 +23,7 @@ export function AstroBuddyPage({ locale }: { locale: Locale }) {
     queryFn: () => apiClient.getCustomizationOptions(locale),
   });
 
-  const [draft, setDraft] = useState<AstroBuddyConfig>({
+  const defaultDraft: AstroBuddyConfig = {
     bodyShape: "round",
     colorHex: "#6366F1",
     hornsStyle: "antennae",
@@ -33,14 +33,19 @@ export function AstroBuddyPage({ locale }: { locale: Locale }) {
     fullName: `Starry ${firstName}`,
     avatarPackId: "space_pets",
     avatarItemId: "astro_fox",
-  });
+  };
+  const [draftOverride, setDraftOverride] = useState<AstroBuddyConfig | null>(null);
   const [savedToast, setSavedToast] = useState(false);
 
-  useEffect(() => {
-    if (optionsQuery.data?.buddy) {
-      setDraft(optionsQuery.data.buddy);
-    }
-  }, [optionsQuery.data]);
+  const draft = draftOverride ?? optionsQuery.data?.buddy ?? defaultDraft;
+  const setDraft = (
+    next: AstroBuddyConfig | ((prev: AstroBuddyConfig) => AstroBuddyConfig),
+  ) => {
+    setDraftOverride((prev) => {
+      const base = prev ?? optionsQuery.data?.buddy ?? defaultDraft;
+      return typeof next === "function" ? next(base) : next;
+    });
+  };
 
   const saveMut = useMutation({
     mutationFn: (cfg: AstroBuddyConfig) => apiClient.saveAstroBuddy(cfg),
