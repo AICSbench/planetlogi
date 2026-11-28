@@ -36,6 +36,9 @@ var (
 	ErrInvalidInput       = errors.New("invalid input")
 	// ErrRewardUnavailable means the completion AC could not be credited; it can be retried.
 	ErrRewardUnavailable = errors.New("assignment reward could not be credited; please retry")
+	// ErrSubmissionConflict means a concurrent request replaced the assignment
+	// with different questions, so this answer was not stored.
+	ErrSubmissionConflict = errors.New("assignment changed while submitting; reopen it and try again")
 )
 
 type AssignedByRole string
@@ -734,6 +737,8 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	var rewardID string
 	var rewardRequestID string
 	var assignmentRequestID string
+	var localItems []itemSpecDTO
+	var submissionDiscarded bool
 	var needsReward bool
 	detail, err := func() (AssignmentDetail, error) {
 		rec, ok := s.records[assignmentID]
@@ -741,6 +746,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			return AssignmentDetail{}, ErrAssignmentNotFound
 		}
 		assignmentRequestID = rec.requestID
+		localItems = toRecordDTO(rec).Items
 		if qIndex < 1 || qIndex > len(rec.items) {
 			return AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 		}
@@ -797,6 +803,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 				if rec.studentID == studentID && rec.requestID == assignmentRequestID {
 					assignmentID = id
 					detail = renderDetail(rec, locale)
+					submissionDiscarded = !sameAssignmentItems(localItems, toRecordDTO(rec).Items)
 					break
 				}
 			}
@@ -859,6 +866,9 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		return res, detail, err
 	}
 	resolveAliases()
+	if submissionDiscarded {
+		return res, detail, ErrSubmissionConflict
+	}
 	if rewardErr != nil {
 		return res, detail, rewardErr
 	}
@@ -958,6 +968,8 @@ func toHTTPError(ctx context.Context, err error) error {
 	case errors.Is(err, ErrRewardUnavailable):
 		slog.WarnContext(ctx, "assignment reward credit failed", "err", err)
 		return huma.Error503ServiceUnavailable(ErrRewardUnavailable.Error())
+	case errors.Is(err, ErrSubmissionConflict):
+		return huma.Error409Conflict(ErrSubmissionConflict.Error())
 	default:
 		slog.ErrorContext(ctx, "assignments request failed", "err", err)
 		return huma.Error500InternalServerError("internal error")

@@ -393,6 +393,60 @@ func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
 	ledger.mu.Unlock()
 }
 
+func TestSubmitQuestionConflictsWhenAliasQuestionsDiffer(t *testing.T) {
+	ctx := context.Background()
+	base := newAssignmentMemoryStore()
+	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+
+	store.failNext = true
+	if _, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-diff-race"); err == nil {
+		t.Fatal("expected create to fail")
+	}
+	var localID string
+	a.mu.Lock()
+	for id, rec := range a.records {
+		if rec.requestID == "req-diff-race" {
+			localID = id
+		}
+	}
+	a.mu.Unlock()
+	local, err := a.GetDetail(ctx, stuUUID, localID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(local.Questions[0].Question.TemplateCode, local.Questions[0].Question.Seed, "en")
+
+	store.mu.Lock()
+	store.armed = true
+	store.mu.Unlock()
+	result := make(chan error, 1)
+	go func() {
+		_, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en")
+		result <- err
+	}()
+	select {
+	case <-store.entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("SubmitQuestion did not reach persistence")
+	}
+	if _, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_sub_within_20"}, "req-diff-race"); err != nil {
+		t.Fatal(err)
+	}
+	close(store.release)
+	if err := <-result; !errors.Is(err, ErrSubmissionConflict) {
+		t.Fatalf("expected a discarded-submission conflict, got %v", err)
+	}
+	if got := acCredited(ledger); got != 0 {
+		t.Fatalf("discarded submission was rewarded: %d", got)
+	}
+}
+
 func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
 	current := assignmentState{Records: map[string]assignmentRecordDTO{
 		"durable-id": {
