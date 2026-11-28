@@ -3,6 +3,7 @@ package dailyorbit
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -37,11 +38,11 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 
 	// Change Question works 3 times and fails on the 4th
 	for i := 0; i < 3; i++ {
-		if _, _, err := svc.ChangeQuestion("stu-1", 1, "Asia/Jakarta", "en", 1, "easier"); err != nil {
+		if _, _, err := svc.ChangeQuestion(context.Background(), "stu-1", 1, "Asia/Jakarta", "en", 1, "easier"); err != nil {
 			t.Fatalf("change question %d failed: %v", i+1, err)
 		}
 	}
-	if _, _, err := svc.ChangeQuestion("stu-1", 1, "Asia/Jakarta", "en", 1, "harder"); err != ErrChangeLimitReached {
+	if _, _, err := svc.ChangeQuestion(context.Background(), "stu-1", 1, "Asia/Jakarta", "en", 1, "harder"); err != ErrChangeLimitReached {
 		t.Fatalf("expected ErrChangeLimitReached on 4th change, got %v", err)
 	}
 
@@ -76,10 +77,10 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 	}
 
 	// Intermediate tier (15 SP) should now be unlockable; Master (100 SP) still locked
-	if _, err := svc.SetTier("stu-1", 1, "Asia/Jakarta", "en", TierIntermediate); err != nil {
+	if _, err := svc.SetTier(context.Background(), "stu-1", 1, "Asia/Jakarta", "en", TierIntermediate); err != nil {
 		t.Fatalf("expected Intermediate tier to unlock: %v", err)
 	}
-	if _, err := svc.SetTier("stu-1", 1, "Asia/Jakarta", "en", TierMaster); err != ErrTierLocked {
+	if _, err := svc.SetTier(context.Background(), "stu-1", 1, "Asia/Jakarta", "en", TierMaster); err != ErrTierLocked {
 		t.Fatalf("expected ErrTierLocked for Master, got %v", err)
 	}
 }
@@ -128,12 +129,19 @@ func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
 	}
 }
 
-type lostAttemptAck struct{ SkillAttemptRecorder }
+type lostAttemptAck struct{ rec *training.Service }
 
 var errLostAttemptAck = errors.New("lost acknowledgement after recording skill attempt")
 
 func (r lostAttemptAck) RecordSkillAttempt(ctx context.Context, studentID, attemptID, skillCode string, correct bool) error {
-	if err := r.SkillAttemptRecorder.RecordSkillAttempt(ctx, studentID, attemptID, skillCode, correct); err != nil {
+	if err := r.rec.RecordSkillAttempt(ctx, studentID, attemptID, skillCode, correct); err != nil {
+		return err
+	}
+	return errLostAttemptAck
+}
+
+func (r lostAttemptAck) RecordSkillAttemptTx(ctx context.Context, tx pgx.Tx, studentID, attemptID, skillCode string, correct bool) error {
+	if err := r.rec.RecordSkillAttemptTx(ctx, tx, studentID, attemptID, skillCode, correct); err != nil {
 		return err
 	}
 	return errLostAttemptAck
@@ -206,21 +214,29 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	streaks := streak.NewServiceWithPG(pool)
 	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streaks)
 	svc2.nowClock = func() time.Time { return fixedNow }
-	svc2.SetAttemptRecorder(lostAttemptAck{training.NewServiceWithPG(pool, nil)})
+	svc2.SetAttemptRecorder(lostAttemptAck{rec: training.NewServiceWithPG(pool, nil)})
 	if _, _, err := submit(svc2, prob.Solution.CorrectAnswers); !errors.Is(err, errLostAttemptAck) {
 		t.Fatalf("expected lost proficiency acknowledgement, got %v", err)
 	}
-	// Streak committed, but the session, rewards, and proficiency receipt did not.
-	if st, err := streaks.GetStatus(studentID, "Asia/Jakarta"); err != nil || st.TodayCorrectCount != 5 || st.CurrentStreak != 4 {
-		t.Fatalf("expected streak milestone once, got %+v: %v", st, err)
+	// The lost acknowledgement rolls back the streak, session, rewards, and receipt together.
+	if st, err := streaks.GetStatus(studentID, "Asia/Jakarta"); err != nil || st.TodayCorrectCount != 4 || st.CurrentStreak != 3 {
+		t.Fatalf("expected streak rolled back, got %+v: %v", st, err)
 	}
-	if days, err := streaks.GetCalendar(studentID, "2099-01"); err != nil || len(days) != 1 || days[0].Status != streak.DayCompleted {
-		t.Fatalf("expected one completed calendar day, got %v: %v", days, err)
+	if days, err := streaks.GetCalendar(studentID, "2099-01"); err != nil || len(days) != 0 {
+		t.Fatalf("expected no committed calendar day, got %v: %v", days, err)
 	}
 	if after := getToday(t, svc2, studentID); after.Slots[sl.Index-1].Status != SlotPending {
 		t.Fatalf("expected slot 5 pending after lost acknowledgement, got %s", after.Slots[sl.Index-1].Status)
 	}
 	assertWallet(4, 12)
+	attemptID := fmt.Sprintf("daily_orbit:2099-01-02:q%d", sl.Index)
+	var receipts, statRows int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM training_attempt_receipts WHERE student_id = $1::uuid AND attempt_id = $2`, studentID, attemptID).Scan(&receipts); err != nil || receipts != 0 {
+		t.Fatalf("expected no committed proficiency receipt, got %d: %v", receipts, err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM training_skill_stats WHERE student_id = $1::uuid AND skill_code = $2`, studentID, prob.Question.SkillCode).Scan(&statRows); err != nil || statRows != 0 {
+		t.Fatalf("expected no committed proficiency stats, got %d: %v", statRows, err)
+	}
 
 	svc3 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc3.nowClock = func() time.Time { return fixedNow }
@@ -300,6 +316,40 @@ func TestDailyOrbitPGConcurrentSubmissions(t *testing.T) {
 	}
 }
 
+func TestDailyOrbitPGSingleConnectionPool(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL single-connection test")
+	}
+	ctx := context.Background()
+	cfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.MaxConns = 1
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	studentID := newTestStudent(t, pool)
+
+	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
+	fixedNow := time.Date(2099, 3, 4, 10, 0, 0, 0, loc)
+	svc := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
+	svc.nowClock = func() time.Time { return fixedNow }
+	svc.SetAttemptRecorder(training.NewServiceWithPG(pool, nil))
+	today := getToday(t, svc, studentID)
+	slot := today.Slots[0]
+	prob, _ := mathengine.GenerateByCode(slot.Question.TemplateCode, slot.Question.Seed, "en")
+
+	submitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if _, _, err := svc.SubmitAnswer(submitCtx, studentID, 1, "Asia/Jakarta", "en", slot.Index, prob.Solution.CorrectAnswers, slot.Question.TemplateCode, slot.Question.Seed); err != nil {
+		t.Fatalf("submit with a one-connection pool must not wait for a second connection: %v", err)
+	}
+}
+
 func newTestStudent(t *testing.T, pool *pgxpool.Pool) string {
 	t.Helper()
 	var studentID string
@@ -322,7 +372,7 @@ func newTestStudent(t *testing.T, pool *pgxpool.Pool) string {
 
 func getToday(t *testing.T, svc *Service, studentID string) SessionView {
 	t.Helper()
-	view, err := svc.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	view, err := svc.GetToday(context.Background(), studentID, 1, "Asia/Jakarta", "en")
 	if err != nil {
 		t.Fatal(err)
 	}

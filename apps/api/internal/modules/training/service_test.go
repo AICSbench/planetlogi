@@ -141,6 +141,10 @@ func TestTrainingPGConcurrentAnswers(t *testing.T) {
 	if err := pool.QueryRow(ctx, `SELECT correct_count FROM training_practice_sessions WHERE id = $1`, sess.SessionID).Scan(&correct); err != nil || correct != 2 {
 		t.Fatalf("expected both answers saved, got correct=%d: %v", correct, err)
 	}
+	var answered map[string]bool
+	if err := pool.QueryRow(ctx, `SELECT answered->'answered' FROM training_practice_sessions WHERE id = $1`, sess.SessionID).Scan(&answered); err != nil || !answered["1"] || !answered["2"] {
+		t.Fatalf("expected both answered slots persisted, got %v: %v", answered, err)
+	}
 	var window, correctStats int
 	if err := pool.QueryRow(ctx, `SELECT recent_window_count, recent_correct_count FROM training_skill_stats
 		WHERE student_id = $1::uuid AND skill_code = 'num-add-within-20'`, studentID).Scan(&window, &correctStats); err != nil || window != 2 || correctStats != 2 {

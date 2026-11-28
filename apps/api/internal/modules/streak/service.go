@@ -8,6 +8,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
@@ -75,8 +76,12 @@ func NewServiceWithPG(pool *pgxpool.Pool) *Service {
 }
 
 func (s *Service) getOrCreateLocked(studentID string) (*record, error) {
+	return s.getOrCreate(context.Background(), s.pool, studentID)
+}
+
+func (s *Service) getOrCreate(ctx context.Context, db pgExecutor, studentID string) (*record, error) {
 	if s.pool != nil && isUUID(studentID) {
-		return s.loadRecordPG(context.Background(), studentID)
+		return s.loadRecordPG(ctx, db, studentID)
 	}
 	r, ok := s.records[studentID]
 	if !ok {
@@ -145,9 +150,24 @@ func (s *Service) GetCalendar(studentID, monthPrefix string) ([]CalendarEntry, e
 // RecordDailyOrbitProgress updates today's correct count and advances the Orbit Streak
 // once the student reaches 5 correct answers on localDate.
 func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, correctCount int) (Status, error) {
+	return s.recordDailyOrbitProgress(context.Background(), nil, studentID, tz, now, correctCount)
+}
+
+// RecordDailyOrbitProgressTx writes the streak inside the caller's transaction.
+func (s *Service) RecordDailyOrbitProgressTx(ctx context.Context, tx pgx.Tx, studentID, tz string, now time.Time, correctCount int) (Status, error) {
+	return s.recordDailyOrbitProgress(ctx, tx, studentID, tz, now, correctCount)
+}
+
+func (s *Service) recordDailyOrbitProgress(ctx context.Context, tx pgx.Tx, studentID, tz string, now time.Time, correctCount int) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
+	var db pgExecutor
+	if tx != nil {
+		db = tx
+	} else if s.pool != nil {
+		db = s.pool
+	}
+	r, err := s.getOrCreate(ctx, db, studentID)
 	if err != nil {
 		return Status{}, err
 	}
@@ -166,7 +186,10 @@ func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, 
 		r.calendar[localDate] = DayCompleted
 		changedDate = localDate
 	}
-	return r.status, s.saveRecordPG(context.Background(), studentID, r, changedDate)
+	if tx != nil {
+		return r.status, s.writeRecordPG(ctx, tx, studentID, r, changedDate)
+	}
+	return r.status, s.saveRecordPG(ctx, studentID, r, changedDate)
 }
 
 // ReconcileMidnight evaluates yesterday (D-1) in the student's timezone:
@@ -179,7 +202,7 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string, now time.Time) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreate(ctx, s.pool, studentID)
 	if err != nil {
 		return Status{}, err
 	}
@@ -193,8 +216,8 @@ func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string
 		r.todayDate = localToday
 	}
 	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen || r.calendar[yesterday] == DayMissed {
-		if resetToday {
-			if err := s.saveRecordPG(ctx, studentID, r, ""); err != nil {
+		if resetToday && s.pool != nil && isUUID(studentID) {
+			if err := s.resetTodayPG(ctx, s.pool, studentID, localToday); err != nil {
 				return Status{}, err
 			}
 		}

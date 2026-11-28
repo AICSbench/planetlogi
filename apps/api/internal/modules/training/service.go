@@ -410,17 +410,22 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 		if gradeRes.IsCorrect {
 			correct++
 		}
+		sess.answered[questionIndex] = true
+		sess.correct = correct
+		// High Score stars reflect a completed 10-question session only.
+		sessionScore := 0
+		if len(sess.answered) == 10 {
+			sessionScore = correct
+		}
 		var err error
 		if tx != nil {
-			err = recordSkillStatPG(ctx, tx, studentID, sess.skillCode, gradeRes.IsCorrect, correct)
+			err = recordSkillStatPG(ctx, tx, studentID, sess.skillCode, gradeRes.IsCorrect, sessionScore)
 		} else {
-			err = s.recordSkillAttemptLocked(ctx, studentID, "", sess.skillCode, gradeRes.IsCorrect, correct)
+			err = s.recordSkillAttemptLocked(ctx, studentID, "", sess.skillCode, gradeRes.IsCorrect, sessionScore)
 		}
 		if err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist skill stats: %w", err)
 		}
-		sess.answered[questionIndex] = true
-		sess.correct = correct
 		if tx != nil {
 			answeredRaw, err := json.Marshal(sess.answered)
 			if err != nil {

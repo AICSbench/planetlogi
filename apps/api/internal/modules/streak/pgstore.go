@@ -7,7 +7,14 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
+
+type pgExecutor interface {
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+}
 
 func isUUID(s string) bool {
 	if len(s) != 36 {
@@ -29,12 +36,12 @@ func isUUID(s string) bool {
 	return true
 }
 
-func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
+func (s *Service) subjectIDPG(ctx context.Context, db pgExecutor) (string, error) {
 	if s.subjectID != "" {
 		return s.subjectID, nil
 	}
 	var id string
-	err := s.pool.QueryRow(ctx, `SELECT id::text FROM subjects WHERE code = 'math' LIMIT 1`).Scan(&id)
+	err := db.QueryRow(ctx, `SELECT id::text FROM subjects WHERE code = 'math' LIMIT 1`).Scan(&id)
 	if err != nil {
 		return "", err
 	}
@@ -42,11 +49,11 @@ func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
 	return id, nil
 }
 
-func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, error) {
+func (s *Service) loadRecordPG(ctx context.Context, db pgExecutor, studentID string) (*record, error) {
 	if s.pool == nil || !isUUID(studentID) {
 		return nil, nil
 	}
-	subjID, err := s.subjectIDPG(ctx)
+	subjID, err := s.subjectIDPG(ctx, db)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +63,7 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 	var todayDate *time.Time
 	var todayCorrect int
 	var reminderTime string
-	err = s.pool.QueryRow(ctx, `
+	err = db.QueryRow(ctx, `
 		SELECT current_streak, longest_streak, cryo_shields, nova_pet_stage,
 		       last_completed_local_date, reminder_enabled, today_correct_count,
 		       today_local_date, reminder_time_local
@@ -83,7 +90,7 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 			DailyMilestoneTarget: DailyStreakMilestone,
 			ReminderTimeLocal:    "19:00",
 		}
-		_, err = s.pool.Exec(ctx, `
+		_, err = db.Exec(ctx, `
 			INSERT INTO student_streaks
 				(student_id, subject_id, current_streak, longest_streak, cryo_shields, nova_pet_stage, reminder_enabled, today_correct_count, reminder_time_local)
 			VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, 0, $8)
@@ -109,7 +116,7 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 	}
 
 	cal := make(map[string]DayStatus)
-	rows, err := s.pool.Query(ctx, `
+	rows, err := db.Query(ctx, `
 		SELECT local_date, status
 		FROM streak_calendar_days
 		WHERE student_id = $1::uuid AND subject_id = $2::uuid
@@ -144,7 +151,16 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 	if s.pool == nil || !isUUID(studentID) {
 		return nil
 	}
-	subjID, err := s.subjectIDPG(ctx)
+	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		return s.writeRecordPG(ctx, tx, studentID, rec, changedDate)
+	})
+}
+
+func (s *Service) writeRecordPG(ctx context.Context, db pgExecutor, studentID string, rec *record, changedDate string) error {
+	if s.pool == nil || !isUUID(studentID) {
+		return nil
+	}
+	subjID, err := s.subjectIDPG(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -158,8 +174,7 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 		todayDt = rec.todayDate
 	}
 
-	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, `
+	if _, err := db.Exec(ctx, `
 		INSERT INTO student_streaks
 			(student_id, subject_id, current_streak, longest_streak, cryo_shields, nova_pet_stage,
 			 last_completed_local_date, reminder_enabled, today_correct_count, today_local_date, reminder_time_local, updated_at)
@@ -176,24 +191,39 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 			reminder_time_local = EXCLUDED.reminder_time_local,
 			updated_at = NOW()
 	`, studentID, subjID, rec.status.CurrentStreak, rec.status.LongestStreak, rec.status.CryoShields,
-			rec.status.NovaPetStage, lastComp, rec.status.ReminderEnabled, rec.status.TodayCorrectCount,
-			todayDt, rec.status.ReminderTimeLocal); err != nil {
-			return err
-		}
+		rec.status.NovaPetStage, lastComp, rec.status.ReminderEnabled, rec.status.TodayCorrectCount,
+		todayDt, rec.status.ReminderTimeLocal); err != nil {
+		return err
+	}
 
-		if changedDate != "" {
-			if st, ok := rec.calendar[changedDate]; ok {
-				if _, err := tx.Exec(ctx, `
+	if changedDate != "" {
+		if st, ok := rec.calendar[changedDate]; ok {
+			if _, err := db.Exec(ctx, `
 				INSERT INTO streak_calendar_days (student_id, subject_id, local_date, status)
 				VALUES ($1::uuid, $2::uuid, $3::date, $4)
 				ON CONFLICT (student_id, subject_id, local_date) DO UPDATE SET status = EXCLUDED.status
 			`, studentID, subjID, changedDate, string(st)); err != nil {
-					return err
-				}
+				return err
 			}
 		}
-		return nil
-	})
+	}
+	return nil
+}
+
+// resetTodayPG clears only the dated counter, so reminder settings and newer
+// progress written by another instance are left untouched.
+func (s *Service) resetTodayPG(ctx context.Context, db pgExecutor, studentID, localDate string) error {
+	subjID, err := s.subjectIDPG(ctx, db)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(ctx, `
+		UPDATE student_streaks
+		SET today_correct_count = 0, today_local_date = $3::date, updated_at = NOW()
+		WHERE student_id = $1::uuid AND subject_id = $2::uuid
+		  AND (today_local_date IS NULL OR today_local_date <> $3::date)
+	`, studentID, subjID, localDate)
+	return err
 }
 
 // ReconcileAllMidnight reconciles missed days for all students persisted in PostgreSQL
