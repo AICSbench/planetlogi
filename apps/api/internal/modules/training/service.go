@@ -194,10 +194,13 @@ func (s *Service) ListCurricula(locale string) []CurriculumSummary {
 	return out
 }
 
-func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale string) []SkillView {
+func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale string) ([]SkillView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
+	stMap, err := s.ensureStatsLoadedPG(context.Background(), studentID)
+	if err != nil {
+		return nil, err
+	}
 
 	out := make([]SkillView, 0)
 	for _, entry := range s.catalog {
@@ -209,13 +212,16 @@ func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale
 		}
 		out = append(out, s.toSkillView(entry, stMap, locale))
 	}
-	return out
+	return out, nil
 }
 
-func (s *Service) GetHOTSWheel(studentID, ageBand, locale string) []HOTSQuadrant {
+func (s *Service) GetHOTSWheel(studentID, ageBand, locale string) ([]HOTSQuadrant, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
+	stMap, err := s.ensureStatsLoadedPG(context.Background(), studentID)
+	if err != nil {
+		return nil, err
+	}
 
 	type hDef struct {
 		code string
@@ -285,7 +291,7 @@ func (s *Service) GetHOTSWheel(studentID, ageBand, locale string) []HOTSQuadrant
 			Heuristics: nodes,
 		})
 	}
-	return out
+	return out, nil
 }
 
 func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (PracticeSession, error) {
@@ -377,13 +383,15 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 				return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("award training XP: %w", err)
 			}
 		}
-		sess.answered[questionIndex] = true
+		correct := sess.correct
 		if gradeRes.IsCorrect {
-			sess.correct++
+			correct++
 		}
-		if err := s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct); err != nil {
+		if err := s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, correct); err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist skill stats: %w", err)
 		}
+		sess.answered[questionIndex] = true
+		sess.correct = correct
 		if err := s.saveSessionPG(ctx, sess, 0); err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
 		}
@@ -408,7 +416,10 @@ func (s *Service) RecordSkillAttempt(studentID, skillCode string, isCorrect bool
 }
 
 func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrect bool, sessionScore int) error {
-	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
+	stMap, err := s.ensureStatsLoadedPG(context.Background(), studentID)
+	if err != nil {
+		return err
+	}
 	st := stMap[skillCode]
 	if st == nil {
 		st = &skillStat{}
@@ -590,7 +601,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Skills []SkillView `json:"skills"`
 			}
 		}{}
-		out.Body.Skills = h.svc.ListSkills(studentID, in.Curriculum, in.Grade, locale)
+		out.Body.Skills, err = h.svc.ListSkills(studentID, in.Curriculum, in.Grade, locale)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("training statistics unavailable")
+		}
 		return out, nil
 	})
 
@@ -617,7 +631,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Quadrants []HOTSQuadrant `json:"quadrants"`
 			}
 		}{}
-		out.Body.Quadrants = h.svc.GetHOTSWheel(studentID, in.AgeBand, locale)
+		out.Body.Quadrants, err = h.svc.GetHOTSWheel(studentID, in.AgeBand, locale)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("training statistics unavailable")
+		}
 		return out, nil
 	})
 

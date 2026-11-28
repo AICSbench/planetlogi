@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -59,9 +60,9 @@ func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
 	return id, nil
 }
 
-func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPrefs, bool) {
+func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPrefs, error) {
 	if s.pool == nil || !isUUID(studentID) {
-		return nil, false
+		return nil, nil
 	}
 	var grade int
 	var tier string
@@ -72,11 +73,17 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 		FROM daily_orbit_prefs
 		WHERE student_id = $1::uuid
 	`, studentID).Scan(&grade, &tier, &curriculaRaw, &totalSP)
-	if errors.Is(err, pgx.ErrNoRows) || err != nil {
-		return nil, false
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
 	}
 	var curricula []string
-	if err := json.Unmarshal(curriculaRaw, &curricula); err != nil || len(curricula) == 0 {
+	if err := json.Unmarshal(curriculaRaw, &curricula); err != nil {
+		return nil, err
+	}
+	if len(curricula) == 0 {
 		curricula = []string{"SINGAPORE_MOE", "HOTS_WHEEL"}
 	}
 	return &studentPrefs{
@@ -84,7 +91,7 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 		tier:            Tier(tier),
 		activeCurricula: curricula,
 		totalSP:         totalSP,
-	}, true
+	}, nil
 }
 
 func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentPrefs) error {
@@ -108,13 +115,13 @@ func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentP
 	return err
 }
 
-func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string) (*internalSession, bool) {
+func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string) (*internalSession, error) {
 	if s.pool == nil || !isUUID(studentID) {
-		return nil, false
+		return nil, nil
 	}
 	subjID, err := s.subjectIDPG(ctx)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	var tier string
@@ -125,13 +132,19 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 		FROM daily_orbit_sessions
 		WHERE student_id = $1::uuid AND subject_id = $2::uuid AND local_date = $3::date
 	`, studentID, subjID, localDate).Scan(&tier, &questionsRaw, &changeUsed, &correctCount, &totalSPEarned)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	var payload pgSessionPayload
-	if err := json.Unmarshal(questionsRaw, &payload); err != nil || len(payload.Slots) != 10 {
-		return nil, false
+	if err := json.Unmarshal(questionsRaw, &payload); err != nil {
+		return nil, err
+	}
+	if len(payload.Slots) != 10 {
+		return nil, fmt.Errorf("invalid persisted session slot count: %d", len(payload.Slots))
 	}
 	slots := make([]*internalSlot, 10)
 	for i, ps := range payload.Slots {
@@ -156,7 +169,7 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 		completedCount:       payload.CompletedCount,
 		totalSPEarned:        totalSPEarned,
 		completionBonusAward: payload.CompletionBonusAward,
-	}, true
+	}, nil
 }
 
 func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *internalSession) error {

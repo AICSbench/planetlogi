@@ -16,14 +16,22 @@ func TestOrbitStreakAndCryoShieldTimeTravel(t *testing.T) {
 	day1 := time.Date(2026, 11, 26, 10, 0, 0, 0, loc)
 
 	// 4 correct answers does NOT increment streak yet
-	st := svc.RecordDailyOrbitProgress("stu-1", tz, day1, 4)
+	st, err := svc.RecordDailyOrbitProgress("stu-1", tz, day1, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if st.CurrentStreak != 3 {
 		t.Fatalf("expected streak to remain 3 at 4/5 correct, got %d", st.CurrentStreak)
 	}
 
 	// 5th correct answer increments streak to 4 (idempotent if called again on same day)
-	st = svc.RecordDailyOrbitProgress("stu-1", tz, day1, 5)
-	st = svc.RecordDailyOrbitProgress("stu-1", tz, day1, 6)
+	if _, err := svc.RecordDailyOrbitProgress("stu-1", tz, day1, 5); err != nil {
+		t.Fatal(err)
+	}
+	st, err = svc.RecordDailyOrbitProgress("stu-1", tz, day1, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if st.CurrentStreak != 4 {
 		t.Fatalf("expected streak 4 after reaching 5 correct, got %d", st.CurrentStreak)
 	}
@@ -50,7 +58,10 @@ func TestOrbitStreakAndCryoShieldTimeTravel(t *testing.T) {
 	}
 
 	// Max-3 Cryo Shield cap enforced
-	st = svc.GrantCryoShield("stu-1", 10)
+	st, err = svc.GrantCryoShield("stu-1", 10)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if st.CryoShields != MaxCryoShields {
 		t.Fatalf("expected Cryo Shield cap %d, got %d", MaxCryoShields, st.CryoShields)
 	}

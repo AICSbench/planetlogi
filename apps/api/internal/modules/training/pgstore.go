@@ -34,7 +34,7 @@ func isUUID(s string) bool {
 	return true
 }
 
-func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) map[string]*skillStat {
+func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) (map[string]*skillStat, error) {
 	if s.pool != nil && isUUID(studentID) {
 		stMap := make(map[string]*skillStat)
 		rows, err := s.pool.Query(ctx, `
@@ -42,32 +42,34 @@ func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) map
 			FROM training_skill_stats
 			WHERE student_id = $1::uuid
 		`, studentID)
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var code string
-				var resultsRaw []byte
-				var bestScore, bestStars int
-				if scanErr := rows.Scan(&code, &resultsRaw, &bestScore, &bestStars); scanErr == nil {
-					var win []bool
-					_ = json.Unmarshal(resultsRaw, &win)
-					stMap[code] = &skillStat{
-						recentWindow:     win,
-						bestSessionScore: bestScore,
-						bestStars:        bestStars,
-					}
-				}
-			}
-			s.stats[studentID] = stMap
-			return stMap
+		if err != nil {
+			return nil, err
 		}
+		defer rows.Close()
+		for rows.Next() {
+			var code string
+			var resultsRaw []byte
+			var bestScore, bestStars int
+			if err := rows.Scan(&code, &resultsRaw, &bestScore, &bestStars); err != nil {
+				return nil, err
+			}
+			var win []bool
+			if err := json.Unmarshal(resultsRaw, &win); err != nil {
+				return nil, err
+			}
+			stMap[code] = &skillStat{recentWindow: win, bestSessionScore: bestScore, bestStars: bestStars}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+		return stMap, nil
 	}
 	if stMap, ok := s.stats[studentID]; ok {
-		return stMap
+		return stMap, nil
 	}
 	stMap := make(map[string]*skillStat)
 	s.stats[studentID] = stMap
-	return stMap
+	return stMap, nil
 }
 
 func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode string, st *skillStat) error {

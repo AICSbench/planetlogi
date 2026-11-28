@@ -15,7 +15,7 @@ func TestTrainingCurriculaProficiencyAndStars(t *testing.T) {
 	if cur := svc.ListCurricula("id"); len(cur) != 6 {
 		t.Fatalf("expected 6 curricula, got %d", len(cur))
 	}
-	if wheel := svc.GetHOTSWheel("stu-1", "ALL", "en"); len(wheel) != 4 {
+	if wheel, err := svc.GetHOTSWheel("stu-1", "ALL", "en"); err != nil || len(wheel) != 4 {
 		t.Fatalf("expected 4 HOTS quadrants, got %d", len(wheel))
 	}
 
@@ -37,7 +37,10 @@ func TestTrainingCurriculaProficiencyAndStars(t *testing.T) {
 		}
 	}
 
-	skills := svc.ListSkills("stu-1", "SINGAPORE_MOE", 1, "en")
+	skills, err := svc.ListSkills("stu-1", "SINGAPORE_MOE", 1, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
 	var found *SkillView
 	for i := range skills {
 		if skills[i].Code == "num-add-within-20" {

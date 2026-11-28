@@ -28,16 +28,16 @@ const (
 )
 
 type Status struct {
-	CurrentStreak         int    `json:"currentStreak"`
-	LongestStreak         int    `json:"longestStreak"`
-	CryoShields           int    `json:"cryoShields"`
-	MaxCryoShields        int    `json:"maxCryoShields"`
-	NovaPetStage          int    `json:"novaPetStage"`
-	TodayCorrectCount     int    `json:"todayCorrectCount"`
-	DailyMilestoneTarget  int    `json:"dailyMilestoneTarget"`
-	LastCompletedDate     string `json:"lastCompletedDate,omitempty"`
-	ReminderEnabled       bool   `json:"reminderEnabled"`
-	ReminderTimeLocal     string `json:"reminderTimeLocal,omitempty"`
+	CurrentStreak        int    `json:"currentStreak"`
+	LongestStreak        int    `json:"longestStreak"`
+	CryoShields          int    `json:"cryoShields"`
+	MaxCryoShields       int    `json:"maxCryoShields"`
+	NovaPetStage         int    `json:"novaPetStage"`
+	TodayCorrectCount    int    `json:"todayCorrectCount"`
+	DailyMilestoneTarget int    `json:"dailyMilestoneTarget"`
+	LastCompletedDate    string `json:"lastCompletedDate,omitempty"`
+	ReminderEnabled      bool   `json:"reminderEnabled"`
+	ReminderTimeLocal    string `json:"reminderTimeLocal,omitempty"`
 }
 
 type CalendarEntry struct {
@@ -74,12 +74,9 @@ func NewServiceWithPG(pool *pgxpool.Pool) *Service {
 	}
 }
 
-func (s *Service) getOrCreateLocked(studentID string) *record {
+func (s *Service) getOrCreateLocked(studentID string) (*record, error) {
 	if s.pool != nil && isUUID(studentID) {
-		if pgRec, loaded := s.loadRecordPG(context.Background(), studentID); loaded {
-			s.records[studentID] = pgRec
-			return pgRec
-		}
+		return s.loadRecordPG(context.Background(), studentID)
 	}
 	r, ok := s.records[studentID]
 	if !ok {
@@ -97,7 +94,7 @@ func (s *Service) getOrCreateLocked(studentID string) *record {
 		}
 		s.records[studentID] = r
 	}
-	return r
+	return r, nil
 }
 
 func NovaPetStageForStreak(streak int) int {
@@ -115,36 +112,45 @@ func NovaPetStageForStreak(streak int) int {
 	}
 }
 
-func (s *Service) GetStatus(studentID, tz string) Status {
+func (s *Service) GetStatus(studentID, tz string) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return Status{}, err
+	}
 	out := r.status
 	out.MaxCryoShields = MaxCryoShields
 	out.DailyMilestoneTarget = DailyStreakMilestone
 	_ = tz
-	return out
+	return out, nil
 }
 
-func (s *Service) GetCalendar(studentID, monthPrefix string) []CalendarEntry {
+func (s *Service) GetCalendar(studentID, monthPrefix string) ([]CalendarEntry, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return nil, err
+	}
 	entries := make([]CalendarEntry, 0, len(r.calendar))
 	for dt, st := range r.calendar {
 		if monthPrefix == "" || (len(dt) >= len(monthPrefix) && dt[:len(monthPrefix)] == monthPrefix) {
 			entries = append(entries, CalendarEntry{Date: dt, Status: st})
 		}
 	}
-	return entries
+	return entries, nil
 }
 
 // RecordDailyOrbitProgress updates today's correct count and advances the Orbit Streak
 // once the student reaches 5 correct answers on localDate.
-func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, correctCount int) Status {
+func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, correctCount int) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return Status{}, err
+	}
 	localDate := timewindow.LocalDateString(now, tz)
 	r.todayDate = localDate
 	r.status.TodayCorrectCount = correctCount
@@ -160,8 +166,7 @@ func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, 
 		r.calendar[localDate] = DayCompleted
 		changedDate = localDate
 	}
-	_ = s.saveRecordPG(context.Background(), studentID, r, changedDate)
-	return r.status
+	return r.status, s.saveRecordPG(context.Background(), studentID, r, changedDate)
 }
 
 // ReconcileMidnight evaluates yesterday (D-1) in the student's timezone:
@@ -174,7 +179,10 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string, now time.Time) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return Status{}, err
+	}
 	loc := timewindow.LoadLocationSafe(tz)
 	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
 
@@ -200,10 +208,13 @@ func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string
 }
 
 // GrantCryoShield adds shields up to the strict cap of 3.
-func (s *Service) GrantCryoShield(studentID string, count int) Status {
+func (s *Service) GrantCryoShield(studentID string, count int) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return Status{}, err
+	}
 	r.status.CryoShields += count
 	if r.status.CryoShields > MaxCryoShields {
 		r.status.CryoShields = MaxCryoShields
@@ -211,20 +222,21 @@ func (s *Service) GrantCryoShield(studentID string, count int) Status {
 	if r.status.CryoShields < 0 {
 		r.status.CryoShields = 0
 	}
-	_ = s.saveRecordPG(context.Background(), studentID, r, "")
-	return r.status
+	return r.status, s.saveRecordPG(context.Background(), studentID, r, "")
 }
 
-func (s *Service) SetReminder(studentID string, enabled bool, timeLocal string) Status {
+func (s *Service) SetReminder(studentID string, enabled bool, timeLocal string) (Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	r := s.getOrCreateLocked(studentID)
+	r, err := s.getOrCreateLocked(studentID)
+	if err != nil {
+		return Status{}, err
+	}
 	r.status.ReminderEnabled = enabled
 	if timeLocal != "" {
 		r.status.ReminderTimeLocal = timeLocal
 	}
-	_ = s.saveRecordPG(context.Background(), studentID, r, "")
-	return r.status
+	return r.status, s.saveRecordPG(context.Background(), studentID, r, "")
 }
 
 type Handler struct {
@@ -273,7 +285,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
-		return &struct{ Body Status }{Body: h.svc.GetStatus(studentID, tz)}, nil
+		status, err := h.svc.GetStatus(studentID, tz)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("streak unavailable")
+		}
+		return &struct{ Body Status }{Body: status}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -299,7 +315,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Days []CalendarEntry `json:"days"`
 			}
 		}{}
-		out.Body.Days = h.svc.GetCalendar(studentID, in.Month)
+		out.Body.Days, err = h.svc.GetCalendar(studentID, in.Month)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("streak calendar unavailable")
+		}
 		return out, nil
 	})
 
@@ -321,8 +340,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
-		return &struct{ Body Status }{
-			Body: h.svc.SetReminder(studentID, in.Body.Enabled, in.Body.TimeLocal),
-		}, nil
+		status, err := h.svc.SetReminder(studentID, in.Body.Enabled, in.Body.TimeLocal)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("streak reminder unavailable")
+		}
+		return &struct{ Body Status }{Body: status}, nil
 	})
 }

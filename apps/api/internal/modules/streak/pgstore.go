@@ -42,13 +42,13 @@ func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
 	return id, nil
 }
 
-func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, bool) {
+func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, error) {
 	if s.pool == nil || !isUUID(studentID) {
-		return nil, false
+		return nil, nil
 	}
 	subjID, err := s.subjectIDPG(ctx)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	var st Status
@@ -83,14 +83,17 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 			DailyMilestoneTarget: DailyStreakMilestone,
 			ReminderTimeLocal:    "19:00",
 		}
-		_, _ = s.pool.Exec(ctx, `
+		_, err = s.pool.Exec(ctx, `
 			INSERT INTO student_streaks
 				(student_id, subject_id, current_streak, longest_streak, cryo_shields, nova_pet_stage, reminder_enabled, today_correct_count, reminder_time_local)
 			VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, 0, $8)
 			ON CONFLICT (student_id, subject_id) DO NOTHING
 		`, studentID, subjID, st.CurrentStreak, st.LongestStreak, st.CryoShields, st.NovaPetStage, st.ReminderEnabled, st.ReminderTimeLocal)
+		if err != nil {
+			return nil, err
+		}
 	} else if err != nil {
-		return nil, false
+		return nil, err
 	} else {
 		st.MaxCryoShields = MaxCryoShields
 		st.DailyMilestoneTarget = DailyStreakMilestone
@@ -111,15 +114,20 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 		FROM streak_calendar_days
 		WHERE student_id = $1::uuid AND subject_id = $2::uuid
 	`, studentID, subjID)
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var dt time.Time
-			var dst string
-			if scanErr := rows.Scan(&dt, &dst); scanErr == nil {
-				cal[dt.Format("2006-01-02")] = DayStatus(dst)
-			}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var dt time.Time
+		var dst string
+		if err := rows.Scan(&dt, &dst); err != nil {
+			return nil, err
 		}
+		cal[dt.Format("2006-01-02")] = DayStatus(dst)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	rec := &record{
@@ -129,7 +137,7 @@ func (s *Service) loadRecordPG(ctx context.Context, studentID string) (*record, 
 	if todayDate != nil {
 		rec.todayDate = todayDate.Format("2006-01-02")
 	}
-	return rec, true
+	return rec, nil
 }
 
 func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *record, changedDate string) error {

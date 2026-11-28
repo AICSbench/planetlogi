@@ -23,12 +23,18 @@ func TestReportsAggregation(t *testing.T) {
 		}
 	}
 
-	prof := h.BuildProficiency("stu-1", "SINGAPORE_MOE", 1, "en")
+	prof, err := h.BuildProficiency("stu-1", "SINGAPORE_MOE", 1, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if prof.MasteryCount != 1 {
 		t.Fatalf("expected 1 Mastery skill, got %+v", prof)
 	}
 
-	hs := h.BuildHighScores("stu-1", "SINGAPORE_MOE", 1, "en")
+	hs, err := h.BuildHighScores("stu-1", "SINGAPORE_MOE", 1, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(hs.Tier9To10) != 1 {
 		t.Fatalf("expected 1 skill in 9-10 tier, got %d", len(hs.Tier9To10))
 	}

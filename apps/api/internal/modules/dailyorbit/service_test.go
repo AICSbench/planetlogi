@@ -23,7 +23,7 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
 	svc.nowClock = func() time.Time { return time.Date(2026, 11, 26, 10, 0, 0, 0, loc) }
 
-	today := svc.GetToday("stu-1", 1, "Asia/Jakarta", "en")
+	today := getToday(t, svc, "stu-1")
 	if len(today.Slots) != 10 {
 		t.Fatalf("expected 10 Daily Orbit slots, got %d", len(today.Slots))
 	}
@@ -43,7 +43,7 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 
 	// Answer all 10 slots correctly -> earns 17 SP + 5 AC completion bonus + advances streak!
 	ctx := context.Background()
-	refreshed := svc.GetToday("stu-1", 1, "Asia/Jakarta", "en")
+	refreshed := getToday(t, svc, "stu-1")
 	for _, sl := range refreshed.Slots {
 		if sl.Question.Seed <= 0 || sl.Question.Seed > 9007199254740991 {
 			t.Fatalf("slot %d seed %d outside JS Number.MAX_SAFE_INTEGER", sl.Index, sl.Question.Seed)
@@ -63,11 +63,11 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 		t.Fatalf("expected ErrAlreadyAnswered, got %v", err)
 	}
 
-	final := svc.GetToday("stu-1", 1, "Asia/Jakarta", "en")
+	final := getToday(t, svc, "stu-1")
 	if final.TotalSPEarned != 17 || !final.CompletionBonusAward {
 		t.Fatalf("expected 17 SP & completion bonus, got SP=%d bonus=%v", final.TotalSPEarned, final.CompletionBonusAward)
 	}
-	if st := streakSvc.GetStatus("stu-1", "Asia/Jakarta"); st.CurrentStreak != 4 {
+	if st, err := streakSvc.GetStatus("stu-1", "Asia/Jakarta"); err != nil || st.CurrentStreak != 4 {
 		t.Fatalf("expected streak to advance from 3 -> 4, got %d", st.CurrentStreak)
 	}
 
@@ -105,7 +105,7 @@ func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
 	rec := &mockAttemptRecorder{}
 	svc.SetAttemptRecorder(rec)
 
-	today := svc.GetToday("stu-2", 1, "Asia/Jakarta", "en")
+	today := getToday(t, svc, "stu-2")
 	sl := today.Slots[0]
 	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
 	if _, _, err := svc.SubmitAnswer(context.Background(), "stu-2", 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed); err != nil {
@@ -146,7 +146,7 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 
 	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc1.nowClock = func() time.Time { return fixedNow }
-	today := svc1.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	today := getToday(t, svc1, studentID)
 	sl := today.Slots[0]
 	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
 	if _, _, err := svc1.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed); err != nil && !errors.Is(err, ErrAlreadyAnswered) {
@@ -156,8 +156,56 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	// Simulate fresh server restart with empty in-memory maps
 	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc2.nowClock = func() time.Time { return fixedNow }
-	reloaded := svc2.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	reloaded := getToday(t, svc2, studentID)
 	if reloaded.CompletedCount < 1 || reloaded.Slots[0].Status == SlotPending {
 		t.Fatalf("expected persisted slot 1 after restart, got completed=%d status=%s", reloaded.CompletedCount, reloaded.Slots[0].Status)
+	}
+}
+
+func getToday(t *testing.T, svc *Service, studentID string) SessionView {
+	t.Helper()
+	view, err := svc.GetToday(studentID, 1, "Asia/Jakarta", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return view
+}
+
+type bonusLedger struct {
+	economy.Ledger
+	err   error
+	coins int64
+}
+
+func (l *bonusLedger) Apply(ctx context.Context, req economy.MutationRequest) (economy.MutationResult, error) {
+	if l.err != nil {
+		return economy.MutationResult{}, l.err
+	}
+	result, err := l.Ledger.Apply(ctx, req)
+	l.coins = result.Wallet.AstroCoins
+	return result, err
+}
+
+func TestSkipFinalSlotRetriesFailedBonus(t *testing.T) {
+	failure := errors.New("ledger unavailable")
+	ledger := &bonusLedger{Ledger: economy.NewMemoryLedger(), err: failure}
+	svc := NewService(ledger, nil)
+	svc.nowClock = func() time.Time { return time.Date(2026, 11, 26, 3, 0, 0, 0, time.UTC) }
+	for i := 1; i < 10; i++ {
+		if _, _, err := svc.SkipSlot(t.Context(), "student", 1, "Asia/Jakarta", "en", i); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, _, err := svc.SkipSlot(t.Context(), "student", 1, "Asia/Jakarta", "en", 10); !errors.Is(err, failure) {
+		t.Fatalf("expected ledger error, got %v", err)
+	}
+	view := getToday(t, svc, "student")
+	if view.Slots[9].Status != SlotPending || view.CompletedCount != 9 || view.CompletionBonusAward {
+		t.Fatalf("session changed after failed bonus: %+v", view)
+	}
+	ledger.err = nil
+	slot, view, err := svc.SkipSlot(t.Context(), "student", 1, "Asia/Jakarta", "en", 10)
+	if err != nil || slot.Status != SlotSkipped || !view.CompletionBonusAward || ledger.coins != 5 {
+		t.Fatalf("retry: slot=%s bonus=%v coins=%d err=%v", slot.Status, view.CompletionBonusAward, ledger.coins, err)
 	}
 }

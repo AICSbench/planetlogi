@@ -189,14 +189,18 @@ func stageForIndex(idx int) (name, shape string, sp int) {
 	}
 }
 
-func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
+func (s *Service) getPrefsLocked(studentID string, grade int) (*studentPrefs, error) {
 	if s.pool != nil && isUUID(studentID) {
-		if pgPrefs, loaded := s.loadPrefsPG(context.Background(), studentID); loaded {
+		pgPrefs, err := s.loadPrefsPG(context.Background(), studentID)
+		if err != nil {
+			return nil, err
+		}
+		if pgPrefs != nil {
 			if grade >= 1 && grade <= 6 {
 				pgPrefs.grade = grade
 			}
 			s.prefs[studentID] = pgPrefs
-			return pgPrefs
+			return pgPrefs, nil
 		}
 	}
 	p, ok := s.prefs[studentID]
@@ -210,10 +214,12 @@ func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 			activeCurricula: []string{"SINGAPORE_MOE", "HOTS_WHEEL"},
 			totalSP:         12,
 		}
+		if err := s.savePrefsPG(context.Background(), studentID, p); err != nil {
+			return nil, err
+		}
 		s.prefs[studentID] = p
-		_ = s.savePrefsPG(context.Background(), studentID, p)
 	}
-	return p
+	return p, nil
 }
 
 func deriveSlotSeed(studentID, localDate string, slotIdx int, tier Tier) int64 {
@@ -268,18 +274,21 @@ func filterTemplatesByTierAndCurricula(pool []mathengine.TemplateMeta, tier Tier
 	return pool
 }
 
-func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDate string) *internalSession {
+func (s *Service) getOrCreateSessionLocked(studentID string, prefs *studentPrefs, localDate string) (*internalSession, error) {
 	key := studentID + ":" + localDate
 	if s.pool != nil && isUUID(studentID) {
-		if pgSess, loaded := s.loadSessionPG(context.Background(), studentID, localDate); loaded {
+		pgSess, err := s.loadSessionPG(context.Background(), studentID, localDate)
+		if err != nil {
+			return nil, err
+		}
+		if pgSess != nil {
 			s.sessions[key] = pgSess
-			return pgSess
+			return pgSess, nil
 		}
 	}
 	if sess, ok := s.sessions[key]; ok {
-		return sess
+		return sess, nil
 	}
-	prefs := s.getPrefsLocked(studentID, grade)
 	gradePool := mathengine.TemplatesForGrade(prefs.grade)
 	if len(gradePool) == 0 {
 		gradePool = mathengine.Registry()
@@ -307,19 +316,27 @@ func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDat
 		tier:      prefs.tier,
 		slots:     slots,
 	}
+	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+		return nil, err
+	}
 	s.sessions[key] = sess
-	_ = s.saveSessionPG(context.Background(), studentID, sess)
-	return sess
+	return sess, nil
 }
 
-func (s *Service) GetToday(studentID string, grade int, tz, locale string) SessionView {
+func (s *Service) GetToday(studentID string, grade int, tz, locale string) (SessionView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	now := s.nowClock()
 	eval := timewindow.Evaluate(now, tz, timewindow.DailyOrbitWindow)
-	prefs := s.getPrefsLocked(studentID, grade)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
-	return s.renderViewLocked(sess, prefs, eval, locale)
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SessionView{}, err
+	}
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SessionView{}, err
+	}
+	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 
 func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int, tz, locale string, slotIndex int, submitted map[string]string, templateCode string, seed int64) (SlotView, SessionView, error) {
@@ -335,8 +352,14 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
 
-	prefs := s.getPrefsLocked(studentID, grade)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
 	slot := sess.slots[slotIndex-1]
 	if slot.status != SlotPending {
 		return SlotView{}, SessionView{}, ErrAlreadyAnswered
@@ -401,7 +424,9 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 		sess.totalSPEarned += slot.rewardSP
 		prefs.totalSP += int64(slot.rewardSP)
 		if s.streakSvc != nil {
-			s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount)
+			if _, err := s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount); err != nil {
+				return SlotView{}, SessionView{}, fmt.Errorf("record streak progress: %w", err)
+			}
 		}
 	} else {
 		slot.status = SlotWrong
@@ -434,30 +459,37 @@ func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz,
 	if slotIndex < 1 || slotIndex > 10 {
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
-	prefs := s.getPrefsLocked(studentID, grade)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
 	slot := sess.slots[slotIndex-1]
 	if slot.status != SlotPending {
 		return SlotView{}, SessionView{}, ErrAlreadyAnswered
 	}
 
-	slot.status = SlotSkipped
-	slot.earnedSP = 0
-	sess.completedCount++
-
-	if sess.completedCount == 10 && !sess.completionBonusAward {
-		sess.completionBonusAward = true
+	if sess.completedCount+1 == 10 && !sess.completionBonusAward {
 		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyAC,
 				Delta:          CompletionBonusAC,
 				SourceType:     "DAILY_ORBIT_BONUS",
 				SourceID:       sess.localDate,
 				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
-			})
+			}); err != nil {
+				return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit bonus: %w", err)
+			}
 		}
+		sess.completionBonusAward = true
 	}
+	slot.status = SlotSkipped
+	slot.earnedSP = 0
+	sess.completedCount++
 	if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
 		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
 	}
@@ -478,8 +510,14 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 	if slotIndex < 1 || slotIndex > 10 {
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
-	prefs := s.getPrefsLocked(studentID, grade)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
 	if sess.changeQuestionUsed >= MaxChangeQuestionsPerDay {
 		return SlotView{}, SessionView{}, ErrChangeLimitReached
 	}
@@ -534,14 +572,20 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier Tier) (SessionView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	prefs := s.getPrefsLocked(studentID, grade)
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SessionView{}, err
+	}
 	reqSP, ok := TierUnlockSP[tier]
 	if !ok || prefs.totalSP < reqSP {
 		return SessionView{}, ErrTierLocked
 	}
-	prefs.tier = tier
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SessionView{}, err
+	}
+	prefs.tier = tier
 	sess.tier = tier
 	gradePool := mathengine.TemplatesForGrade(prefs.grade)
 	if len(gradePool) > 0 {
@@ -573,10 +617,16 @@ func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, c
 	if len(valid) == 0 {
 		return SessionView{}, ErrInvalidCurricula
 	}
-	prefs := s.getPrefsLocked(studentID, grade)
-	prefs.activeCurricula = valid
+	prefs, err := s.getPrefsLocked(studentID, grade)
+	if err != nil {
+		return SessionView{}, err
+	}
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
-	sess := s.getOrCreateSessionLocked(studentID, prefs.grade, eval.LocalDate)
+	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+	if err != nil {
+		return SessionView{}, err
+	}
+	prefs.activeCurricula = valid
 	gradePool := mathengine.TemplatesForGrade(prefs.grade)
 	if len(gradePool) > 0 {
 		filtered := filterTemplatesByTierAndCurricula(gradePool, prefs.tier, prefs.activeCurricula)
@@ -707,7 +757,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
-		return &struct{ Body SessionView }{Body: h.svc.GetToday(id, grade, tz, locale)}, nil
+		session, err := h.svc.GetToday(id, grade, tz, locale)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
+		}
+		return &struct{ Body SessionView }{Body: session}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -742,8 +796,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				return nil, huma.Error409Conflict(err.Error())
 			case errors.Is(err, ErrOutsideOperatingHours):
 				return nil, huma.Error403Forbidden(err.Error())
-			default:
+			case errors.Is(err, ErrInvalidSlot):
 				return nil, huma.Error400BadRequest(err.Error())
+			default:
+				return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
 			}
 		}
 		out := &struct {
@@ -784,7 +840,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			if errors.Is(err, ErrAlreadyAnswered) {
 				return nil, huma.Error409Conflict(err.Error())
 			}
-			return nil, huma.Error400BadRequest(err.Error())
+			if errors.Is(err, ErrInvalidSlot) || errors.Is(err, ErrOutsideOperatingHours) {
+				return nil, huma.Error400BadRequest(err.Error())
+			}
+			return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
 		}
 		out := &struct {
 			Body struct {
@@ -822,7 +881,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		slot, sess, err := h.svc.ChangeQuestion(id, grade, tz, locale, in.Body.SlotIndex, in.Body.Mode)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			switch err {
+			case ErrOutsideOperatingHours, ErrInvalidSlot, ErrChangeLimitReached, ErrAlreadyAnswered, ErrNoReplacementAvailable:
+				return nil, huma.Error400BadRequest(err.Error())
+			default:
+				return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
+			}
 		}
 		out := &struct {
 			Body struct {
@@ -854,7 +918,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		sess, err := h.svc.SetTier(id, grade, tz, locale, in.Body.Tier)
 		if err != nil {
-			return nil, huma.Error403Forbidden(err.Error())
+			if errors.Is(err, ErrTierLocked) {
+				return nil, huma.Error403Forbidden(err.Error())
+			}
+			return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
 		}
 		return &struct{ Body SessionView }{Body: sess}, nil
 	})
@@ -878,7 +945,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		sess, err := h.svc.SetCurricula(id, grade, tz, locale, in.Body.Curricula)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			if errors.Is(err, ErrInvalidCurricula) {
+				return nil, huma.Error400BadRequest(err.Error())
+			}
+			return nil, huma.Error503ServiceUnavailable("daily orbit unavailable")
 		}
 		return &struct{ Body SessionView }{Body: sess}, nil
 	})

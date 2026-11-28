@@ -65,8 +65,11 @@ func (h *Handler) resolveStudent(ctx context.Context, in reportQuery) (string, s
 	return "demo-pilot1", locale, nil
 }
 
-func (h *Handler) BuildProficiency(studentID, curriculum string, grade int, locale string) ProficiencySummary {
-	skills := h.trainingSvc.ListSkills(studentID, curriculum, grade, locale)
+func (h *Handler) BuildProficiency(studentID, curriculum string, grade int, locale string) (ProficiencySummary, error) {
+	skills, err := h.trainingSvc.ListSkills(studentID, curriculum, grade, locale)
+	if err != nil {
+		return ProficiencySummary{}, err
+	}
 	out := ProficiencySummary{Skills: skills}
 	for _, sk := range skills {
 		switch sk.ProficiencyTier {
@@ -80,11 +83,14 @@ func (h *Handler) BuildProficiency(studentID, curriculum string, grade int, loca
 			out.IncompleteCount++
 		}
 	}
-	return out
+	return out, nil
 }
 
-func (h *Handler) BuildHighScores(studentID, curriculum string, grade int, locale string) HighScoreBuckets {
-	skills := h.trainingSvc.ListSkills(studentID, curriculum, grade, locale)
+func (h *Handler) BuildHighScores(studentID, curriculum string, grade int, locale string) (HighScoreBuckets, error) {
+	skills, err := h.trainingSvc.ListSkills(studentID, curriculum, grade, locale)
+	if err != nil {
+		return HighScoreBuckets{}, err
+	}
 	out := HighScoreBuckets{
 		Tier9To10: []training.SkillView{},
 		Tier6To8:  []training.SkillView{},
@@ -106,7 +112,7 @@ func (h *Handler) BuildHighScores(studentID, curriculum string, grade int, local
 			out.Unplayed = append(out.Unplayed, sk)
 		}
 	}
-	return out
+	return out, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -121,9 +127,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
-		return &struct{ Body ProficiencySummary }{
-			Body: h.BuildProficiency(studentID, in.Curriculum, in.Grade, locale),
-		}, nil
+		report, err := h.BuildProficiency(studentID, in.Curriculum, in.Grade, locale)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("report unavailable")
+		}
+		return &struct{ Body ProficiencySummary }{Body: report}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -137,8 +145,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
 		}
-		return &struct{ Body HighScoreBuckets }{
-			Body: h.BuildHighScores(studentID, in.Curriculum, in.Grade, locale),
-		}, nil
+		report, err := h.BuildHighScores(studentID, in.Curriculum, in.Grade, locale)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("report unavailable")
+		}
+		return &struct{ Body HighScoreBuckets }{Body: report}, nil
 	})
 }
