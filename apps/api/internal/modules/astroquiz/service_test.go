@@ -136,7 +136,7 @@ func TestAstroQuizHiddenSolutionsAndWeeklySupplyPodCap(t *testing.T) {
 	}
 	if _, err := svc.SavePaper(context.Background(), "stu-1", "G1-ESS-01", "en", 5, map[int]map[string]string{
 		0:  {"answer": "junk"},
-		11: {"answer": "junk"},
+		99: {"answer": "junk"},
 	}); err != nil {
 		t.Fatalf("out-of-range drafts should be ignored, got %v", err)
 	}
@@ -160,8 +160,8 @@ func TestAstroQuizHiddenSolutionsAndWeeklySupplyPodCap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sub1.Score != 10 || !sub1.SupplyPodAwarded {
-		t.Fatalf("expected 10/10 and Supply Pod awarded: %+v", sub1)
+	if sub1.Score != len(opened.Questions) || !sub1.SupplyPodAwarded {
+		t.Fatalf("expected %d/%d and Supply Pod awarded: %+v", len(opened.Questions), len(opened.Questions), sub1)
 	}
 	for _, q := range sub1.Questions {
 		if q.WorkedSolution == nil {
@@ -207,7 +207,7 @@ func TestAstroQuizSupplyPodRetriesAfterLedgerFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("retry after ledger failure: %v", err)
 	}
-	if !sub.SupplyPodAwarded || sub.Score != 10 {
+	if !sub.SupplyPodAwarded || sub.Score != len(opened.Questions) {
 		t.Fatalf("expected retry to award the pod and keep the score, got %+v", sub)
 	}
 	if got := ledger.totalAC(); got != 5 {
@@ -256,6 +256,9 @@ func TestPapersMatchContentManifest(t *testing.T) {
 		}
 		if len(p.templates) != len(mp.Templates) {
 			t.Fatalf("paper %s template count drift", mp.Code)
+		}
+		if len(p.templates) < minPaperQuestions || len(p.templates) > maxPaperQuestions {
+			t.Fatalf("paper %s has %d questions, required %d-%d", mp.Code, len(p.templates), minPaperQuestions, maxPaperQuestions)
 		}
 		for i := range p.templates {
 			if p.templates[i] != mp.Templates[i] {
@@ -629,7 +632,7 @@ func TestSubmitGradesDurableDraftsAcrossInstances(t *testing.T) {
 		t.Fatal(err)
 	}
 	if submitted.Score != 1 {
-		t.Fatalf("stale instance graded %d instead of the durable 1/10 answer", submitted.Score)
+		t.Fatalf("stale instance graded %d instead of the durable single answer", submitted.Score)
 	}
 	var stored quizState
 	if _, err := store.Load(ctx, studentID, "astroquiz", &stored); err != nil {

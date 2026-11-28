@@ -27,7 +27,10 @@ const WeeklySupplyPodRewardAC = 5
 const maxElapsedSec = 24 * 60 * 60
 
 const (
-	paperQuestionCount = 10
+	// minPaperQuestions and maxPaperQuestions bound each paper's question count, which is
+	// derived from the paper's template-code list (one question per entry).
+	minPaperQuestions = 15
+	maxPaperQuestions = 20
 	// maxTickGapSec caps how much wall-clock time between two server ticks (open/save/submit)
 	// counts toward the paper timer, so a tab left open overnight does not add hours.
 	maxTickGapSec = 15 * 60
@@ -399,14 +402,14 @@ func (s *Service) findPaper(code string) (paperDef, bool) {
 }
 
 // mergeDrafts copies client answers into the attempt and drops keys outside
-// the 1..10 question range so ungraded data never accumulates.
-func mergeDrafts(dst map[int]map[string]string, updatedAt map[int]int64, drafts map[int]map[string]string) {
-	mergeDraftsAt(dst, updatedAt, drafts, time.Now().UnixNano())
+// the paper's 1..n question range so ungraded data never accumulates.
+func mergeDrafts(dst map[int]map[string]string, updatedAt map[int]int64, drafts map[int]map[string]string, questionCount int) {
+	mergeDraftsAt(dst, updatedAt, drafts, questionCount, time.Now().UnixNano())
 }
 
-func mergeDraftsAt(dst map[int]map[string]string, updatedAt map[int]int64, drafts map[int]map[string]string, at int64) {
+func mergeDraftsAt(dst map[int]map[string]string, updatedAt map[int]int64, drafts map[int]map[string]string, questionCount int, at int64) {
 	for k, v := range drafts {
-		if k < 1 || k > 10 {
+		if k < 1 || k > questionCount {
 			continue
 		}
 		copied := make(map[string]string, len(v))
@@ -420,10 +423,9 @@ func mergeDraftsAt(dst map[int]map[string]string, updatedAt map[int]int64, draft
 
 func gradePaperDrafts(p paperDef, drafts map[int]map[string]string, locale string) int {
 	score := 0
-	for i := 0; i < 10; i++ {
+	for i := 0; i < len(p.templates); i++ {
 		idx := i + 1
-		tmpl := p.templates[i%len(p.templates)]
-		prob, _ := mathengine.GenerateByCode(tmpl, seedForPaperQ(p.code, idx), locale)
+		prob, _ := mathengine.GenerateByCode(p.templates[i], seedForPaperQ(p.code, idx), locale)
 		if mathengine.Grade(prob, drafts[idx]).IsCorrect {
 			score++
 		}
@@ -455,7 +457,7 @@ func mergeSubmissionAttempt(dto attemptStateDTO, p paperDef, drafts map[int]map[
 			}
 		}
 		dto.LastTick = now
-		mergeDraftsAt(dto.Drafts, dto.DraftUpdatedAt, drafts, now.UnixNano())
+		mergeDraftsAt(dto.Drafts, dto.DraftUpdatedAt, drafts, len(p.templates), now.UnixNano())
 		dto.Score = gradePaperDrafts(p, dto.Drafts, locale)
 		dto.Status = "SUBMITTED"
 	}
@@ -563,7 +565,7 @@ func (s *Service) submitLocal(ctx context.Context, studentID string, p paperDef,
 	st := s.getOrCreateAttemptLocked(studentID, p.code)
 	if st.status != "SUBMITTED" {
 		s.tickLocked(st)
-		mergeDrafts(st.drafts, st.draftUpdatedAt, drafts)
+		mergeDrafts(st.drafts, st.draftUpdatedAt, drafts, len(p.templates))
 		st.score = gradePaperDrafts(p, st.drafts, locale)
 		st.status = "SUBMITTED"
 	}
@@ -620,7 +622,7 @@ func (s *Service) ListPapers(ctx context.Context, studentID string, grade int, c
 			Grade:          p.grade,
 			Category:       p.category,
 			Title:          p.title.For(locale),
-			QuestionCount:  10,
+			QuestionCount:  len(p.templates),
 			Status:         status,
 			BestScore:      score,
 			WeeklyDeadline: deadline,
@@ -673,7 +675,7 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 		return view, nil
 	}
 	s.tickLocked(st)
-	mergeDrafts(st.drafts, st.draftUpdatedAt, drafts)
+	mergeDrafts(st.drafts, st.draftUpdatedAt, drafts, len(p.templates))
 	view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 	s.mu.Unlock()
 	if err := s.persistStudent(ctx, studentID); err != nil {
@@ -682,7 +684,7 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 	return view, nil
 }
 
-// SubmitPaper grades all 10 questions at once, reveals worked solutions, and awards
+// SubmitPaper grades every paper question at once, reveals worked solutions, and awards
 // 1 Weekly Supply Pod (+5 AC) max once per ISO week.
 func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale string, elapsedSec int, drafts map[int]map[string]string) (PaperAttemptView, error) {
 	_ = elapsedSec // display-only on the client; the server measures elapsed time
@@ -830,15 +832,14 @@ func (s *Service) GetPrintablePaper(ctx context.Context, studentID, paperCode, l
 	if includeKey && !available {
 		return PrintablePaper{}, ErrAnswerKeyLocked
 	}
-	qs := make([]mathengine.RenderedQuestion, paperQuestionCount)
+	qs := make([]mathengine.RenderedQuestion, len(p.templates))
 	var keys []map[string]string
 	if includeKey {
-		keys = make([]map[string]string, paperQuestionCount)
+		keys = make([]map[string]string, len(p.templates))
 	}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < len(p.templates); i++ {
 		idx := i + 1
-		tmpl := p.templates[i%len(p.templates)]
-		prob, _ := mathengine.GenerateByCode(tmpl, seedForPaperQ(p.code, idx), locale)
+		prob, _ := mathengine.GenerateByCode(p.templates[i], seedForPaperQ(p.code, idx), locale)
 		qs[i] = prob.Question
 		if includeKey {
 			keys[i] = prob.Solution.CorrectAnswers
@@ -891,11 +892,10 @@ func (s *Service) tickLocked(st *attemptState) {
 }
 
 func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p paperDef, st *attemptState, locale string) PaperAttemptView {
-	qs := make([]PaperQuestion, 10)
-	for i := 0; i < 10; i++ {
+	qs := make([]PaperQuestion, len(p.templates))
+	for i := 0; i < len(p.templates); i++ {
 		idx := i + 1
-		tmpl := p.templates[i%len(p.templates)]
-		prob, _ := mathengine.GenerateByCode(tmpl, seedForPaperQ(p.code, idx), locale)
+		prob, _ := mathengine.GenerateByCode(p.templates[i], seedForPaperQ(p.code, idx), locale)
 		pq := PaperQuestion{
 			Index:       idx,
 			Question:    prob.Question,
@@ -933,7 +933,7 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 		Status:             st.status,
 		ElapsedSec:         st.elapsedSec,
 		Score:              st.score,
-		TotalQuestions:     10,
+		TotalQuestions:     len(p.templates),
 		SupplyPodAwarded:   st.supplyPodAwarded,
 		SupplyPodClaimedWk: s.weeklySupplyPod[studentID+":"+s.currentWeekKey(ctx)],
 		SupplyPodRetryable: retryable,
@@ -944,29 +944,29 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 
 func buildPapers() []paperDef {
 	return []paperDef{
-		{code: "G1-ESS-01", grade: 1, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 1 Essential Revision: Numbers & Operations", ID: "Revisi Esensial Kelas 1: Bilangan & Operasi"}, templates: []string{"g1_add_within_20", "g1_sub_within_20", "g1_place_value_tens_ones", "g1_pattern_hots"}},
-		{code: "G1-TOP-01", grade: 1, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 1 Top School Year-End Paper (Math-F1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 1 (Math-F1)"}, templates: []string{"g1_add_within_20", "g1_place_value_tens_ones", "g1_sub_within_20", "g1_pattern_hots"}},
-		{code: "G1-HOTS-01", grade: 1, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 1 HOTS Heuristic Paper (Ages 6–9)", ID: "Kertas HOTS Heuristik Kelas 1 (Usia 6–9)"}, templates: []string{"g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones"}},
+		{code: "G1-ESS-01", grade: 1, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 1 Essential Revision: Numbers & Operations", ID: "Revisi Esensial Kelas 1: Bilangan & Operasi"}, templates: []string{"g1_add_within_20", "g1_sub_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_sub_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_sub_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_sub_within_20", "g1_place_value_tens_ones", "g1_pattern_hots"}},
+		{code: "G1-TOP-01", grade: 1, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 1 Top School Year-End Paper (Math-F1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 1 (Math-F1)"}, templates: []string{"g1_add_within_20", "g1_place_value_tens_ones", "g1_sub_within_20", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_sub_within_20", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_sub_within_20", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_sub_within_20", "g1_pattern_hots"}},
+		{code: "G1-HOTS-01", grade: 1, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 1 HOTS Heuristic Paper (Ages 6–9)", ID: "Kertas HOTS Heuristik Kelas 1 (Usia 6–9)"}, templates: []string{"g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_pattern_hots", "g1_add_within_20", "g1_place_value_tens_ones", "g1_pattern_hots"}},
 
-		{code: "G2-ESS-01", grade: 2, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 2 Essential Revision: Addition & Multiplication", ID: "Revisi Esensial Kelas 2: Penjumlahan & Perkalian"}, templates: []string{"g2_add_within_1000", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_bar_model_compare"}},
-		{code: "G2-TOP-01", grade: 2, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 2 Top School Year-End Paper (Math-F2)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 2 (Math-F2)"}, templates: []string{"g2_add_within_1000", "g2_bar_model_compare", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq"}},
-		{code: "G2-HOTS-01", grade: 2, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 2 HOTS Heuristic Paper: Draw Models", ID: "Kertas HOTS Kelas 2: Menggambar Model Batang"}, templates: []string{"g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10"}},
+		{code: "G2-ESS-01", grade: 2, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 2 Essential Revision: Addition & Multiplication", ID: "Revisi Esensial Kelas 2: Penjumlahan & Perkalian"}, templates: []string{"g2_add_within_1000", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_bar_model_compare", "g2_add_within_1000", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_bar_model_compare", "g2_add_within_1000", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_bar_model_compare", "g2_add_within_1000", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_bar_model_compare"}},
+		{code: "G2-TOP-01", grade: 2, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 2 Top School Year-End Paper (Math-F2)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 2 (Math-F2)"}, templates: []string{"g2_add_within_1000", "g2_bar_model_compare", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_add_within_1000", "g2_bar_model_compare", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_add_within_1000", "g2_bar_model_compare", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq", "g2_add_within_1000", "g2_bar_model_compare", "g2_mul_tables_2_5_10", "g2_unit_fraction_mcq"}},
+		{code: "G2-HOTS-01", grade: 2, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 2 HOTS Heuristic Paper: Draw Models", ID: "Kertas HOTS Kelas 2: Menggambar Model Batang"}, templates: []string{"g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10", "g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10", "g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10", "g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10", "g2_bar_model_compare", "g1_pattern_hots", "g2_mul_tables_2_5_10", "g2_bar_model_compare"}},
 
-		{code: "G3-ESS-01", grade: 3, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 3 Essential Revision: Area, Division & Fractions", ID: "Revisi Esensial Kelas 3: Luas, Pembagian & Pecahan"}, templates: []string{"g3_mul_6_to_9", "g3_div_with_remainder", "g3_area_perimeter_rect", "g3_equiv_fraction"}},
-		{code: "G3-TOP-01", grade: 3, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 3 Top School Year-End Paper (Math-I1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 3 (Math-I1)"}, templates: []string{"g3_area_perimeter_rect", "g3_div_with_remainder", "g3_equiv_fraction", "g3_mul_6_to_9"}},
-		{code: "G3-HOTS-01", grade: 3, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 3 HOTS Heuristic Paper (Ages 8–11)", ID: "Kertas HOTS Heuristik Kelas 3 (Usia 8–11)"}, templates: []string{"g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare"}},
+		{code: "G3-ESS-01", grade: 3, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 3 Essential Revision: Area, Division & Fractions", ID: "Revisi Esensial Kelas 3: Luas, Pembagian & Pecahan"}, templates: []string{"g3_mul_6_to_9", "g3_div_with_remainder", "g3_area_perimeter_rect", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_div_with_remainder", "g3_area_perimeter_rect", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_div_with_remainder", "g3_area_perimeter_rect", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_div_with_remainder", "g3_area_perimeter_rect", "g3_equiv_fraction"}},
+		{code: "G3-TOP-01", grade: 3, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 3 Top School Year-End Paper (Math-I1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 3 (Math-I1)"}, templates: []string{"g3_area_perimeter_rect", "g3_div_with_remainder", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_area_perimeter_rect", "g3_div_with_remainder", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_area_perimeter_rect", "g3_div_with_remainder", "g3_equiv_fraction", "g3_mul_6_to_9", "g3_area_perimeter_rect", "g3_div_with_remainder", "g3_equiv_fraction", "g3_mul_6_to_9"}},
+		{code: "G3-HOTS-01", grade: 3, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 3 HOTS Heuristic Paper (Ages 8–11)", ID: "Kertas HOTS Heuristik Kelas 3 (Usia 8–11)"}, templates: []string{"g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare", "g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare", "g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare", "g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare", "g3_div_with_remainder", "g3_area_perimeter_rect", "g2_bar_model_compare", "g3_div_with_remainder"}},
 
-		{code: "G4-ESS-01", grade: 4, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 4 Essential Revision: LCM, Decimals & Fractions", ID: "Revisi Esensial Kelas 4: KPK, Desimal & Pecahan"}, templates: []string{"g4_lcm_gcf", "g4_decimal_add_sub", "g4_fraction_of_set", "g4_work_backwards_hots"}},
-		{code: "G4-TOP-01", grade: 4, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 4 Top School Year-End Paper (Math-I2)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 4 (Math-I2)"}, templates: []string{"g4_decimal_add_sub", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots"}},
-		{code: "G4-HOTS-01", grade: 4, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 4 HOTS Heuristic Paper: Work Backwards", ID: "Kertas HOTS Kelas 4: Strategi Bekerja Mundur"}, templates: []string{"g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set"}},
+		{code: "G4-ESS-01", grade: 4, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 4 Essential Revision: LCM, Decimals & Fractions", ID: "Revisi Esensial Kelas 4: KPK, Desimal & Pecahan"}, templates: []string{"g4_lcm_gcf", "g4_decimal_add_sub", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_decimal_add_sub", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_decimal_add_sub", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_decimal_add_sub", "g4_fraction_of_set", "g4_work_backwards_hots"}},
+		{code: "G4-TOP-01", grade: 4, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 4 Top School Year-End Paper (Math-I2)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 4 (Math-I2)"}, templates: []string{"g4_decimal_add_sub", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_decimal_add_sub", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_decimal_add_sub", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_decimal_add_sub", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots"}},
+		{code: "G4-HOTS-01", grade: 4, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 4 HOTS Heuristic Paper: Work Backwards", ID: "Kertas HOTS Kelas 4: Strategi Bekerja Mundur"}, templates: []string{"g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots", "g4_lcm_gcf", "g4_fraction_of_set", "g4_work_backwards_hots"}},
 
-		{code: "G5-ESS-01", grade: 5, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 5 Essential Revision: Percentage, Ratio & Volume", ID: "Revisi Esensial Kelas 5: Persentase, Rasio & Volume"}, templates: []string{"g5_percentage_discount", "g5_ratio_word_problem", "g5_volume_cuboid", "g5_average_mean"}},
-		{code: "G5-TOP-01", grade: 5, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 5 Top School Year-End Paper (Math-A1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 5 (Math-A1)"}, templates: []string{"g5_ratio_word_problem", "g5_percentage_discount", "g5_volume_cuboid", "g5_average_mean"}},
-		{code: "G5-HOTS-01", grade: 5, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 5 HOTS Heuristic Paper: Ratio & Models", ID: "Kertas HOTS Kelas 5: Rasio & Model Batang"}, templates: []string{"g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount"}},
+		{code: "G5-ESS-01", grade: 5, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 5 Essential Revision: Percentage, Ratio & Volume", ID: "Revisi Esensial Kelas 5: Persentase, Rasio & Volume"}, templates: []string{"g5_percentage_discount", "g5_ratio_word_problem", "g5_volume_cuboid", "g5_average_mean", "g5_percentage_discount", "g5_ratio_word_problem", "g5_volume_cuboid", "g5_average_mean", "g5_percentage_discount", "g5_ratio_word_problem", "g5_volume_cuboid", "g5_average_mean", "g5_percentage_discount", "g5_ratio_word_problem", "g5_volume_cuboid", "g5_average_mean"}},
+		{code: "G5-TOP-01", grade: 5, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 5 Top School Year-End Paper (Math-A1)", ID: "Ujian Akhir Tahun Sekolah Unggulan Kelas 5 (Math-A1)"}, templates: []string{"g5_ratio_word_problem", "g5_percentage_discount", "g5_volume_cuboid", "g5_average_mean", "g5_ratio_word_problem", "g5_percentage_discount", "g5_volume_cuboid", "g5_average_mean", "g5_ratio_word_problem", "g5_percentage_discount", "g5_volume_cuboid", "g5_average_mean", "g5_ratio_word_problem", "g5_percentage_discount", "g5_volume_cuboid", "g5_average_mean"}},
+		{code: "G5-HOTS-01", grade: 5, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 5 HOTS Heuristic Paper: Ratio & Models", ID: "Kertas HOTS Kelas 5: Rasio & Model Batang"}, templates: []string{"g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount", "g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount", "g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount", "g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount", "g5_ratio_word_problem", "g4_work_backwards_hots", "g5_percentage_discount", "g5_ratio_word_problem"}},
 
-		{code: "G6-ESS-01", grade: 6, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 6 Essential Revision: Algebra, Speed & Circles", ID: "Revisi Esensial Kelas 6: Aljabar, Kecepatan & Lingkaran"}, templates: []string{"g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots"}},
-		{code: "G6-TOP-01", grade: 6, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 6 Final Exam Mock Paper (Math-M1)", ID: "Tryout Ujian Akhir SD Kelas 6 (Math-M1)"}, templates: []string{"g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots"}},
-		{code: "G6-HOTS-01", grade: 6, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 6 HOTS Heuristic Paper: Supposition Method", ID: "Kertas HOTS Kelas 6: Metode Pengandaian"}, templates: []string{"g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time"}},
+		{code: "G6-ESS-01", grade: 6, category: CategoryEssential, title: mathengine.LocaleText{EN: "Grade 6 Essential Revision: Algebra, Speed & Circles", ID: "Revisi Esensial Kelas 6: Aljabar, Kecepatan & Lingkaran"}, templates: []string{"g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots"}},
+		{code: "G6-TOP-01", grade: 6, category: CategoryTopSchool, title: mathengine.LocaleText{EN: "Grade 6 Final Exam Mock Paper (Math-M1)", ID: "Tryout Ujian Akhir SD Kelas 6 (Math-M1)"}, templates: []string{"g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_circle_circumference", "g6_supposition_hots"}},
+		{code: "G6-HOTS-01", grade: 6, category: CategoryHOTS, title: mathengine.LocaleText{EN: "Grade 6 HOTS Heuristic Paper: Supposition Method", ID: "Kertas HOTS Kelas 6: Metode Pengandaian"}, templates: []string{"g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_supposition_hots", "g6_algebra_linear", "g6_speed_distance_time", "g6_supposition_hots"}},
 	}
 }
 
