@@ -316,9 +316,13 @@ func (s *Service) reconcileRequestAliasesLocked(studentID string) {
 		}
 		if durable, ok := s.records[durableID]; ok {
 			merged := mergeAssignmentRecord(toRecordDTO(durable), toRecordDTO(rec)).toRecord()
-			merged.persisted = true
-			if merged.revision < durable.revision {
-				merged.revision = durable.revision
+			// The durable record has not stored this local progress yet, even
+			// when the local record itself was persisted under its old ID.
+			hasProgress := len(rec.submitted) > 0 || rec.completed || rec.rewarded
+			merged.persisted = !hasProgress
+			merged.revision = durable.revision
+			if hasProgress {
+				merged.revision++
 			}
 			s.records[durableID] = merged
 		}

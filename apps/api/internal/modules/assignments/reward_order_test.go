@@ -133,7 +133,7 @@ func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 	ctx := context.Background()
 	store := newAssignmentMemoryStore()
-	ledger := &recordingLedger{}
+	ledger := &storeCheckingLedger{recordingLedger: &recordingLedger{}, store: store, studentID: stuUUID, t: t}
 	a := NewServiceWithDeps(nil, store, ledger)
 	b := NewServiceWithDeps(nil, store, ledger)
 	for _, svc := range []*Service{a, b} {
@@ -166,7 +166,7 @@ func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 	if _, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
 		t.Fatal("expected local answer save to fail")
 	}
-	if got := acCredited(ledger); got != 0 {
+	if got := acCredited(ledger.recordingLedger); got != 0 {
 		t.Fatalf("local completion credited before the durable alias existed: %d", got)
 	}
 
@@ -177,6 +177,7 @@ func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 	if durable.ID == localID {
 		t.Fatal("test expected the retry to use a different durable ID")
 	}
+	ledger.assignmentID = durable.ID
 	list, err := a.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0)
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +185,7 @@ func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 	if len(list) != 1 || list[0].ID != durable.ID || list[0].Status != "COMPLETE" {
 		t.Fatalf("alias reconciliation lost progress or kept a duplicate: %+v", list)
 	}
-	if got := acCredited(ledger); got != 5 {
+	if got := acCredited(ledger.recordingLedger); got != 5 {
 		t.Fatalf("expected exactly one completion reward, got %d", got)
 	}
 	if _, err := a.GetDetail(ctx, stuUUID, localID, "en"); !errors.Is(err, ErrAssignmentNotFound) {
