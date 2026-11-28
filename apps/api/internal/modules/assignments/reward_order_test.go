@@ -223,7 +223,8 @@ func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 }
 
 func TestSubmitQuestionUsesDurableIDWhenAliasCreatedDuringPersist(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
 	t.Cleanup(store.releaseNow)
@@ -336,7 +337,8 @@ func TestLoadReconciliationDropsProgressForDifferentAliasItems(t *testing.T) {
 }
 
 func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
 	t.Cleanup(store.releaseNow)
@@ -411,7 +413,8 @@ func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
 }
 
 func TestSubmitQuestionConflictsWhenAliasQuestionsDiffer(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
 	t.Cleanup(store.releaseNow)

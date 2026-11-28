@@ -112,8 +112,10 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
     },
     onError: (err, vars) => {
       if (err instanceof ApiError && err.status === 409) {
-        setActiveId(null);
-        setActionError(t("portals:assignments.assignmentChanged"));
+        if (account === vars.account) {
+          setActiveId((current) => (current === vars.assignmentId ? null : current));
+          setActionError(t("portals:assignments.assignmentChanged"));
+        }
         void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
         return;
       }

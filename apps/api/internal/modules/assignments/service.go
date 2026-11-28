@@ -770,6 +770,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	var rewardRequestID string
 	var assignmentRequestID string
 	var localItems []itemSpecDTO
+	var gradedAnswers map[string]string
 	var originalAssignmentID string
 	var submissionDiscarded bool
 	var needsReward bool
@@ -800,12 +801,14 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			// the real outcome instead of an error.
 			item := rec.items[qIndex-1]
 			prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
-			res = mathengine.Grade(prob, rec.submitted[qIndex])
+			gradedAnswers = rec.submitted[qIndex]
+			res = mathengine.Grade(prob, gradedAnswers)
 			return renderDetail(rec, locale), nil
 		}
 		item := rec.items[qIndex-1]
 		prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
-		res = mathengine.Grade(prob, answers)
+		gradedAnswers = answers
+		res = mathengine.Grade(prob, gradedAnswers)
 		rec.submitted[qIndex] = answers
 		rec.submittedAt[qIndex] = time.Now().UnixNano()
 		rec.correct[qIndex] = res.IsCorrect
@@ -839,7 +842,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 					detail = renderDetail(rec, locale)
 					submissionDiscarded = id != originalAssignmentID &&
 						(!sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
-							!sameAnswerMap(rec.submitted[qIndex], answers))
+							!sameAnswerMap(rec.submitted[qIndex], gradedAnswers))
 					break
 				}
 			}
@@ -866,7 +869,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		// The durable alias may have different questions and discarded the
 		// local completion; only credit a record that is still complete.
 		s.mu.Lock()
-		if rec, ok := s.records[rewardID]; ok && rec.completed && !rec.rewarded {
+		if rec, ok := s.records[rewardID]; ok && rec.completed && rec.persisted && !rec.rewarded {
 			rewardAC = rec.rewardAC
 			detail = renderDetail(rec, locale)
 		} else {
