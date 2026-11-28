@@ -302,6 +302,13 @@ func mergeQuizState(currentRaw []byte, snapshot quizState) (any, error) {
 			if existing.ElapsedSec > merged.ElapsedSec {
 				merged.ElapsedSec = existing.ElapsedSec
 			}
+		} else if snap.Status == "SUBMITTED" {
+			// The incoming submission is one immutable unit: keep its
+			// answers, score, and status together instead of merging stale
+			// in-progress drafts over them.
+			if existing.ElapsedSec > merged.ElapsedSec {
+				merged.ElapsedSec = existing.ElapsedSec
+			}
 		} else {
 			if snap.Score > merged.Score {
 				merged.Score = snap.Score

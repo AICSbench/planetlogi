@@ -248,6 +248,48 @@ func TestAssignmentFinalSubmissionPersistsAfterRetry(t *testing.T) {
 	}
 }
 
+func TestAssignmentReadsSurvivePendingRewardFailure(t *testing.T) {
+	const studentID = "55555555-5555-5555-5555-555555555555"
+	store := newAssignmentMemoryStore()
+	writerLedger := &recordingLedger{}
+	writer := NewServiceWithDeps(nil, store, writerLedger)
+	writer.LinkParentChild("par-1", studentID)
+	ctx := context.Background()
+
+	created, err := writer.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "Reward retry", "2026-12-01", []string{"g1_add_within_20"}, "req-reward-retry")
+	if err != nil {
+		t.Fatal(err)
+	}
+	detail, err := writer.GetDetail(ctx, studentID, created.ID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(detail.Questions[0].Question.TemplateCode, detail.Questions[0].Question.Seed, "en")
+	writerLedger.failNext = true
+	if _, _, err := writer.SubmitQuestion(ctx, studentID, created.ID, 1, prob.Solution.CorrectAnswers, "en"); !errors.Is(err, ErrRewardUnavailable) {
+		t.Fatalf("expected reward error, got %v", err)
+	}
+
+	readerLedger := &recordingLedger{failNext: true}
+	reader := NewServiceWithDeps(nil, store, readerLedger)
+	list, err := reader.ListForStudent(ctx, studentID, "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatalf("read failed while reward was pending: %v", err)
+	}
+	if len(list) != 1 || list[0].Status != "COMPLETE" {
+		t.Fatalf("completed assignment not visible: %+v", list)
+	}
+	if len(readerLedger.applied) != 0 {
+		t.Fatal("reward was credited despite the injected ledger failure")
+	}
+	if _, err := reader.ListForStudent(ctx, studentID, "ALL", "ALL", 0); err != nil {
+		t.Fatal(err)
+	}
+	if len(readerLedger.applied) != 1 {
+		t.Fatalf("pending reward was not retried: %d credits", len(readerLedger.applied))
+	}
+}
+
 func TestAssignmentListReloadsRecordsWrittenByAnotherInstance(t *testing.T) {
 	const studentID = "44444444-4444-4444-4444-444444444444"
 	store := newAssignmentMemoryStore()
@@ -268,6 +310,26 @@ func TestAssignmentListReloadsRecordsWrittenByAnotherInstance(t *testing.T) {
 	}
 	if len(list) != 1 || list[0].Title != "From another instance" {
 		t.Fatalf("reader did not reload the persisted assignment: %+v", list)
+	}
+}
+
+func TestMergeAssignmentRecordKeepsCorrectnessWithWinningAnswer(t *testing.T) {
+	existing := assignmentRecordDTO{
+		Submitted:   map[int]map[string]string{1: {"answer": "new"}},
+		SubmittedAt: map[int]int64{1: 200},
+		Correct:     map[int]bool{1: true},
+	}
+	stale := assignmentRecordDTO{
+		Submitted:   map[int]map[string]string{1: {"answer": "old"}},
+		SubmittedAt: map[int]int64{1: 100},
+		Correct:     map[int]bool{1: false},
+	}
+	merged := mergeAssignmentRecord(existing, stale)
+	if merged.Submitted[1]["answer"] != "new" {
+		t.Fatalf("older answer won the merge: %+v", merged.Submitted)
+	}
+	if !merged.Correct[1] {
+		t.Fatal("stale correctness overwrote the stored answer's result")
 	}
 }
 

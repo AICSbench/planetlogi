@@ -9,12 +9,24 @@ import { QuestionPlayer } from "../../../components/question-player/QuestionPlay
 import { apiClient, useAccountScope, useAuthStore } from "../../../store/authStore";
 
 const MAX_ELAPSED_SEC = 24 * 60 * 60;
+// Stop checkpoints after two minutes without input so an abandoned tab cannot keep
+// resetting the server's 15-minute idle gap.
+const CHECKPOINT_IDLE_MS = 2 * 60 * 1000;
 
 function formatTimer(sec: number): string {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
   return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
+}
+
+function sameAnswers(
+  a: Record<string, string> | undefined,
+  b: Record<string, string> | undefined
+): boolean {
+  if (!a || !b) return a === b;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
 }
 
 export function AstroQuizPage({ locale }: { locale: Locale }) {
@@ -93,8 +105,40 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   const checkpointRef = useRef<PaperPayload | null>(null);
   useEffect(() => {
     checkpointRef.current =
-      activePaperCode && attempt?.status !== "SUBMITTED" ? payload(drafts) : null;
+      activePaperCode && attempt?.status !== "SUBMITTED" ? payload(draftEdits) : null;
   });
+
+  const lastActivityRef = useRef(0);
+  useEffect(() => {
+    const markActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+    markActivity();
+    window.addEventListener("pointerdown", markActivity, { passive: true });
+    window.addEventListener("keydown", markActivity);
+    window.addEventListener("touchstart", markActivity, { passive: true });
+    window.addEventListener("scroll", markActivity, { passive: true });
+    return () => {
+      window.removeEventListener("pointerdown", markActivity);
+      window.removeEventListener("keydown", markActivity);
+      window.removeEventListener("touchstart", markActivity);
+      window.removeEventListener("scroll", markActivity);
+    };
+  }, []);
+
+  // Only locally edited questions are sent, so a checkpoint cannot write a stale
+  // cached answer over a newer save from another tab. An index stays dirty when
+  // the learner edited it again while the request was in flight.
+  function clearSavedDrafts(sent: Record<number, Record<string, string>>) {
+    setDraftEdits((prev) => {
+      const next = { ...prev };
+      for (const [key, answers] of Object.entries(sent)) {
+        const index = Number(key);
+        if (sameAnswers(prev[index], answers)) delete next[index];
+      }
+      return next;
+    });
+  }
 
   const saveMutation = useMutation({
     mutationFn: (p: PaperPayload) =>
@@ -102,6 +146,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     onSuccess: (updated, p) => {
       queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
       if (p.account === account && p.paperCode === activePaperCode) {
+        clearSavedDrafts(p.drafts);
         setSessionSec(secondsSince(p.sentAt));
         setActionError(null);
       }
@@ -118,6 +163,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
       queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
       void queryClient.invalidateQueries({ queryKey: ["astro-quiz-papers", p.account] });
       if (p.account === account && p.paperCode === activePaperCode) {
+        clearSavedDrafts(p.drafts);
         setSessionSec(0);
         setActionError(null);
       }
@@ -133,6 +179,8 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   useEffect(() => {
     if (!activePaperCode || attempt?.status === "SUBMITTED") return;
     const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      if (Date.now() - lastActivityRef.current > CHECKPOINT_IDLE_MS) return;
       const next = checkpointRef.current;
       if (next && next.elapsedSec > 0) saveCheckpoint(next);
     }, 60_000);
@@ -190,14 +238,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <>
                 <GalaxyButton
                   variant="secondary"
-                  onClick={() => saveMutation.mutate(payload(drafts))}
+                  onClick={() => saveMutation.mutate(payload(draftEdits))}
                   disabled={saveMutation.isPending || submitMutation.isPending}
                 >
                   {t("astro-quiz:savePaper")}
                 </GalaxyButton>
                 <GalaxyButton
                   variant="gold"
-                  onClick={() => submitMutation.mutate(payload(drafts))}
+                  onClick={() => submitMutation.mutate(payload(draftEdits))}
                   disabled={submitMutation.isPending || saveMutation.isPending}
                 >
                   {t("astro-quiz:submitPaper")}
@@ -238,7 +286,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
             ) : !attempt.supplyPodClaimedThisWeek ? (
               <GalaxyButton
                 variant="gold"
-                onClick={() => submitMutation.mutate(payload(drafts))}
+                onClick={() => submitMutation.mutate(payload(draftEdits))}
                 disabled={submitMutation.isPending}
               >
                 <Gift className="h-4 w-4" aria-hidden="true" />
@@ -293,9 +341,8 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
           }}
           onSaveDraft={(answers) => {
-            const next = { ...drafts, [activeQ.index]: answers };
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
-            return saveMutation.mutateAsync(payload(next));
+            return saveMutation.mutateAsync(payload({ [activeQ.index]: answers }));
           }}
           onSubmit={(answers) => {
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));

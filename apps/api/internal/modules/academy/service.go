@@ -358,14 +358,25 @@ func mergeLessonProgress(current, snapshot lessonProgressDTO) lessonProgressDTO 
 		snapAt := snapshot.SelfCheckUpdatedAt[key]
 		switch {
 		case !ok:
-			// Legacy/current records have no timestamp; never erase a checkmark.
-			out.SelfChecked[key] = out.SelfChecked[key] || checked
-			out.SelfCheckUpdatedAt[key] = snapAt
+			if snapAt > 0 {
+				// A timestamped explicit uncheck may clear a legacy checkmark
+				// that predates per-item timestamps.
+				out.SelfChecked[key] = checked
+				out.SelfCheckUpdatedAt[key] = snapAt
+			} else {
+				// Timestamp-free legacy snapshots must not erase a checkmark.
+				out.SelfChecked[key] = out.SelfChecked[key] || checked
+				out.SelfCheckUpdatedAt[key] = snapAt
+			}
 		case snapAt > 0 && snapAt >= at:
 			out.SelfChecked[key] = checked
 			out.SelfCheckUpdatedAt[key] = snapAt
 		case snapAt == 0:
-			out.SelfChecked[key] = out.SelfChecked[key] || checked
+			// A timestamp-free snapshot is legacy data. Only OR it into
+			// another timestamp-free record; a newer timestamped value wins.
+			if at == 0 {
+				out.SelfChecked[key] = out.SelfChecked[key] || checked
+			}
 		}
 	}
 	out.ScrollEarned = out.ScrollEarned || snapshot.ScrollEarned

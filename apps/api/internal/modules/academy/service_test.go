@@ -359,6 +359,40 @@ func TestMergeLessonProgressKeepsCompletedSelfCheck(t *testing.T) {
 	}
 }
 
+func TestMergeLessonProgressTimestampedUncheckClearsLegacyCheck(t *testing.T) {
+	current := lessonProgressDTO{
+		SelfChecked: map[string]bool{"count_20": true},
+	}
+	snapshot := lessonProgressDTO{
+		SelfChecked:        map[string]bool{"count_20": false},
+		SelfCheckUpdatedAt: map[string]int64{"count_20": 100},
+	}
+	merged := mergeLessonProgress(current, snapshot)
+	if merged.SelfChecked["count_20"] {
+		t.Fatal("timestamped uncheck did not clear the legacy checkmark")
+	}
+	if merged.SelfCheckUpdatedAt["count_20"] != 100 {
+		t.Fatalf("unexpected self-check timestamp: %d", merged.SelfCheckUpdatedAt["count_20"])
+	}
+}
+
+func TestMergeLessonProgressIgnoresStaleLegacyCheck(t *testing.T) {
+	current := lessonProgressDTO{
+		SelfChecked:        map[string]bool{"count_20": false},
+		SelfCheckUpdatedAt: map[string]int64{"count_20": 200},
+	}
+	snapshot := lessonProgressDTO{
+		SelfChecked: map[string]bool{"count_20": true},
+	}
+	merged := mergeLessonProgress(current, snapshot)
+	if merged.SelfChecked["count_20"] {
+		t.Fatal("stale legacy checkmark overwrote a newer timestamped uncheck")
+	}
+	if merged.SelfCheckUpdatedAt["count_20"] != 200 {
+		t.Fatalf("newer timestamp was replaced: %d", merged.SelfCheckUpdatedAt["count_20"])
+	}
+}
+
 func TestMergeLessonProgressKeepsNewerDraft(t *testing.T) {
 	current := lessonProgressDTO{
 		Drafts:         map[int]map[string]string{1: {"answer": "new"}},

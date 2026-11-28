@@ -362,6 +362,33 @@ func TestMergeQuizStateKeepsSubmittedAnswers(t *testing.T) {
 	}
 }
 
+func TestMergeQuizStateKeepsIncomingSubmittedUnit(t *testing.T) {
+	current := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status:         "IN_PROGRESS",
+			Drafts:         map[int]map[string]string{1: {"answer": "stale-newer"}},
+			DraftUpdatedAt: map[int]int64{1: 200},
+		},
+	}}
+	raw, _ := json.Marshal(current)
+	snapshot := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status:         "SUBMITTED",
+			Score:          9,
+			Drafts:         map[int]map[string]string{1: {"answer": "submitted"}},
+			DraftUpdatedAt: map[int]int64{1: 100},
+		},
+	}}
+	merged, err := mergeQuizState(raw, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := merged.(quizState).Attempts["G1-ESS-01"]
+	if rec.Status != "SUBMITTED" || rec.Score != 9 || rec.Drafts[1]["answer"] != "submitted" {
+		t.Fatalf("submitted snapshot was split by draft merge: %+v", rec)
+	}
+}
+
 func TestStaleInstanceUsesPersistedClaimWeek(t *testing.T) {
 	const studentID = "44444444-4444-4444-4444-444444444444"
 	store := newQuizMemoryStore()

@@ -261,7 +261,10 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 				SourceID:       rec.id,
 				IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rec.id, studentID),
 			}); err != nil {
-				return err
+				// Reads must stay available while a reward is retryable; the
+				// next load or submission attempt will reconcile it.
+				slog.WarnContext(ctx, "assignment reward reconciliation failed", "assignment", rec.id, "err", err)
+				continue
 			}
 			s.mu.Lock()
 			rec.rewarded = true
@@ -288,18 +291,22 @@ func mergeAssignmentRecord(existing, snap assignmentRecordDTO) assignmentRecordD
 		submitted[q] = answers
 		submittedAt[q] = existing.SubmittedAt[q]
 	}
-	for q, answers := range snap.Submitted {
-		if at, ok := existing.SubmittedAt[q]; !ok || snap.SubmittedAt[q] >= at {
-			submitted[q] = answers
-			submittedAt[q] = snap.SubmittedAt[q]
-		}
-	}
 	correct := make(map[int]bool, len(existing.Correct)+len(snap.Correct))
 	for q, ok := range existing.Correct {
 		correct[q] = ok
 	}
-	for q, ok := range snap.Correct {
-		correct[q] = ok
+	for q, answers := range snap.Submitted {
+		if at, ok := existing.SubmittedAt[q]; !ok || snap.SubmittedAt[q] >= at {
+			submitted[q] = answers
+			submittedAt[q] = snap.SubmittedAt[q]
+			// Correctness travels with the answer and timestamp that won the
+			// merge; a losing snapshot must not overwrite the stored result.
+			if val, exists := snap.Correct[q]; exists {
+				correct[q] = val
+			} else {
+				delete(correct, q)
+			}
+		}
 	}
 	merged.Submitted = submitted
 	merged.SubmittedAt = submittedAt
