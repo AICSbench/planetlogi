@@ -33,7 +33,8 @@
     "assigningTo": "Dikirim ke {{name}} (Kelas {{grade}})",
     "childLoadError": "Belum ada anak terhubung. Buka Portal Orang Tua untuk menautkan anak.",
     "childLabel": "Anak",
-    "childOption": "{{name}} (Kelas {{grade}})"
+    "childOption": "{{name}} (Kelas {{grade}})",
+    "assignmentChanged": "Tugas ini berubah saat kamu menjawab. Buka kembali dari daftar yang sudah diperbarui."
   },
   "profile": {
     "title": "Profil & Pengaturan Keluarga",

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ApiError } from "@planetlogi/api-client";
 import type { Locale } from "@planetlogi/i18n";
 import { CurrencyPill, GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
@@ -109,7 +110,15 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
       setActionError(null);
     },
-    onError: () => setActionError(t("portals:assignments.submitError")),
+    onError: (err, vars) => {
+      if (err instanceof ApiError && err.status === 409) {
+        setActiveId(null);
+        setActionError(t("portals:assignments.assignmentChanged"));
+        void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
+        return;
+      }
+      setActionError(t("portals:assignments.submitError"));
+    },
   });
 
   if (activeId && detailQuery.isError) {

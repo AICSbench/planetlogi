@@ -289,7 +289,7 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 			if rec == nil {
 				rec = s.records[p.id]
 			}
-			if rec != nil && rec.completed && !rec.rewarded {
+			if rec != nil && rec.completed && !rec.rewarded && rec.persisted {
 				resolved = append(resolved, rec)
 			}
 		}
@@ -357,6 +357,18 @@ func (s *Service) reconcileRequestAliasesLocked(studentID string) {
 		}
 		delete(s.records, id)
 	}
+}
+
+func sameAnswerMap(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for key, value := range a {
+		if b[key] != value {
+			return false
+		}
+	}
+	return true
 }
 
 func sameAssignmentItems(a, b []itemSpecDTO) bool {
@@ -457,6 +469,10 @@ func mergeAssignmentStateAliases(currentRaw []byte, snapshot assignmentState) (a
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
+	return s.persistStudentAttempt(ctx, studentID, true)
+}
+
+func (s *Service) persistStudentAttempt(ctx context.Context, studentID string, allowRetry bool) error {
 	if s.store == nil || !isUUID(studentID) {
 		s.mu.Lock()
 		for _, rec := range s.records {
@@ -496,9 +512,8 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	// A concurrent create (e.g. on another instance) with the same request ID won the durable
 	// slot: drop our local duplicate and adopt the stored record, so responses and later reads
 	// use an ID every instance can load.
+	needsSecondSave := false
 	for localID, durableID := range aliases {
-		delete(s.records, localID)
-		delete(revisions, localID)
 		if _, ok := s.records[durableID]; !ok {
 			if dto, ok := durable.Records[durableID]; ok {
 				rec := dto.toRecord()
@@ -506,6 +521,20 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 				s.records[durableID] = rec
 			}
 		}
+		local, localExists := s.records[localID]
+		if localExists && local.revision != revisions[localID] {
+			// Progress arrived after the save snapshot; carry it into the
+			// durable record and persist again before acknowledging.
+			if durableRec, ok := s.records[durableID]; ok {
+				merged := mergeAssignmentRecord(toRecordDTO(durableRec), toRecordDTO(local)).toRecord()
+				merged.persisted = false
+				merged.revision = durableRec.revision + 1
+				s.records[durableID] = merged
+				needsSecondSave = true
+			}
+		}
+		delete(s.records, localID)
+		delete(revisions, localID)
 	}
 	for id, rec := range s.records {
 		if rec.studentID == studentID && rec.revision == revisions[id] {
@@ -513,6 +542,9 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		}
 	}
 	s.mu.Unlock()
+	if needsSecondSave && allowRetry {
+		return s.persistStudentAttempt(ctx, studentID, false)
+	}
 	return nil
 }
 
@@ -738,6 +770,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	var rewardRequestID string
 	var assignmentRequestID string
 	var localItems []itemSpecDTO
+	var originalAssignmentID string
 	var submissionDiscarded bool
 	var needsReward bool
 	detail, err := func() (AssignmentDetail, error) {
@@ -747,6 +780,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		}
 		assignmentRequestID = rec.requestID
 		localItems = toRecordDTO(rec).Items
+		originalAssignmentID = rec.id
 		if qIndex < 1 || qIndex > len(rec.items) {
 			return AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 		}
@@ -803,7 +837,9 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 				if rec.studentID == studentID && rec.requestID == assignmentRequestID {
 					assignmentID = id
 					detail = renderDetail(rec, locale)
-					submissionDiscarded = !sameAssignmentItems(localItems, toRecordDTO(rec).Items)
+					submissionDiscarded = id != originalAssignmentID &&
+						(!sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
+							!sameAnswerMap(rec.submitted[qIndex], answers))
 					break
 				}
 			}

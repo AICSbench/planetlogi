@@ -87,11 +87,16 @@ func (l *storeCheckingLedger) ApplyBatch(ctx context.Context, reqs []economy.Mut
 
 type blockingAssignmentStore struct {
 	*assignmentMemoryStore
-	mu      sync.Mutex
-	armed   bool
-	blocked bool
-	entered chan struct{}
-	release chan struct{}
+	mu          sync.Mutex
+	armed       bool
+	blocked     bool
+	entered     chan struct{}
+	release     chan struct{}
+	releaseOnce sync.Once
+}
+
+func (b *blockingAssignmentStore) releaseNow() {
+	b.releaseOnce.Do(func() { close(b.release) })
 }
 
 func (b *blockingAssignmentStore) SaveMerged(ctx context.Context, studentID, module string, merge func([]byte) (any, error)) error {
@@ -221,6 +226,7 @@ func TestSubmitQuestionUsesDurableIDWhenAliasCreatedDuringPersist(t *testing.T) 
 	ctx := context.Background()
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	t.Cleanup(store.releaseNow)
 	ledger := &recordingLedger{}
 	a := NewServiceWithDeps(nil, store, ledger)
 	b := NewServiceWithDeps(nil, store, ledger)
@@ -263,9 +269,14 @@ func TestSubmitQuestionUsesDurableIDWhenAliasCreatedDuringPersist(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	close(store.release)
-	if err := <-result; err != nil {
-		t.Fatal(err)
+	store.releaseNow()
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("SubmitQuestion stalled after release")
 	}
 	if got := acCredited(ledger); got != 5 {
 		t.Fatalf("expected one credit, got %d", got)
@@ -328,6 +339,7 @@ func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
 	ctx := context.Background()
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	t.Cleanup(store.releaseNow)
 	ledger := &recordingLedger{}
 	a := NewServiceWithDeps(nil, store, ledger)
 	b := NewServiceWithDeps(nil, store, ledger)
@@ -378,8 +390,13 @@ func TestLoadReconciliationUsesDurableAliasIDForReward(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	close(store.release)
-	res := <-result
+	store.releaseNow()
+	var res listResult
+	select {
+	case res = <-result:
+	case <-time.After(2 * time.Second):
+		t.Fatal("ListForStudent stalled after release")
+	}
 	if res.err != nil {
 		t.Fatal(res.err)
 	}
@@ -397,6 +414,7 @@ func TestSubmitQuestionConflictsWhenAliasQuestionsDiffer(t *testing.T) {
 	ctx := context.Background()
 	base := newAssignmentMemoryStore()
 	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	t.Cleanup(store.releaseNow)
 	ledger := &recordingLedger{}
 	a := NewServiceWithDeps(nil, store, ledger)
 	b := NewServiceWithDeps(nil, store, ledger)
@@ -438,9 +456,14 @@ func TestSubmitQuestionConflictsWhenAliasQuestionsDiffer(t *testing.T) {
 	if _, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_sub_within_20"}, "req-diff-race"); err != nil {
 		t.Fatal(err)
 	}
-	close(store.release)
-	if err := <-result; !errors.Is(err, ErrSubmissionConflict) {
-		t.Fatalf("expected a discarded-submission conflict, got %v", err)
+	store.releaseNow()
+	select {
+	case err := <-result:
+		if !errors.Is(err, ErrSubmissionConflict) {
+			t.Fatalf("expected a discarded-submission conflict, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("SubmitQuestion stalled after release")
 	}
 	if got := acCredited(ledger); got != 0 {
 		t.Fatalf("discarded submission was rewarded: %d", got)

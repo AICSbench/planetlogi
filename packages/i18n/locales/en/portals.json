@@ -33,7 +33,8 @@
     "assigningTo": "Assigning to {{name}} (Grade {{grade}})",
     "childLoadError": "No linked child found. Open the Parent Portal to link a child first.",
     "childLabel": "Child",
-    "childOption": "{{name}} (Grade {{grade}})"
+    "childOption": "{{name}} (Grade {{grade}})",
+    "assignmentChanged": "This assignment changed while you were answering. Reopen it from the updated list."
   },
   "profile": {
     "title": "Profile & Family Settings",
