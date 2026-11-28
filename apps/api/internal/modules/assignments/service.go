@@ -251,6 +251,22 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 			}
 		}
 		s.mu.Unlock()
+		needsPersist := false
+		for _, rec := range pending {
+			if !rec.persisted {
+				needsPersist = true
+				break
+			}
+		}
+		if needsPersist {
+			// The completed answer must be durable before its reward is
+			// credited; if storage is unavailable, defer the credit and keep
+			// read-only assignment loading available.
+			if err := s.persistStudent(ctx, studentID); err != nil {
+				slog.WarnContext(ctx, "assignment completion persist failed; reward deferred", "err", err)
+				return nil
+			}
+		}
 		awarded := false
 		for _, rec := range pending {
 			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
@@ -282,7 +298,9 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 }
 
 func mergeAssignmentRecord(existing, snap assignmentRecordDTO) assignmentRecordDTO {
-	merged := snap
+	// Assignment identity and question seeds are immutable once durable; only
+	// progress and reward state may be merged from a concurrent snapshot.
+	merged := existing
 	merged.Completed = existing.Completed || snap.Completed
 	merged.Rewarded = existing.Rewarded || snap.Rewarded
 	submitted := make(map[int]map[string]string, len(existing.Submitted)+len(snap.Submitted))

@@ -219,8 +219,9 @@ func TestPapersMatchContentManifest(t *testing.T) {
 }
 
 type quizMemoryStore struct {
-	mu   sync.Mutex
-	data map[string][]byte
+	mu        sync.Mutex
+	data      map[string][]byte
+	failAfter int
 }
 
 func newQuizMemoryStore() *quizMemoryStore {
@@ -253,6 +254,12 @@ func (m *quizMemoryStore) Save(_ context.Context, studentID, module string, valu
 func (m *quizMemoryStore) SaveMerged(_ context.Context, studentID, module string, merge func([]byte) (any, error)) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.failAfter > 0 {
+		m.failAfter--
+		if m.failAfter == 0 {
+			return errors.New("store temporarily unavailable")
+		}
+	}
 	key := m.key(studentID, module)
 	merged, err := merge(m.data[key])
 	if err != nil {
@@ -389,6 +396,109 @@ func TestMergeQuizStateKeepsIncomingSubmittedUnit(t *testing.T) {
 	}
 }
 
+func TestSupplyPodRetryableUsesPaperClaimWeek(t *testing.T) {
+	const studentID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	store := newQuizMemoryStore()
+	ledger := &recordingLedger{failNext: true}
+	svc := NewServiceWithStore(store, ledger)
+	week1 := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
+	week2 := week1.AddDate(0, 0, 8)
+	svc.nowClock = func() time.Time { return week1 }
+	ctx := context.Background()
+
+	a, err := svc.OpenPaper(ctx, studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	aDrafts := map[int]map[string]string{}
+	for _, q := range a.Questions {
+		prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
+		aDrafts[q.Index] = prob.Solution.CorrectAnswers
+	}
+	if _, err := svc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, aDrafts); !errors.Is(err, ErrRewardUnavailable) {
+		t.Fatalf("expected A's credit to fail, got %v", err)
+	}
+	if view, err := svc.OpenPaper(ctx, studentID, "G1-ESS-01", "en"); err != nil || !view.SupplyPodRetryable {
+		t.Fatalf("paper A should be retryable in its own week: %+v err=%v", view, err)
+	}
+
+	svc.nowClock = func() time.Time { return week2 }
+	b, err := svc.OpenPaper(ctx, studentID, "G1-TOP-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bDrafts := map[int]map[string]string{}
+	for _, q := range b.Questions {
+		prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
+		bDrafts[q.Index] = prob.Solution.CorrectAnswers
+	}
+	if _, err := svc.SubmitPaper(ctx, studentID, "G1-TOP-01", "en", 0, bDrafts); err != nil {
+		t.Fatal(err)
+	}
+
+	view, err := svc.OpenPaper(ctx, studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !view.SupplyPodRetryable {
+		t.Fatal("paper A's W1 claim is still pending, but the current-week flag hid Retry")
+	}
+	if !view.SupplyPodClaimedWk {
+		t.Fatal("test expected the current week to be claimed by paper B")
+	}
+	if _, err := svc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, map[int]map[string]string{}); err != nil {
+		t.Fatal(err)
+	}
+	if got := ledger.totalAC(); got != 2*WeeklySupplyPodRewardAC {
+		t.Fatalf("expected W1 and W2 credits, got %d", got)
+	}
+}
+
+func TestSupplyPodAwardSurvivesFailedFinalPersist(t *testing.T) {
+	const studentID = "99999999-9999-9999-9999-999999999999"
+	store := newQuizMemoryStore()
+	ledger := &recordingLedger{}
+	svc := NewServiceWithStore(store, ledger)
+	ctx := context.Background()
+
+	opened, err := svc.OpenPaper(ctx, studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	drafts := map[int]map[string]string{}
+	for _, q := range opened.Questions {
+		prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
+		drafts[q.Index] = prob.Solution.CorrectAnswers
+	}
+
+	// Let the submission persist, then fail the post-ledger persist.
+	store.failAfter = 2
+	if _, err := svc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, drafts); err == nil {
+		t.Fatal("expected the final persist to fail")
+	}
+	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
+		t.Fatalf("expected one ledger credit, got %d", got)
+	}
+
+	view, err := svc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, map[int]map[string]string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !view.SupplyPodAwarded {
+		t.Fatal("paper lost its Supply Pod badge after the failed final write")
+	}
+	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
+		t.Fatalf("retry credited the pod twice: %d", got)
+	}
+	var stored quizState
+	if _, err := store.Load(ctx, studentID, "astroquiz", &stored); err != nil {
+		t.Fatal(err)
+	}
+	if !stored.Attempts["G1-ESS-01"].SupplyPodAwarded {
+		t.Fatal("durable attempt lost the Supply Pod badge")
+	}
+}
+
 func TestSubmitGradesDurableDraftsAcrossInstances(t *testing.T) {
 	const studentID = "77777777-7777-7777-7777-777777777777"
 	store := newQuizMemoryStore()
@@ -423,6 +533,8 @@ func TestSubmitGradesDurableDraftsAcrossInstances(t *testing.T) {
 	}
 	if got := stored.Attempts["G1-ESS-01"]; got.Status != "SUBMITTED" || got.Score != 1 {
 		t.Fatalf("durable submission did not keep the graded answer: %+v", got)
+	} else if got.Drafts[1]["answer"] != prob.Solution.CorrectAnswers["answer"] {
+		t.Fatalf("durable submission lost the graded Q1 answer: %+v", got.Drafts[1])
 	}
 }
 

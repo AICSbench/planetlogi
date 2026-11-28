@@ -25,4 +25,8 @@ func TestSupplyPodLedgerFailureIsRetryable(t *testing.T) {
 	if !errors.Is(err, ErrRewardUnavailable) {
 		t.Fatalf("expected ErrRewardUnavailable, got %v", err)
 	}
+	var statusErr interface{ GetStatus() int }
+	if !errors.As(toHTTPError(context.Background(), err), &statusErr) || statusErr.GetStatus() != 503 {
+		t.Fatalf("expected HTTP 503 for a retryable reward failure, got %v", toHTTPError(context.Background(), err))
+	}
 }

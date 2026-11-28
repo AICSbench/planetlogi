@@ -1586,6 +1586,9 @@
           "supplyPodClaimedThisWeek": {
             "type": "boolean"
           },
+          "supplyPodRetryable": {
+            "type": "boolean"
+          },
           "title": {
             "type": "string"
           },
@@ -1605,6 +1608,7 @@
           "totalQuestions",
           "supplyPodAwarded",
           "supplyPodClaimedThisWeek",
+          "supplyPodRetryable",
           "questions"
         ],
         "type": "object"

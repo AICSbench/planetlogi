@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Clock, Gift, Printer } from "lucide-react";
+import type { AstroQuizAttemptView } from "@planetlogi/api-client";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
@@ -20,14 +21,6 @@ function formatTimer(sec: number): string {
   return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
 }
 
-function sameAnswers(
-  a: Record<string, string> | undefined,
-  b: Record<string, string> | undefined
-): boolean {
-  if (!a || !b) return a === b;
-  const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
-}
 
 export function AstroQuizPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["astro-quiz", "common"]);
@@ -91,21 +84,41 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     sentAt: number;
     elapsedSec: number;
     drafts: Record<number, Record<string, string>>;
+    revisions: Record<number, number>;
   };
-  const payload = (d: Record<number, Record<string, string>>): PaperPayload => ({
+  const payload = (
+    d: Record<number, Record<string, string>>,
+    revisions: Record<number, number>
+  ): PaperPayload => ({
     account,
     paperCode: activePaperCode!,
     locale,
     sentAt: Date.now(),
     elapsedSec,
     drafts: d,
+    revisions,
   });
+  const draftRevisionsRef = useRef<Record<number, number>>({});
+  function markDraft(index: number, answers: Record<string, string>): number {
+    const revision = (draftRevisionsRef.current[index] ?? 0) + 1;
+    draftRevisionsRef.current[index] = revision;
+    setDraftEdits((prev) => ({ ...prev, [index]: answers }));
+    return revision;
+  }
+  function dirtyPayload(): PaperPayload {
+    const revisions: Record<number, number> = {};
+    for (const key of Object.keys(draftEdits)) {
+      const index = Number(key);
+      revisions[index] = draftRevisionsRef.current[index] ?? 0;
+    }
+    return payload(draftEdits, revisions);
+  }
   const secondsSince = (sentAt: number) => Math.max(0, Math.floor((Date.now() - sentAt) / 1000));
 
   const checkpointRef = useRef<PaperPayload | null>(null);
   useEffect(() => {
     checkpointRef.current =
-      activePaperCode && attempt?.status !== "SUBMITTED" ? payload(draftEdits) : null;
+      activePaperCode && attempt?.status !== "SUBMITTED" ? dirtyPayload() : null;
   });
 
   const lastActivityRef = useRef(0);
@@ -129,12 +142,17 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   // Only locally edited questions are sent, so a checkpoint cannot write a stale
   // cached answer over a newer save from another tab. An index stays dirty when
   // the learner edited it again while the request was in flight.
-  function clearSavedDrafts(sent: Record<number, Record<string, string>>) {
+  function clearSavedDrafts(
+    sent: Record<number, Record<string, string>>,
+    sentRevisions: Record<number, number>
+  ) {
     setDraftEdits((prev) => {
       const next = { ...prev };
-      for (const [key, answers] of Object.entries(sent)) {
+      for (const key of Object.keys(sent)) {
         const index = Number(key);
-        if (sameAnswers(prev[index], answers)) delete next[index];
+        // An edit that happened after the request was sent keeps the draft
+        // dirty even when its value happens to match the saved value again.
+        if (draftRevisionsRef.current[index] === sentRevisions[index]) delete next[index];
       }
       return next;
     });
@@ -144,9 +162,13 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     mutationFn: (p: PaperPayload) =>
       apiClient.saveAstroQuizPaper(p.paperCode, p.elapsedSec, p.drafts, p.locale),
     onSuccess: (updated, p) => {
-      queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
+      queryClient.setQueryData<AstroQuizAttemptView>(
+        ["astro-quiz-attempt", p.account, p.paperCode, p.locale],
+        (current) =>
+          current?.status === "SUBMITTED" && updated.status === "IN_PROGRESS" ? current : updated
+      );
       if (p.account === account && p.paperCode === activePaperCode) {
-        clearSavedDrafts(p.drafts);
+        clearSavedDrafts(p.drafts, p.revisions);
         setSessionSec(secondsSince(p.sentAt));
         setActionError(null);
       }
@@ -160,10 +182,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     mutationFn: (p: PaperPayload) =>
       apiClient.submitAstroQuizPaper(p.paperCode, p.elapsedSec, p.drafts, p.locale),
     onSuccess: (updated, p) => {
-      queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
+      queryClient.setQueryData<AstroQuizAttemptView>(
+        ["astro-quiz-attempt", p.account, p.paperCode, p.locale],
+        (current) =>
+          current?.status === "SUBMITTED" && updated.status === "IN_PROGRESS" ? current : updated
+      );
       void queryClient.invalidateQueries({ queryKey: ["astro-quiz-papers", p.account] });
       if (p.account === account && p.paperCode === activePaperCode) {
-        clearSavedDrafts(p.drafts);
+        clearSavedDrafts(p.drafts, p.revisions);
         setSessionSec(0);
         setActionError(null);
       }
@@ -177,7 +203,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   // the learner works for more than the 15-minute idle gap without saving.
   const saveCheckpoint = saveMutation.mutate;
   useEffect(() => {
-    if (!activePaperCode || attempt?.status === "SUBMITTED") return;
+    if (!activePaperCode || attempt?.status === "SUBMITTED" || submitMutation.isPending) return;
     const id = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
       if (Date.now() - lastActivityRef.current > CHECKPOINT_IDLE_MS) return;
@@ -185,7 +211,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
       if (next && next.elapsedSec > 0) saveCheckpoint(next);
     }, 60_000);
     return () => window.clearInterval(id);
-  }, [activePaperCode, attempt?.status, saveCheckpoint]);
+  }, [activePaperCode, attempt?.status, saveCheckpoint, submitMutation.isPending]);
 
   if (activePaperCode && attemptQuery.isError) {
     return (
@@ -238,14 +264,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <>
                 <GalaxyButton
                   variant="secondary"
-                  onClick={() => saveMutation.mutate(payload(draftEdits))}
+                  onClick={() => saveMutation.mutate(dirtyPayload())}
                   disabled={saveMutation.isPending || submitMutation.isPending}
                 >
                   {t("astro-quiz:savePaper")}
                 </GalaxyButton>
                 <GalaxyButton
                   variant="gold"
-                  onClick={() => submitMutation.mutate(payload(draftEdits))}
+                  onClick={() => submitMutation.mutate(dirtyPayload())}
                   disabled={submitMutation.isPending || saveMutation.isPending}
                 >
                   {t("astro-quiz:submitPaper")}
@@ -283,10 +309,10 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">
                 {t("astro-quiz:supplyPodBadge")}
               </span>
-            ) : !attempt.supplyPodClaimedThisWeek ? (
+            ) : attempt.supplyPodRetryable ? (
               <GalaxyButton
                 variant="gold"
-                onClick={() => submitMutation.mutate(payload(draftEdits))}
+                onClick={() => submitMutation.mutate(dirtyPayload())}
                 disabled={submitMutation.isPending}
               >
                 <Gift className="h-4 w-4" aria-hidden="true" />
@@ -338,19 +364,21 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           submitting={submitMutation.isPending}
           workedSolution={submitted ? (activeQ.workedSolution ?? null) : null}
           onDraftChange={(answers) => {
-            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+            markDraft(activeQ.index, answers);
           }}
           onSaveDraft={(answers) => {
             // Saving an untouched cached answer would let a stale tab
             // overwrite a newer save from another tab. Returning false keeps
             // QuestionPlayer from claiming the unchanged answer was saved.
             if (draftEdits[activeQ.index] === undefined) return Promise.resolve(false);
-            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
-            return saveMutation.mutateAsync(payload({ [activeQ.index]: answers }));
+            const revision = markDraft(activeQ.index, answers);
+            return saveMutation.mutateAsync(
+              payload({ [activeQ.index]: answers }, { [activeQ.index]: revision })
+            );
           }}
           onSubmit={(answers) => {
             if (draftEdits[activeQ.index] !== undefined) {
-              setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+              markDraft(activeQ.index, answers);
             }
             if (activeQ.index < attempt.questions.length) {
               setQIdx(activeQ.index + 1);

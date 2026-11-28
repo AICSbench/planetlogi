@@ -212,8 +212,9 @@ func TestCatalogMatchesContentManifest(t *testing.T) {
 }
 
 type memoryStore struct {
-	mu   sync.Mutex
-	data map[string][]byte
+	mu       sync.Mutex
+	data     map[string][]byte
+	failNext bool
 }
 
 func newMemoryStore() *memoryStore {
@@ -246,6 +247,10 @@ func (m *memoryStore) Save(_ context.Context, studentID, module string, value an
 func (m *memoryStore) SaveMerged(_ context.Context, studentID, module string, merge func([]byte) (any, error)) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.failNext {
+		m.failNext = false
+		return errors.New("store temporarily unavailable")
+	}
 	key := m.key(studentID, module)
 	merged, err := merge(m.data[key])
 	if err != nil {
@@ -257,6 +262,56 @@ func (m *memoryStore) SaveMerged(_ context.Context, studentID, module string, me
 	}
 	m.data[key] = raw
 	return nil
+}
+
+func TestRetryScrollPersistsProgressBeforeCredit(t *testing.T) {
+	const studentID = "88888888-8888-8888-8888-888888888888"
+	store := newMemoryStore()
+	ledger := &recordingLedger{}
+	svc := NewServiceWithStore(store, ledger)
+	ctx := context.Background()
+
+	lesson, err := svc.GetLesson(ctx, studentID, "g1-wn-l1", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range lesson.DoAndLearn {
+		prob, _ := mathengine.GenerateByCode(item.Question.TemplateCode, item.Question.Seed, "en")
+		if item.Index == 4 {
+			store.failNext = true
+		}
+		_, _, err := svc.CheckAnswer(ctx, studentID, "g1-wn-l1", "en", item.Index, prob.Solution.CorrectAnswers)
+		if item.Index == 4 {
+			if err == nil {
+				t.Fatal("expected the pre-credit save to fail")
+			}
+		} else if err != nil {
+			t.Fatalf("check q%d: %v", item.Index, err)
+		}
+	}
+	if got := ledger.scrolls(); got != 0 {
+		t.Fatalf("credit applied before progress was durable: %d", got)
+	}
+
+	// Storage is still down: the retry must not credit the scroll.
+	store.failNext = true
+	if _, err := svc.RetryScrollAward(ctx, studentID, "g1-wn-l1", "en"); err == nil {
+		t.Fatal("expected retry to fail while storage is unavailable")
+	}
+	if got := ledger.scrolls(); got != 0 {
+		t.Fatalf("retry credited before progress was durable: %d", got)
+	}
+
+	detail, err := svc.RetryScrollAward(ctx, studentID, "g1-wn-l1", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !detail.ScrollEarned {
+		t.Fatal("expected scroll after storage recovered")
+	}
+	if got := ledger.scrolls(); got != 1 {
+		t.Fatalf("expected exactly one credit, got %d", got)
+	}
 }
 
 func TestAcademyRetryScrollAfterReload(t *testing.T) {

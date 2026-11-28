@@ -98,6 +98,7 @@ type PaperAttemptView struct {
 	TotalQuestions     int             `json:"totalQuestions"`
 	SupplyPodAwarded   bool            `json:"supplyPodAwarded"`
 	SupplyPodClaimedWk bool            `json:"supplyPodClaimedThisWeek"`
+	SupplyPodRetryable bool            `json:"supplyPodRetryable"`
 	Questions          []PaperQuestion `json:"questions"`
 }
 
@@ -456,6 +457,14 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 			snapshotWeekly[key] = true
 		}
 	}
+	var localAwarded bool
+	var localClaimWeek string
+	if attempts := s.attempts[studentID]; attempts != nil {
+		if local := attempts[p.code]; local != nil {
+			localAwarded = local.supplyPodAwarded
+			localClaimWeek = local.claimWeek
+		}
+	}
 	s.mu.Unlock()
 
 	now := s.nowClock()
@@ -481,6 +490,13 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 			current.Weekly[key] = current.Weekly[key] || claimed
 		}
 		submitted = mergeSubmissionAttempt(current.Attempts[p.code], p, drafts, locale, claimWeek, now)
+		if localAwarded && localClaimWeek != "" && submitted.ClaimWeek == localClaimWeek {
+			// The ledger already credited this paper before a failed final
+			// write; keep its badge and weekly claim on retry.
+			submitted.SupplyPodAwarded = true
+			submitted.RewardClaimed = true
+			current.Weekly[studentID+":"+localClaimWeek] = true
+		}
 		current.Attempts[p.code] = submitted
 		mergedWeekly = make(map[string]bool, len(current.Weekly))
 		for key, claimed := range current.Weekly {
@@ -814,6 +830,10 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 		qs[i] = pq
 	}
 
+	retryable := st.status == "SUBMITTED" && !st.supplyPodAwarded && !st.rewardClaimed
+	if retryable && st.claimWeek != "" {
+		retryable = !s.weeklySupplyPod[studentID+":"+st.claimWeek]
+	}
 	return PaperAttemptView{
 		PaperCode:          p.code,
 		Title:              p.title.For(locale),
@@ -825,6 +845,7 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 		TotalQuestions:     10,
 		SupplyPodAwarded:   st.supplyPodAwarded,
 		SupplyPodClaimedWk: s.weeklySupplyPod[studentID+":"+s.currentWeekKey(ctx)],
+		SupplyPodRetryable: retryable,
 		Questions:          qs,
 	}
 }

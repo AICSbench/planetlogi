@@ -684,21 +684,28 @@ func (s *Service) RetryScrollAward(ctx context.Context, studentID, lessonCode, l
 		s.getProgLocked(studentID, lessonCode).scrollEarned = true
 		detail = s.buildLessonDetailLocked(l, s.getProgLocked(studentID, lessonCode), locale)
 		s.mu.Unlock()
-	} else if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
-		StudentID:      studentID,
-		Currency:       economy.CurrencyScroll,
-		Delta:          1,
-		SourceType:     "SPACE_ACADEMY",
-		SourceID:       lessonCode,
-		IdempotencyKey: fmt.Sprintf("academy_scroll:%s:%s", studentID, lessonCode),
-	}); err != nil {
-		awardErr = fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
 	} else {
-		s.mu.Lock()
-		p = s.getProgLocked(studentID, lessonCode)
-		p.scrollEarned = true
-		detail = s.buildLessonDetailLocked(l, p, locale)
-		s.mu.Unlock()
+		// The four solved answers must be durable before the ledger credit;
+		// otherwise a failed save leaves a credited scroll without progress.
+		if err := s.persistStudent(ctx, studentID); err != nil {
+			return detail, err
+		}
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			StudentID:      studentID,
+			Currency:       economy.CurrencyScroll,
+			Delta:          1,
+			SourceType:     "SPACE_ACADEMY",
+			SourceID:       lessonCode,
+			IdempotencyKey: fmt.Sprintf("academy_scroll:%s:%s", studentID, lessonCode),
+		}); err != nil {
+			awardErr = fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
+		} else {
+			s.mu.Lock()
+			p = s.getProgLocked(studentID, lessonCode)
+			p.scrollEarned = true
+			detail = s.buildLessonDetailLocked(l, p, locale)
+			s.mu.Unlock()
+		}
 	}
 	if err := s.persistStudent(ctx, studentID); err != nil {
 		return detail, err

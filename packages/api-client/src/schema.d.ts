@@ -1280,6 +1280,7 @@ export interface components {
             status: string;
             supplyPodAwarded: boolean;
             supplyPodClaimedThisWeek: boolean;
+            supplyPodRetryable: boolean;
             title: string;
             /** Format: int64 */
             totalQuestions: number;
