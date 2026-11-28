@@ -381,7 +381,7 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 		if err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, err
 		}
-		defer tx.Rollback(context.Background())
+		defer func() { _ = tx.Rollback(ctx) }()
 		sess, err = s.loadSessionPG(ctx, tx, sessionID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("practice session not found")
