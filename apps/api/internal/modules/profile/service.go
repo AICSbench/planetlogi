@@ -186,7 +186,7 @@ func (s *Service) UpdateSettings(ctx context.Context, studentID string, actor au
 	return *b, nil
 }
 
-func (s *Service) GetParentOverview(studentID, locale string) ParentChildOverview {
+func (s *Service) GetParentOverview(studentID, locale string) (ParentChildOverview, error) {
 	s.mu.Lock()
 	bundle := *s.getOrCreateLocked(studentID)
 	s.mu.Unlock()
@@ -199,12 +199,18 @@ func (s *Service) GetParentOverview(studentID, locale string) ParentChildOvervie
 		StrengthSkills: []training.SkillView{},
 	}
 	if s.streakSvc != nil {
-		st := s.streakSvc.GetStatus(studentID, "Asia/Jakarta")
+		st, err := s.streakSvc.GetStatus(studentID, "Asia/Jakarta")
+		if err != nil {
+			return ParentChildOverview{}, err
+		}
 		ov.StreakDays = st.CurrentStreak
 		ov.CryoShields = st.CryoShields
 	}
 	if s.reportsH != nil {
-		prof := s.reportsH.BuildProficiency(studentID, "ALL", bundle.Child.Grade, locale)
+		prof, err := s.reportsH.BuildProficiency(studentID, "ALL", bundle.Child.Grade, locale)
+		if err != nil {
+			return ParentChildOverview{}, err
+		}
 		ov.MasteryCount = prof.MasteryCount
 		ov.CompetentCount = prof.CompetentCount
 		ov.BeginningCount = prof.BeginningCount
@@ -217,7 +223,7 @@ func (s *Service) GetParentOverview(studentID, locale string) ParentChildOvervie
 			}
 		}
 	}
-	return ov
+	return ov, nil
 }
 
 type Handler struct {
@@ -295,6 +301,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Tags:        []string{"Parent"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body ParentChildOverview }, error) {
 		sid, _, locale := h.resolvePrincipal(ctx, *in)
-		return &struct{ Body ParentChildOverview }{Body: h.svc.GetParentOverview(sid, locale)}, nil
+		ov, err := h.svc.GetParentOverview(sid, locale)
+		if err != nil {
+			return nil, huma.Error500InternalServerError(err.Error())
+		}
+		return &struct{ Body ParentChildOverview }{Body: ov}, nil
 	})
 }
