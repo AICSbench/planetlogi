@@ -639,8 +639,10 @@ export function createApiClient(baseUrl: string) {
     },
 
     // Profile & Parent Portal
-    getProfileBundle() {
-      return request<ProfileBundle>("/api/v1/profile/bundle");
+    getProfileBundle(childId?: string) {
+      return request<ProfileBundle>(
+        `/api/v1/profile/bundle${childId ? `?childId=${encodeURIComponent(childId)}` : ""}`
+      );
     },
     getProfileChildren() {
       return request<{ children: ProfileBundle["child"][] }>("/api/v1/profile/children");
@@ -651,6 +653,7 @@ export function createApiClient(baseUrl: string) {
       });
     },
     updateProfileSettings(payload: {
+      childId?: string;
       otpEnabled?: boolean;
       otpCode?: string;
       language?: "en" | "id";
@@ -665,8 +668,10 @@ export function createApiClient(baseUrl: string) {
         body: JSON.stringify(payload),
       });
     },
-    getParentOverview(locale: string) {
-      return request<ParentChildOverview>(`/api/v1/parent/overview?locale=${locale}`);
+    getParentOverview(locale: string, childId?: string) {
+      return request<ParentChildOverview>(
+        `/api/v1/parent/overview?locale=${locale}${childId ? `&childId=${encodeURIComponent(childId)}` : ""}`
+      );
     },
   };
 }

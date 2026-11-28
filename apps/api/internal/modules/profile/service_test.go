@@ -82,7 +82,7 @@ func TestUpdateSettingsPreservesIndependentPatches(t *testing.T) {
 	if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{BrainGalaxyDailyCapMin: &capMin}); err != nil {
 		t.Fatal(err)
 	}
-	bundle, err := svc.GetBundle(ctx, parent)
+	bundle, err := svc.GetBundle(ctx, parent, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestUpdateSettingsOverlappingPatches(t *testing.T) {
 	}()
 	wg.Wait()
 
-	bundle, err := svc.GetBundle(ctx, parent)
+	bundle, err := svc.GetBundle(ctx, parent, "")
 	if err != nil {
 		t.Fatal(err)
 	}

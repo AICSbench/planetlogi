@@ -2786,6 +2786,9 @@
           "brainGalaxyWindowStart": {
             "type": "string"
           },
+          "childId": {
+            "type": "string"
+          },
           "dailyOrbitCurricula": {
             "items": {
               "type": "string"
@@ -4901,6 +4904,16 @@
               "default": "en",
               "type": "string"
             }
+          },
+          {
+            "description": "Linked child the overview is for; defaults to the parent's first child",
+            "explode": false,
+            "in": "query",
+            "name": "childId",
+            "schema": {
+              "description": "Linked child the overview is for; defaults to the parent's first child",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4963,6 +4976,16 @@
             "name": "locale",
             "schema": {
               "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Linked child the bundle is for; defaults to the parent's first child",
+            "explode": false,
+            "in": "query",
+            "name": "childId",
+            "schema": {
+              "description": "Linked child the bundle is for; defaults to the parent's first child",
               "type": "string"
             }
           }

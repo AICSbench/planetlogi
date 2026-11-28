@@ -1668,6 +1668,7 @@ export interface components {
             brainGalaxyDailyCapMin?: number;
             brainGalaxyWindowEnd?: string;
             brainGalaxyWindowStart?: string;
+            childId?: string;
             dailyOrbitCurricula?: string[] | null;
             language?: string;
             otpCode?: string;
@@ -2738,6 +2739,8 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
+                /** @description Linked child the overview is for; defaults to the parent's first child */
+                childId?: string;
             };
             header?: {
                 Authorization?: string;
@@ -2773,6 +2776,8 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
+                /** @description Linked child the bundle is for; defaults to the parent's first child */
+                childId?: string;
             };
             header?: {
                 Authorization?: string;

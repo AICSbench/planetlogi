@@ -15,9 +15,18 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   // Saving family settings is parent-only on the API (students get 403).
   const isParent = useAuthStore((s) => s.user?.role === "PARENT");
 
+  // Settings apply per child; empty keeps the server default (first linked child).
+  const [childId, setChildId] = useState("");
+  const childrenQuery = useQuery({
+    queryKey: ["profile-children", userId],
+    queryFn: apiClient.getProfileChildren,
+    enabled: isParent,
+  });
+  const children = childrenQuery.data?.children ?? [];
+
   const bundleQuery = useQuery({
-    queryKey: ["profile-bundle", userId],
-    queryFn: () => apiClient.getProfileBundle(),
+    queryKey: ["profile-bundle", userId, childId],
+    queryFn: () => apiClient.getProfileBundle(childId || undefined),
   });
 
   const bundle = bundleQuery.data;
@@ -56,6 +65,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
     mutationFn: (vars: { account: string }) =>
       apiClient
         .updateProfileSettings({
+          ...(childId ? { childId } : {}),
           ...(otpDraft !== null ? { otpEnabled: otpDraft } : {}),
           ...(langDraft !== null ? { language: langDraft } : {}),
           ...(brainCapDraft !== null ? { brainGalaxyDailyCapMin: brainCapDraft } : {}),
@@ -63,7 +73,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
         })
         .then((updated) => ({ updated, account: vars.account })),
     onSuccess: async ({ updated, account: requestAccount }) => {
-      queryClient.setQueryData(["profile-bundle", requestAccount], updated);
+      queryClient.setQueryData(["profile-bundle", requestAccount, childId], updated);
       if (useAuthStore.getState().user?.id !== requestAccount) return;
       setOtpDraft(null);
       setLangDraft(null);
@@ -117,6 +127,28 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
             <h2 className="text-sm font-bold uppercase text-amber-300">
               {t("portals:profile.childCard")}
             </h2>
+            {isParent && children.length > 1 ? (
+              <div>
+                <label className="block text-xs font-bold text-slate-200" htmlFor="settings-child">
+                  {t("portals:assignments.childLabel")}
+                </label>
+                <select
+                  id="settings-child"
+                  value={childId || children[0]?.studentId || ""}
+                  onChange={(e) => setChildId(e.target.value)}
+                  className="mt-1 min-h-11 w-full rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-sm text-white"
+                >
+                  {children.map((child) => (
+                    <option key={child.studentId} value={child.studentId}>
+                      {t("portals:assignments.childOption", {
+                        name: child.firstName,
+                        grade: child.grade,
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <p className="text-lg font-extrabold text-white">
               {bundle.child.firstName} • {t("common:common.grade", { grade: bundle.child.grade })}
             </p>

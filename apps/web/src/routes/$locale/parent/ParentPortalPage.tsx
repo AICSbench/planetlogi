@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -12,9 +13,18 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
   const isParent = useAuthStore((s) => s.user?.role === "PARENT");
   const account = useAccountScope();
 
+  // The overview and its stats follow the selected child; empty keeps the server default.
+  const [childId, setChildId] = useState<string>("");
+  const childrenQuery = useQuery({
+    queryKey: ["profile-children", account],
+    queryFn: apiClient.getProfileChildren,
+    enabled: isParent,
+  });
+  const children = childrenQuery.data?.children ?? [];
+
   const overviewQuery = useQuery({
-    queryKey: ["parent-overview", account, locale],
-    queryFn: () => apiClient.getParentOverview(locale),
+    queryKey: ["parent-overview", account, childId, locale],
+    queryFn: () => apiClient.getParentOverview(locale, childId || undefined),
     enabled: isParent,
   });
 
@@ -31,6 +41,26 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
           <GalaxyButton variant="gold">{t("portals:parentPortal.quickAssignFocus")} →</GalaxyButton>
         </Link>
       </GalaxyCard>
+
+      {isParent && children.length > 1 ? (
+        <div className="max-w-xs">
+          <label className="block text-xs font-bold text-slate-200" htmlFor="parent-portal-child">
+            {t("portals:assignments.childLabel")}
+          </label>
+          <select
+            id="parent-portal-child"
+            value={childId || children[0]?.studentId || ""}
+            onChange={(e) => setChildId(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-sm text-white"
+          >
+            {children.map((child) => (
+              <option key={child.studentId} value={child.studentId}>
+                {t("portals:assignments.childOption", { name: child.firstName, grade: child.grade })}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
 
       {!isParent ? (
         <GalaxyCard>

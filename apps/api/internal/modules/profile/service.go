@@ -109,16 +109,32 @@ func NewServiceWithPG(pool *pgxpool.Pool, reportsH *reports.Handler, streakSvc *
 // isUUID reports whether studentID is a real (PostgreSQL-backed) ID.
 func isUUID(s string) bool { return reqguard.IsUUID(s) }
 
-func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (string, error) {
+func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal, preferred string) (string, error) {
 	if actor.Role != auth.RoleParent {
 		return actor.ID, nil
 	}
 	if s.pool != nil {
 		if !isUUID(actor.ID) {
-			if actor.ID == "demo-parent" {
+			if actor.ID == "demo-parent" && (preferred == "" || preferred == "demo-pilot1") {
 				return "demo-pilot1", nil
 			}
 			return "", ErrNoLinkedChild
+		}
+		if preferred != "" {
+			// The parent explicitly picked a child: only a student linked to this
+			// parent's account is acceptable, whatever was requested.
+			if !isUUID(preferred) {
+				return "", ErrNoLinkedChild
+			}
+			var child string
+			err := s.pool.QueryRow(ctx, `
+				SELECT id::text FROM student_profiles
+				WHERE id = $1::uuid AND parent_account_id = $2::uuid
+			`, preferred, actor.ID).Scan(&child)
+			if errors.Is(err, pgx.ErrNoRows) {
+				return "", ErrNoLinkedChild
+			}
+			return child, err
 		}
 		var child string
 		err := s.pool.QueryRow(ctx, `
@@ -133,6 +149,9 @@ func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (str
 		return child, err
 	}
 	if actor.ID != "demo-parent" {
+		return "", ErrNoLinkedChild
+	}
+	if preferred != "" && preferred != "demo-pilot1" {
 		return "", ErrNoLinkedChild
 	}
 	return "demo-pilot1", nil
@@ -258,8 +277,8 @@ func (s *Service) getOrCreateLocked(studentID string) *ProfileBundle {
 	return b
 }
 
-func (s *Service) GetBundle(ctx context.Context, actor auth.Principal) (ProfileBundle, error) {
-	childID, err := s.resolveChildID(ctx, actor)
+func (s *Service) GetBundle(ctx context.Context, actor auth.Principal, childID string) (ProfileBundle, error) {
+	childID, err := s.resolveChildID(ctx, actor, childID)
 	if err != nil {
 		return ProfileBundle{}, err
 	}
@@ -272,6 +291,9 @@ func (s *Service) GetBundle(ctx context.Context, actor auth.Principal) (ProfileB
 }
 
 type UpdateSettingsInput struct {
+	// ChildID selects which linked child the settings apply to; empty means the
+	// parent's first linked child. The parent-child link is re-validated server-side.
+	ChildID                string   `json:"childId,omitempty"`
 	OTPEnabled             *bool    `json:"otpEnabled,omitempty"`
 	OTPCode                string   `json:"otpCode,omitempty"`
 	Language               string   `json:"language,omitempty"`
@@ -318,7 +340,7 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 	if err := validateSettingsInput(in); err != nil {
 		return ProfileBundle{}, err
 	}
-	childID, err := s.resolveChildID(ctx, actor)
+	childID, err := s.resolveChildID(ctx, actor, in.ChildID)
 	if err != nil {
 		return ProfileBundle{}, err
 	}
@@ -493,7 +515,7 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 // student's own profile, so the assignment builder can select a child.
 func (s *Service) ListChildren(ctx context.Context, actor auth.Principal) ([]ChildProfile, error) {
 	if actor.Role != auth.RoleParent {
-		bundle, err := s.GetBundle(ctx, actor)
+		bundle, err := s.GetBundle(ctx, actor, "")
 		if err != nil {
 			return nil, err
 		}
@@ -541,12 +563,12 @@ func (s *Service) ListChildren(ctx context.Context, actor auth.Principal) ([]Chi
 	return children, nil
 }
 
-func (s *Service) GetParentOverview(ctx context.Context, actor auth.Principal, locale string) (ParentChildOverview, error) {
-	childID, err := s.resolveChildID(ctx, actor)
+func (s *Service) GetParentOverview(ctx context.Context, actor auth.Principal, locale, childID string) (ParentChildOverview, error) {
+	childID, err := s.resolveChildID(ctx, actor, childID)
 	if err != nil {
 		return ParentChildOverview{}, err
 	}
-	bundle, err := s.GetBundle(ctx, actor)
+	bundle, err := s.GetBundle(ctx, actor, childID)
 	if err != nil {
 		return ParentChildOverview{}, err
 	}
@@ -642,12 +664,15 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get Parent & Child profile cards and family settings",
 		Tags:        []string{"Profile"},
 		Security:    authSecurity,
-	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ProfileBundle }, error) {
-		actor, _, err := h.resolvePrincipal(ctx, *in)
+	}, func(ctx context.Context, in *struct {
+		AuthIn
+		ChildID string `query:"childId" doc:"Linked child the bundle is for; defaults to the parent's first child"`
+	}) (*struct{ Body ProfileBundle }, error) {
+		actor, _, err := h.resolvePrincipal(ctx, in.AuthIn)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
-		bundle, err := h.svc.GetBundle(ctx, actor)
+		bundle, err := h.svc.GetBundle(ctx, actor, in.ChildID)
 		if err != nil {
 			return nil, lookupError(ctx, err)
 		}
@@ -726,15 +751,18 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
 		Tags:        []string{"Parent"},
 		Security:    authSecurity,
-	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ParentChildOverview }, error) {
-		actor, locale, err := h.resolvePrincipal(ctx, *in)
+	}, func(ctx context.Context, in *struct {
+		AuthIn
+		ChildID string `query:"childId" doc:"Linked child the overview is for; defaults to the parent's first child"`
+	}) (*struct{ Body ParentChildOverview }, error) {
+		actor, locale, err := h.resolvePrincipal(ctx, in.AuthIn)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
 		if actor.Role != auth.RoleParent {
 			return nil, huma.Error403Forbidden("parent account required")
 		}
-		ov, err := h.svc.GetParentOverview(ctx, actor, locale)
+		ov, err := h.svc.GetParentOverview(ctx, actor, locale, in.ChildID)
 		if err != nil {
 			if errors.Is(err, ErrNoLinkedChild) || errors.Is(err, ErrProfileNotFound) {
 				return nil, huma.Error404NotFound(err.Error())

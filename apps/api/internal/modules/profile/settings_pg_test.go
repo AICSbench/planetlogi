@@ -41,6 +41,13 @@ func TestSettingsPGPartialUpdateAndOTPEnrollment(t *testing.T) {
 	svc := NewServiceWithPG(pool, nil, nil, authSvc, false)
 	parent := auth.Principal{ID: parentID, Role: auth.RoleParent}
 
+	// A well-formed but unlinked child ID is rejected: settings apply per child and
+	// the parent-child link is validated server-side.
+	unlinked := "00000000-0000-0000-0000-000000000001"
+	if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{ChildID: unlinked, Language: "en"}); !errors.Is(err, ErrNoLinkedChild) {
+		t.Fatalf("unlinked child: expected ErrNoLinkedChild, got %v", err)
+	}
+
 	// Two partial patches: the second must not restore the first one's field.
 	lang, capMin := "id", 15
 	if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{Language: lang}); err != nil {
