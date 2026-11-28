@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -53,11 +54,24 @@ func TestAstroBuddyShowcaseAndBadgeRecovery(t *testing.T) {
 	}
 	var doc struct {
 		Days []struct {
-			DayOfYear int `json:"dayOfYear"`
+			DayOfYear   int `json:"dayOfYear"`
+			Title, Fact map[string]string
 		} `json:"days"`
 	}
 	if err := json.Unmarshal(raw, &doc); err != nil || len(doc.Days) != 365 {
 		t.Fatalf("expected 365 daily trivia cards, err=%v len=%d", err, len(doc.Days))
+	}
+	seen := make(map[int]bool)
+	for _, day := range doc.Days {
+		if day.DayOfYear < 1 || day.DayOfYear > 365 || seen[day.DayOfYear] {
+			t.Errorf("invalid or duplicate badge day %d", day.DayOfYear)
+		}
+		seen[day.DayOfYear] = true
+		for _, locale := range []string{"en", "id"} {
+			if strings.TrimSpace(day.Title[locale]) == "" || strings.TrimSpace(day.Fact[locale]) == "" {
+				t.Errorf("badge day %d is missing %s trivia", day.DayOfYear, locale)
+			}
+		}
 	}
 }
 

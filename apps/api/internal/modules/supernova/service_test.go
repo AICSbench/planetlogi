@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -62,9 +63,25 @@ func TestSuperSightScoringPracticeAndPackValidation(t *testing.T) {
 	if err := json.Unmarshal(raw, &doc); err != nil || len(doc.Puzzles) != 30 {
 		t.Fatalf("expected 30 valid puzzles, err=%v len=%d", err, len(doc.Puzzles))
 	}
+	ids := make(map[string]bool)
 	for _, pz := range doc.Puzzles {
+		if pz.ID == "" || ids[pz.ID] {
+			t.Fatalf("empty or duplicate puzzle ID %q", pz.ID)
+		}
+		ids[pz.ID] = true
 		if len(pz.Targets) != 5 {
 			t.Fatalf("puzzle %s must have 5 targets", pz.ID)
+		}
+		for i, target := range pz.Targets {
+			if target.Radius <= 0 || target.X-target.Radius < 0 || target.X+target.Radius > 1 ||
+				target.Y-target.Radius < 0 || target.Y+target.Radius > 1 {
+				t.Errorf("puzzle %s target %+v falls outside the normalized scene", pz.ID, target)
+			}
+			for _, other := range pz.Targets[:i] {
+				if target.ID == other.ID || math.Hypot(target.X-other.X, target.Y-other.Y) < target.Radius+other.Radius {
+					t.Errorf("puzzle %s targets %d and %d conflict", pz.ID, target.ID, other.ID)
+				}
+			}
 		}
 	}
 }
