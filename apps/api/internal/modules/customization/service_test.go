@@ -89,25 +89,35 @@ func TestShowcasePersistAcrossRestartPG(t *testing.T) {
 	}
 	t.Cleanup(pool.Close)
 
-	// This test uses the shared showcase key; preserve any existing fixture.
-	var previous []byte
-	err = pool.QueryRow(ctx, `SELECT payload FROM shared_state WHERE scope=$1 AND key=$2`, showcaseScope, showcaseKey).Scan(&previous)
-	if err != nil && err != pgx.ErrNoRows {
+	// Give this test its own schema and table, so the singleton key cannot
+	// overwrite data belonging to other tests or users of the database.
+	var schema string
+	if err := pool.QueryRow(ctx, `SELECT 'showcase_test_' || replace(gen_random_uuid()::text, '-', '')`).Scan(&schema); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `DELETE FROM shared_state WHERE scope=$1 AND key=$2`, showcaseScope, showcaseKey); err != nil {
+	quotedSchema := pgx.Identifier{schema}.Sanitize()
+	if _, err := pool.Exec(ctx, `CREATE SCHEMA `+quotedSchema); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		_, err := pool.Exec(ctx, `DELETE FROM shared_state WHERE scope=$1 AND key=$2`, showcaseScope, showcaseKey)
-		if err == nil && previous != nil {
-			_, err = pool.Exec(ctx, `INSERT INTO shared_state(scope,key,payload) VALUES($1,$2,$3::jsonb)`, showcaseScope, showcaseKey, string(previous))
-		}
-		if err != nil {
+		if _, err := pool.Exec(ctx, `DROP SCHEMA `+quotedSchema+` CASCADE`); err != nil {
 			t.Error(err)
 		}
 	})
-	svc1 := NewServiceWithPG(pool, nil)
+	if _, err := pool.Exec(ctx, `CREATE TABLE `+quotedSchema+`.shared_state (LIKE public.shared_state INCLUDING ALL)`); err != nil {
+		t.Fatal(err)
+	}
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	config.ConnConfig.RuntimeParams["search_path"] = quotedSchema
+	isolatedPool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(isolatedPool.Close)
+	svc1 := NewServiceWithPG(isolatedPool, nil)
 	first := svc1.GetShowcase(ctx, 1)
 	if len(first) == 0 {
 		t.Fatalf("expected seeded showcase entries, got none")
@@ -122,7 +132,7 @@ func TestShowcasePersistAcrossRestartPG(t *testing.T) {
 		t.Fatal(err)
 	}
 	// A fresh "process" must see the modified durable entry rather than seed.
-	svc2 := NewServiceWithPG(pool, nil)
+	svc2 := NewServiceWithPG(isolatedPool, nil)
 	second := svc2.GetShowcase(ctx, 1)
 	if len(second) != 1 || second[0].MaskedName != "Fixture P." || second[0].StarPoints != 987 {
 		t.Fatalf("durable showcase fixture lost: %+v", second)

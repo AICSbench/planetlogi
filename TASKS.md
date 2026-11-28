@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR6-CI-PG-ISOLATION** — Run PostgreSQL tests in CI and isolate the showcase singleton test. *(Owner: agent-pr6-fixer | Done: 2026-11-28T16:15Z)*
+  - **Depends On**: `P0-01`, `P3-BE-03`
+  - **Spec**: `docs/08-technical-architecture-and-database.md` §5; `docs/02-features-student-portal.md` §12.2
+  - **Acceptance Criteria**: CI initializes a disposable PostgreSQL database with migrations and seed and runs the Go race suite with it; the showcase test never mutates the shared singleton row.
+  - **Handoff**: CI Go job uses a disposable PostgreSQL 16 service and existing seed command; showcase integration test uses its own schema. Local disposable PostgreSQL 17: seeded full `go test -race -count=1 ./...`, `go vet ./...`, and Go binary builds passed; two concurrent showcase tests preserved a public sentinel row. No production migration or environment variable.
+
 - [x] **PR6-SHOWCASE-SEED-ASSERTION** — Verify the initial showcase seed is durably written before replacing the test fixture. *(Owner: agent-pr6-fixer | Done: 2026-11-28T15:42Z)*
   - **Depends On**: `P3-BE-03`
   - **Spec**: `docs/02-features-student-portal.md` §12.2
