@@ -1,0 +1,36 @@
+{
+  "title": "Galaxy Training",
+  "subtitle": "Choose from 6 elementary curricula, master HOTS heuristics, and track your skill stars.",
+  "gradeSelector": "Grade {{grade}}",
+  "modeHighScore": "High Score Mode",
+  "modeProficiency": "Proficiency % Mode",
+  "nationalAvg": "National Avg: {{pct}}%",
+  "yourProficiency": "Your Proficiency: {{pct}}% ({{correct}}/{{attempts}})",
+  "practiceBtn": "Practice",
+  "tutorialBtn": "Tutorial",
+  "hotsTitle": "HOTS Constellation Wheel",
+  "hotsSubtitle": "Explore 4 quadrants & 9 heuristic problem-solving strategies by age band.",
+  "ageBandAll": "All Ages",
+  "ageBand": "Ages {{band}}",
+  "sessionProgress": "Question {{current}} of {{total}} — Complete 10 questions to unlock rewards!",
+  "backToSkills": "Back to Skill List",
+  "reports": {
+    "title": "Progress Reports",
+    "tabProficiency": "Proficiency Report",
+    "tabHighScore": "High Score Report",
+    "allCurricula": "All 6 Curricula",
+    "allGrades": "All Grades (1–6)",
+    "tier9To10": "3 Stars (9–10 / 10)",
+    "tier6To8": "2 Stars (6–8 / 10)",
+    "tier4To5": "1 Star (4–5 / 10)",
+    "tier1To3": "Needs Practice (1–3 / 10)",
+    "unplayed": "Not Practiced Yet",
+    "practiceNow": "Practice Now"
+  },
+  "expLevel": {
+    "title": "Pilot XP & Cosmic Ranks",
+    "subtitle": "Earn XP on every math mission to advance from Level 1 to Level 100!",
+    "currentRank": "Current Rank",
+    "nextLevel": "{{xp}} XP needed for Level {{next}}"
+  }
+}

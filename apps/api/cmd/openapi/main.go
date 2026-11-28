@@ -8,6 +8,10 @@ import (
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/server"
 )
 
@@ -18,11 +22,19 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 
 	authSvc := auth.NewService(cfg, nil, nil, logger)
+	streakSvc := streak.NewService()
+	dailyOrbitSvc := dailyorbit.NewService(nil, streakSvc)
+	trainingSvc := training.NewService(nil)
+
 	app := server.New(server.Dependencies{
 		Config: cfg,
 		Logger: logger,
 		Registrars: []server.ModuleRegistrar{
 			auth.NewHandler(authSvc, cfg).RegisterRoutes,
+			streak.NewHandler(streakSvc, authSvc).RegisterRoutes,
+			dailyorbit.NewHandler(dailyOrbitSvc, authSvc).RegisterRoutes,
+			training.NewHandler(trainingSvc, authSvc).RegisterRoutes,
+			reports.NewHandler(trainingSvc, authSvc).RegisterRoutes,
 		},
 	})
 

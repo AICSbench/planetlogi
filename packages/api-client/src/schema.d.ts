@@ -123,6 +123,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/daily-orbit/change-question": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replace a pending Daily Orbit question (max 3 edits/day) */
+        post: operations["daily-orbit-change-question"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-orbit/curricula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update active Daily Orbit curriculum pools */
+        patch: operations["daily-orbit-set-curricula"];
+        trace?: never;
+    };
+    "/api/v1/daily-orbit/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip a Daily Orbit question (0 SP) and reveal its worked solution */
+        post: operations["daily-orbit-skip"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-orbit/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a single-attempt answer for a Daily Orbit slot */
+        post: operations["daily-orbit-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-orbit/tier": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Switch unlocked Daily Orbit difficulty tier */
+        patch: operations["daily-orbit-set-tier"];
+        trace?: never;
+    };
+    "/api/v1/daily-orbit/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get today's 10-question Daily Orbit progression path */
+        get: operations["daily-orbit-today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/high-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get student High Score star-tier report (9-10, 6-8, 4-5, 1-3) */
+        get: operations["reports-high-score"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reports/proficiency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get student Proficiency % report across all 6 curricula and Grades 1-6 */
+        get: operations["reports-proficiency"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/streak/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get monthly Orbit Streak calendar days */
+        get: operations["streak-calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/streak/reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Update Orbit Streak daily push reminder preference */
+        post: operations["streak-reminder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/streak/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get student's Orbit Streak, Nova Pet stage, and Cryo Shields */
+        get: operations["streak-status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/training/curricula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all 6 Galaxy Training curriculum tracks */
+        get: operations["training-curricula"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/training/hots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the 4-Quadrant / 9-Heuristic HOTS Constellation Wheel */
+        get: operations["training-hots-wheel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/training/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a 10-question Galaxy Training practice session for a skill */
+        post: operations["training-start-session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/training/sessions/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grade a Galaxy Training practice answer and update Proficiency % and stars */
+        post: operations["training-submit-answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/training/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List skills for a curriculum and grade with High Score stars and Proficiency % */
+        get: operations["training-skills"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -135,6 +407,110 @@ export interface components {
              */
             readonly $schema?: string;
             user: components["schemas"]["Principal"];
+        };
+        CalendarEntry: {
+            date: string;
+            status: string;
+        };
+        CurriculumSummary: {
+            code: string;
+            description: string;
+            name: string;
+            /** Format: int64 */
+            skillCount: number;
+        };
+        "Daily-orbit-change-questionRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-change-questionRequest.json
+             */
+            readonly $schema?: string;
+            /** @enum {string} */
+            mode: "easier" | "harder" | "topic";
+            /** Format: int64 */
+            slotIndex: number;
+        };
+        "Daily-orbit-change-questionResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-change-questionResponse.json
+             */
+            readonly $schema?: string;
+            session: components["schemas"]["SessionView"];
+            slot: components["schemas"]["SlotView"];
+        };
+        "Daily-orbit-set-curriculaRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-set-curriculaRequest.json
+             */
+            readonly $schema?: string;
+            curricula: string[] | null;
+        };
+        "Daily-orbit-set-tierRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-set-tierRequest.json
+             */
+            readonly $schema?: string;
+            /** @enum {string} */
+            tier: "ELEMENTARY" | "INTERMEDIATE" | "ADVANCED" | "MASTER";
+        };
+        "Daily-orbit-skipRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-skipRequest.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            slotIndex: number;
+        };
+        "Daily-orbit-skipResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-skipResponse.json
+             */
+            readonly $schema?: string;
+            session: components["schemas"]["SessionView"];
+            slot: components["schemas"]["SlotView"];
+        };
+        "Daily-orbit-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-submitRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            seed?: number;
+            /** Format: int64 */
+            slotIndex: number;
+            templateCode?: string;
+        };
+        "Daily-orbit-submitResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Daily-orbit-submitResponse.json
+             */
+            readonly $schema?: string;
+            session: components["schemas"]["SessionView"];
+            slot: components["schemas"]["SlotView"];
+        };
+        DiagramSpec: {
+            params: {
+                [key: string]: unknown;
+            };
+            type: string;
         };
         ErrorDetail: {
             /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
@@ -183,6 +559,44 @@ export interface components {
              */
             type: string;
         };
+        GradeResult: {
+            correctAnswers: {
+                [key: string]: string;
+            };
+            isCorrect: boolean;
+            workedSolution: components["schemas"]["WorkedSolution"];
+        };
+        HOTSQuadrant: {
+            code: string;
+            heuristics: components["schemas"]["HeuristicNode"][] | null;
+            name: string;
+        };
+        HeuristicNode: {
+            code: string;
+            name: string;
+            /** Format: int64 */
+            skillCount: number;
+            skills: components["schemas"]["SkillView"][] | null;
+        };
+        HighScoreBuckets: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/HighScoreBuckets.json
+             */
+            readonly $schema?: string;
+            tier1To3: components["schemas"]["SkillView"][] | null;
+            tier4To5: components["schemas"]["SkillView"][] | null;
+            tier6To8: components["schemas"]["SkillView"][] | null;
+            tier9To10: components["schemas"]["SkillView"][] | null;
+            unplayed: components["schemas"]["SkillView"][] | null;
+        };
+        InputPart: {
+            key: string;
+            label?: string;
+            prefix?: string;
+            suffix?: string;
+        };
         LiveFeedItem: {
             avatarId: string;
             /** Format: int64 */
@@ -225,6 +639,10 @@ export interface components {
             readonly $schema?: string;
             ok: boolean;
         };
+        MCQOption: {
+            key: string;
+            label: string;
+        };
         OtpRequestOutputBody: {
             /**
              * Format: uri
@@ -254,6 +672,24 @@ export interface components {
             readonly $schema?: string;
             verified: boolean;
         };
+        PracticeSession: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PracticeSession.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            answered: number;
+            /** Format: int64 */
+            correct: number;
+            questions: components["schemas"]["RenderedQuestion"][] | null;
+            sessionId: string;
+            skillCode: string;
+            skillName: string;
+            /** Format: int64 */
+            starsEarned: number;
+        };
         Principal: {
             /** Format: int64 */
             astroCoins: number;
@@ -272,6 +708,240 @@ export interface components {
             timezone: string;
             /** Format: int64 */
             totalSp: number;
+        };
+        ProficiencySummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ProficiencySummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            beginningCount: number;
+            /** Format: int64 */
+            competentCount: number;
+            /** Format: int64 */
+            incompleteCount: number;
+            /** Format: int64 */
+            masteryCount: number;
+            skills: components["schemas"]["SkillView"][] | null;
+        };
+        RenderedQuestion: {
+            curriculumCode: string;
+            diagram?: components["schemas"]["DiagramSpec"];
+            /** Format: int64 */
+            difficulty: number;
+            /** Format: int64 */
+            grade: number;
+            heuristicCode?: string;
+            heuristicName?: string;
+            hints: string[] | null;
+            id: string;
+            inputType: string;
+            locale: string;
+            options?: components["schemas"]["MCQOption"][] | null;
+            parts?: components["schemas"]["InputPart"][] | null;
+            /** Format: int64 */
+            seed: number;
+            skillCode: string;
+            skillName: string;
+            stem: string;
+            templateCode: string;
+            ttsText: string;
+            videoTutorialId?: string;
+        };
+        SPBreakdown: {
+            /** Format: int64 */
+            dailyOrbit: number;
+            /** Format: int64 */
+            starDuels: number;
+            /** Format: int64 */
+            sundayMeteor: number;
+            /** Format: int64 */
+            totalToday: number;
+        };
+        SessionView: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/SessionView.json
+             */
+            readonly $schema?: string;
+            activeCurricula: string[] | null;
+            /** Format: int64 */
+            changeQuestionLimit: number;
+            /** Format: int64 */
+            changeQuestionUsed: number;
+            /** Format: int64 */
+            completedCount: number;
+            completionBonusAwarded: boolean;
+            /** Format: int64 */
+            correctCount: number;
+            isOpen: boolean;
+            localDate: string;
+            slots: components["schemas"]["SlotView"][] | null;
+            tier: string;
+            todaySpBreakdown: components["schemas"]["SPBreakdown"];
+            /** Format: int64 */
+            totalSpEarned: number;
+            unlockedTiers: string[] | null;
+            windowNotice?: string;
+        };
+        SkillView: {
+            ageBand?: string;
+            /** Format: int64 */
+            attemptsCount: number;
+            /** Format: int64 */
+            bestSessionScore: number;
+            /** Format: int64 */
+            bestStars: number;
+            category: string;
+            code: string;
+            /** Format: int64 */
+            correctCount: number;
+            curricula: string[] | null;
+            /** Format: int64 */
+            difficulty: number;
+            /** Format: int64 */
+            grade: number;
+            heuristicCode?: string;
+            name: string;
+            /** Format: int64 */
+            nationalAvgPct: number;
+            /** Format: int64 */
+            proficiencyPct: number;
+            proficiencyTier: string;
+            templateCode: string;
+        };
+        SlotView: {
+            /** Format: int64 */
+            earnedSp: number;
+            /** Format: int64 */
+            index: number;
+            nodeShape: string;
+            question: components["schemas"]["RenderedQuestion"];
+            /** Format: int64 */
+            rewardSp: number;
+            stageName: string;
+            status: string;
+            submittedAnswer?: {
+                [key: string]: string;
+            };
+            workedSolution?: components["schemas"]["WorkedSolution"];
+        };
+        SolutionStep: {
+            diagram?: components["schemas"]["DiagramSpec"];
+            text: string;
+        };
+        Status: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Status.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            cryoShields: number;
+            /** Format: int64 */
+            currentStreak: number;
+            /** Format: int64 */
+            dailyMilestoneTarget: number;
+            lastCompletedDate?: string;
+            /** Format: int64 */
+            longestStreak: number;
+            /** Format: int64 */
+            maxCryoShields: number;
+            /** Format: int64 */
+            novaPetStage: number;
+            reminderEnabled: boolean;
+            reminderTimeLocal?: string;
+            /** Format: int64 */
+            todayCorrectCount: number;
+        };
+        "Streak-calendarResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Streak-calendarResponse.json
+             */
+            readonly $schema?: string;
+            days: components["schemas"]["CalendarEntry"][] | null;
+        };
+        "Streak-reminderRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Streak-reminderRequest.json
+             */
+            readonly $schema?: string;
+            enabled: boolean;
+            timeLocal?: string;
+        };
+        "Training-curriculaResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-curriculaResponse.json
+             */
+            readonly $schema?: string;
+            curricula: components["schemas"]["CurriculumSummary"][] | null;
+        };
+        "Training-hots-wheelResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-hots-wheelResponse.json
+             */
+            readonly $schema?: string;
+            quadrants: components["schemas"]["HOTSQuadrant"][] | null;
+        };
+        "Training-skillsResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-skillsResponse.json
+             */
+            readonly $schema?: string;
+            skills: components["schemas"]["SkillView"][] | null;
+        };
+        "Training-start-sessionRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-start-sessionRequest.json
+             */
+            readonly $schema?: string;
+            skillCode: string;
+        };
+        "Training-submit-answerRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-submit-answerRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            questionIndex: number;
+            sessionId: string;
+        };
+        "Training-submit-answerResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Training-submit-answerResponse.json
+             */
+            readonly $schema?: string;
+            result: components["schemas"]["GradeResult"];
+            session: components["schemas"]["PracticeSession"];
+        };
+        WorkedSolution: {
+            correctAnswers: {
+                [key: string]: string;
+            };
+            steps: components["schemas"]["SolutionStep"][] | null;
         };
     };
     responses: never;
@@ -500,6 +1170,604 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthOutputBody"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-change-question": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Daily-orbit-change-questionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Daily-orbit-change-questionResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-set-curricula": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Daily-orbit-set-curriculaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-skip": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Daily-orbit-skipRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Daily-orbit-skipResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-submit": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Daily-orbit-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Daily-orbit-submitResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-set-tier": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Daily-orbit-set-tierRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "daily-orbit-today": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "reports-high-score": {
+        parameters: {
+            query?: {
+                curriculum?: string;
+                grade?: number;
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HighScoreBuckets"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "reports-proficiency": {
+        parameters: {
+            query?: {
+                curriculum?: string;
+                grade?: number;
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProficiencySummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "streak-calendar": {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM filter */
+                month?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Streak-calendarResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "streak-reminder": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Streak-reminderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Status"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "streak-status": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Status"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "training-curricula": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Training-curriculaResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "training-hots-wheel": {
+        parameters: {
+            query?: {
+                locale?: string;
+                ageBand?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Training-hots-wheelResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "training-start-session": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Training-start-sessionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeSession"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "training-submit-answer": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Training-submit-answerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Training-submit-answerResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "training-skills": {
+        parameters: {
+            query?: {
+                locale?: string;
+                curriculum?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Training-skillsResponse"];
                 };
             };
             /** @description Error */

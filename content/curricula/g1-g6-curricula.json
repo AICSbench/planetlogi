@@ -1,0 +1,101 @@
+{
+  "version": "1.0.0",
+  "curricula": [
+    {
+      "code": "KURIKULUM_MERDEKA",
+      "translations": { "en": "Kurikulum Merdeka (Indonesia)", "id": "Kurikulum Merdeka (SD)" },
+      "description": { "en": "Aligned with Indonesian national elementary math Fase A, B, and C.", "id": "Selaras dengan standar matematika SD nasional Fase A, B, dan C." }
+    },
+    {
+      "code": "SINGAPORE_MOE",
+      "translations": { "en": "Singapore Math MOE", "id": "Matematika Singapura (MOE)" },
+      "description": { "en": "Mastery-focused Concrete-Pictorial-Abstract & Bar Model syllabus.", "id": "Silabus penguasaan CPA & Model Batang untuk Kelas 1–6." }
+    },
+    {
+      "code": "CAMBRIDGE_0096",
+      "translations": { "en": "Cambridge Primary 0096", "id": "Cambridge Primary 0096" },
+      "description": { "en": "International Cambridge Primary Mathematics Stages 1–6.", "id": "Matematika internasional Cambridge Primary Stage 1–6." }
+    },
+    {
+      "code": "CHALLENGING_MATHS",
+      "translations": { "en": "Challenging Maths", "id": "Matematika Tantangan" },
+      "description": { "en": "Non-routine enrichment and Olympiad-foundation problems.", "id": "Soal pengayaan non-rutin dan dasar olimpiade." }
+    },
+    {
+      "code": "HOTS_WHEEL",
+      "translations": { "en": "HOTS Constellation", "id": "HOTS (Strategi Pemecahan Masalah)" },
+      "description": { "en": "4-Quadrant / 9-Heuristic problem-solving wheel across 3 age bands.", "id": "Roda 4 Kuadran / 9 Strategi Heuristik untuk 3 rentang usia." }
+    },
+    {
+      "code": "EXPLORER_SERIES",
+      "translations": { "en": "Real-World Explorer Series", "id": "Seri Eksplorasi Dunia Nyata" },
+      "description": { "en": "Authentic competition-style real-world math missions (Junior & Senior).", "id": "Misi matematika dunia nyata bergaya kompetisi (Junior & Senior)." }
+    }
+  ],
+  "hotsQuadrants": [
+    {
+      "code": "REPRESENTATION",
+      "translations": { "en": "Using a Representation", "id": "Menggunakan Representasi" },
+      "heuristics": [
+        { "code": "DRAW_DIAGRAMS", "translations": { "en": "Draw Diagrams", "id": "Menggambar Diagram" } },
+        { "code": "DRAW_MODELS", "translations": { "en": "Draw Models", "id": "Menggambar Model Batang" } },
+        { "code": "MAKE_A_LIST", "translations": { "en": "Make a List", "id": "Membuat Daftar Teratur" } }
+      ]
+    },
+    {
+      "code": "PROCESS",
+      "translations": { "en": "Walking Through the Process", "id": "Menelusuri Proses" },
+      "heuristics": [
+        { "code": "ACT_IT_OUT", "translations": { "en": "Act It Out", "id": "Memperagakan Langkah" } },
+        { "code": "WORK_BACKWARDS", "translations": { "en": "Work Backwards", "id": "Bekerja Mundur" } }
+      ]
+    },
+    {
+      "code": "GUESSING",
+      "translations": { "en": "Making a Guess", "id": "Membuat Perkiraan" },
+      "heuristics": [
+        { "code": "GUESS_AND_CHECK", "translations": { "en": "Guess & Check", "id": "Tebak & Periksa" } },
+        { "code": "LOOK_FOR_PATTERNS", "translations": { "en": "Look for Patterns", "id": "Mencari Pola" } }
+      ]
+    },
+    {
+      "code": "CHANGING_PROBLEM",
+      "translations": { "en": "Changing the Problem", "id": "Mengubah Masalah" },
+      "heuristics": [
+        { "code": "MAKE_SUPPOSITION", "translations": { "en": "Make Supposition", "id": "Membuat Pengandaian" } },
+        { "code": "SIMPLIFY_PROBLEM", "translations": { "en": "Simplify the Problem", "id": "Menyederhanakan Masalah" } }
+      ]
+    }
+  ],
+  "skills": [
+    { "code": "num-add-within-20", "grade": 1, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA", "CAMBRIDGE_0096"], "category": "CORE", "difficulty": 1, "nationalAvgPct": 82, "templateCode": "g1_add_within_20", "translations": { "en": "Addition within 20", "id": "Penjumlahan sampai 20" } },
+    { "code": "num-sub-within-20", "grade": 1, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE"], "category": "CORE", "difficulty": 1, "nationalAvgPct": 78, "templateCode": "g1_sub_within_20", "translations": { "en": "Subtraction within 20", "id": "Pengurangan sampai 20" } },
+    { "code": "num-place-value-100", "grade": 1, "curricula": ["SINGAPORE_MOE", "CAMBRIDGE_0096", "KURIKULUM_MERDEKA"], "category": "CORE", "difficulty": 2, "nationalAvgPct": 74, "templateCode": "g1_place_value_tens_ones", "translations": { "en": "Place Value (Tens & Ones)", "id": "Nilai Tempat (Puluhan & Satuan)" } },
+    { "code": "hots-look-for-patterns-g1", "grade": 1, "curricula": ["HOTS_WHEEL", "CHALLENGING_MATHS", "EXPLORER_SERIES"], "category": "HOTS", "heuristicCode": "LOOK_FOR_PATTERNS", "ageBand": "6-9", "difficulty": 2, "nationalAvgPct": 68, "templateCode": "g1_pattern_hots", "translations": { "en": "Star Number Patterns", "id": "Pola Bilangan Bintang" } },
+
+    { "code": "num-add-1000", "grade": 2, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE", "CAMBRIDGE_0096"], "category": "CORE", "difficulty": 2, "nationalAvgPct": 76, "templateCode": "g2_add_within_1000", "translations": { "en": "Addition within 1,000", "id": "Penjumlahan sampai 1.000" } },
+    { "code": "num-mul-2-3-4-5-10", "grade": 2, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA"], "category": "CORE", "difficulty": 2, "nationalAvgPct": 79, "templateCode": "g2_mul_tables_2_5_10", "translations": { "en": "Multiplication Tables (2–5, 10)", "id": "Perkalian 2–5 & 10" } },
+    { "code": "wp-bar-model-compare", "grade": 2, "curricula": ["HOTS_WHEEL", "SINGAPORE_MOE", "EXPLORER_SERIES"], "category": "WORD_PROBLEM", "heuristicCode": "DRAW_MODELS", "ageBand": "6-9", "difficulty": 3, "nationalAvgPct": 66, "templateCode": "g2_bar_model_compare", "translations": { "en": "Comparison Bar Models", "id": "Model Batang Perbandingan" } },
+    { "code": "frac-intro-compare", "grade": 2, "curricula": ["CAMBRIDGE_0096", "SINGAPORE_MOE"], "category": "CORE", "difficulty": 2, "nationalAvgPct": 71, "templateCode": "g2_unit_fraction_mcq", "translations": { "en": "Comparing Unit Fractions", "id": "Membandingkan Pecahan Satuan" } },
+
+    { "code": "num-mul-6-7-8-9", "grade": 3, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA"], "category": "CORE", "difficulty": 2, "nationalAvgPct": 75, "templateCode": "g3_mul_6_to_9", "translations": { "en": "Multiplication Tables (6–9)", "id": "Perkalian 6–9" } },
+    { "code": "num-div-remainder", "grade": 3, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE", "EXPLORER_SERIES"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 64, "templateCode": "g3_div_with_remainder", "translations": { "en": "Division with Remainders", "id": "Pembagian dengan Sisa" } },
+    { "code": "geo-area-perimeter-rect", "grade": 3, "curricula": ["SINGAPORE_MOE", "CAMBRIDGE_0096", "KURIKULUM_MERDEKA"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 69, "templateCode": "g3_area_perimeter_rect", "translations": { "en": "Area & Perimeter of Rectangles", "id": "Luas & Keliling Persegi Panjang" } },
+    { "code": "frac-add-like", "grade": 3, "curricula": ["CAMBRIDGE_0096", "SINGAPORE_MOE"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 72, "templateCode": "g3_equiv_fraction", "translations": { "en": "Adding Related Fractions", "id": "Penjumlahan Pecahan" } },
+
+    { "code": "num-factors-multiples", "grade": 4, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE", "CAMBRIDGE_0096"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 67, "templateCode": "g4_lcm_gcf", "translations": { "en": "Factors & Multiples (LCM/GCF)", "id": "Faktor & Kelipatan (KPK/FPB)" } },
+    { "code": "dec-add-sub", "grade": 4, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 74, "templateCode": "g4_decimal_add_sub", "translations": { "en": "Adding Decimals", "id": "Penjumlahan Desimal" } },
+    { "code": "frac-of-set", "grade": 4, "curricula": ["SINGAPORE_MOE", "EXPLORER_SERIES"], "category": "WORD_PROBLEM", "difficulty": 3, "nationalAvgPct": 65, "templateCode": "g4_fraction_of_set", "translations": { "en": "Fraction of a Set", "id": "Pecahan dari Sekumpulan Benda" } },
+    { "code": "hots-work-backwards", "grade": 4, "curricula": ["HOTS_WHEEL", "CHALLENGING_MATHS"], "category": "HOTS", "heuristicCode": "WORK_BACKWARDS", "ageBand": "8-11", "difficulty": 4, "nationalAvgPct": 58, "templateCode": "g4_work_backwards_hots", "translations": { "en": "Working Backwards Strategy", "id": "Strategi Bekerja Mundur" } },
+
+    { "code": "pct-discount", "grade": 5, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA", "EXPLORER_SERIES"], "category": "WORD_PROBLEM", "difficulty": 3, "nationalAvgPct": 69, "templateCode": "g5_percentage_discount", "translations": { "en": "Percentage & Discounts", "id": "Persentase & Diskon" } },
+    { "code": "ratio-two-quantities", "grade": 5, "curricula": ["SINGAPORE_MOE", "HOTS_WHEEL", "CHALLENGING_MATHS"], "category": "WORD_PROBLEM", "heuristicCode": "DRAW_MODELS", "ageBand": "8-11", "difficulty": 4, "nationalAvgPct": 61, "templateCode": "g5_ratio_word_problem", "translations": { "en": "Ratio Bar-Model Problems", "id": "Soal Rasio Model Batang" } },
+    { "code": "geo-volume-cuboid", "grade": 5, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE", "CAMBRIDGE_0096"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 73, "templateCode": "g5_volume_cuboid", "translations": { "en": "Volume of Cuboids", "id": "Volume Balok" } },
+    { "code": "data-average", "grade": 5, "curricula": ["CAMBRIDGE_0096", "SINGAPORE_MOE"], "category": "CORE", "difficulty": 3, "nationalAvgPct": 76, "templateCode": "g5_average_mean", "translations": { "en": "Average (Mean)", "id": "Rata-rata (Mean)" } },
+
+    { "code": "alg-linear-eq", "grade": 6, "curricula": ["SINGAPORE_MOE", "CAMBRIDGE_0096"], "category": "CORE", "difficulty": 4, "nationalAvgPct": 64, "templateCode": "g6_algebra_linear", "translations": { "en": "Simple Linear Algebra", "id": "Aljabar Linear Dasar" } },
+    { "code": "rate-speed-dst", "grade": 6, "curricula": ["SINGAPORE_MOE", "KURIKULUM_MERDEKA", "EXPLORER_SERIES"], "category": "WORD_PROBLEM", "difficulty": 4, "nationalAvgPct": 60, "templateCode": "g6_speed_distance_time", "translations": { "en": "Speed, Distance & Time", "id": "Kecepatan, Jarak & Waktu" } },
+    { "code": "geo-circles", "grade": 6, "curricula": ["KURIKULUM_MERDEKA", "SINGAPORE_MOE"], "category": "CORE", "difficulty": 4, "nationalAvgPct": 63, "templateCode": "g6_circle_circumference", "translations": { "en": "Circumference of Circles", "id": "Keliling Lingkaran" } },
+    { "code": "hots-make-supposition", "grade": 6, "curricula": ["HOTS_WHEEL", "CHALLENGING_MATHS", "EXPLORER_SERIES"], "category": "CHALLENGING", "heuristicCode": "MAKE_SUPPOSITION", "ageBand": "10-13", "difficulty": 5, "nationalAvgPct": 52, "templateCode": "g6_supposition_hots", "translations": { "en": "Supposition Method", "id": "Metode Pengandaian" } }
+  ]
+}

@@ -15,6 +15,11 @@ import (
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/dailyorbit"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/server"
 )
 
@@ -49,7 +54,12 @@ func main() {
 	})
 	defer func() { _ = rdb.Close() }()
 
+	ledger := economy.NewPGLedger(pool)
 	authSvc := auth.NewService(cfg, auth.NewPGStore(pool), rdb, logger)
+	streakSvc := streak.NewServiceWithPG(pool)
+	dailyOrbitSvc := dailyorbit.NewServiceWithPG(pool, ledger, streakSvc)
+	trainingSvc := training.NewServiceWithPG(pool, ledger)
+	dailyOrbitSvc.SetAttemptRecorder(trainingSvc)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,
@@ -58,6 +68,10 @@ func main() {
 		RedisCheck: redisPinger{client: rdb},
 		Registrars: []server.ModuleRegistrar{
 			auth.NewHandler(authSvc, cfg).RegisterRoutes,
+			streak.NewHandler(streakSvc, authSvc).RegisterRoutes,
+			dailyorbit.NewHandler(dailyOrbitSvc, authSvc).RegisterRoutes,
+			training.NewHandler(trainingSvc, authSvc).RegisterRoutes,
+			reports.NewHandler(trainingSvc, authSvc).RegisterRoutes,
 		},
 	})
 

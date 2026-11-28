@@ -14,18 +14,20 @@ import { detectInitialLocale, setAppLocale } from "./i18n/init";
 import { TopNavShell } from "./components/shell/TopNavShell";
 import { LoginPage } from "./routes/$locale/(auth)/login/LoginPage";
 import { DashboardPreviewPage } from "./routes/$locale/dashboard/DashboardPreviewPage";
+import { DailyOrbitPage } from "./routes/$locale/daily-orbit/DailyOrbitPage";
+import { StreakPage } from "./routes/$locale/streak/StreakPage";
+import { TrainingPage } from "./routes/$locale/training/TrainingPage";
+import { ReportPage } from "./routes/$locale/report/ReportPage";
+import { ExpLevelPage } from "./routes/$locale/exp-level/ExpLevelPage";
 import { useAuthStore } from "./store/authStore";
 
 const FEATURE_META: Record<string, { titleKey: string; phase: number }> = {
-  "daily-orbit": { titleKey: "apps.dailyOrbit", phase: 1 },
-  streak: { titleKey: "nav.streak", phase: 1 },
-  training: { titleKey: "apps.galaxyTraining", phase: 1 },
-  report: { titleKey: "nav.report", phase: 1 },
   academy: { titleKey: "apps.spaceAcademy", phase: 2 },
   "astro-quiz": { titleKey: "apps.astroQuiz", phase: 2 },
   assignments: { titleKey: "apps.assignments", phase: 2 },
   "profile-settings": { titleKey: "nav.settings", phase: 2 },
   help: { titleKey: "nav.help", phase: 2 },
+  "super-nova": { titleKey: "apps.dailyOrbit", phase: 3 },
   stories: { titleKey: "apps.planetStories", phase: 3 },
   "star-duels": { titleKey: "apps.starDuels", phase: 3 },
   leaderboard: { titleKey: "nav.leaderboard", phase: 3 },
@@ -67,7 +69,7 @@ function FeaturePlaceholderRoute() {
   const { _splat } = useParams({ from: "/$locale/shell/$" });
   const { t } = useTranslation("common");
   const slug = (_splat ?? "").split("/")[0] ?? "";
-  const meta = FEATURE_META[slug] ?? { titleKey: "brand", phase: 1 };
+  const meta = FEATURE_META[slug] ?? { titleKey: "brand", phase: 2 };
 
   return (
     <GalaxyCard className="mx-auto max-w-2xl text-center py-12 space-y-2">
@@ -118,6 +120,48 @@ const dashboardRoute = createRoute({
   },
 });
 
+const dailyOrbitRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/daily-orbit",
+  component: function DailyOrbitRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/daily-orbit" });
+    return <DailyOrbitPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const streakRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/streak",
+  component: StreakPage,
+});
+
+const trainingRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/training",
+  component: function TrainingRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/training" });
+    return <TrainingPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const reportRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/report",
+  component: function ReportRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/report" });
+    return <ReportPage locale={normalizeLocale(locale)} />;
+  },
+});
+
+const expLevelRoute = createRoute({
+  getParentRoute: () => appShellRoute,
+  path: "/exp-level",
+  component: function ExpLevelRouteView() {
+    const { locale } = useParams({ from: "/$locale/shell/exp-level" });
+    return <ExpLevelPage locale={normalizeLocale(locale)} />;
+  },
+});
+
 const featureSplatRoute = createRoute({
   getParentRoute: () => appShellRoute,
   path: "/$",
@@ -128,7 +172,15 @@ const routeTree = rootRoute.addChildren([
   indexRoute,
   localeRoute.addChildren([
     loginRoute,
-    appShellRoute.addChildren([dashboardRoute, featureSplatRoute]),
+    appShellRoute.addChildren([
+      dashboardRoute,
+      dailyOrbitRoute,
+      streakRoute,
+      trainingRoute,
+      reportRoute,
+      expLevelRoute,
+      featureSplatRoute,
+    ]),
   ]),
 ]);
 

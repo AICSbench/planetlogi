@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -13,6 +15,7 @@ import (
 
 	dbmigrations "github.com/AICSbench/planetlogi/apps/api/db"
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
+	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 )
 
 func main() {
@@ -39,14 +42,32 @@ func main() {
 	}
 	defer pool.Close()
 
-	if err := seedCore(ctx, pool); err != nil {
+	if err := seedCore(ctx, pool, logger); err != nil {
 		logger.Error("seed failed", "error", err)
 		os.Exit(1)
 	}
 	logger.Info("planetlogi seed completed cleanly")
 }
 
-func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
+func resolveContentFile(rel string) (string, bool) {
+	candidates := []string{
+		rel,
+		filepath.Join("..", rel),
+		filepath.Join("..", "..", rel),
+		filepath.Join("/app", rel),
+	}
+	if dir := os.Getenv("CONTENT_DIR"); dir != "" {
+		candidates = append([]string{filepath.Join(dir, rel)}, candidates...)
+	}
+	for _, p := range candidates {
+		if st, err := os.Stat(p); err == nil && !st.IsDir() {
+			return p, true
+		}
+	}
+	return "", false
+}
+
+func seedCore(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
 	// 1. Seed multi-subject catalog (only Math active at launch)
 	subjects := []struct {
 		code   string
@@ -193,6 +214,202 @@ func seedCore(ctx context.Context, pool *pgxpool.Pool) error {
 	`, studentID, mathSubjectID); err != nil {
 		return fmt.Errorf("seed streak: %w", err)
 	}
+
+	if err := seedContentPacks(ctx, pool, mathSubjectID, logger); err != nil {
+		return fmt.Errorf("seed content packs: %w", err)
+	}
+
+	return nil
+}
+
+func seedContentPacks(ctx context.Context, pool *pgxpool.Pool, mathSubjectID string, logger *slog.Logger) error {
+	currPath, ok := resolveContentFile(filepath.Join("content", "curricula", "g1-g6-curricula.json"))
+	if !ok {
+		logger.Warn("content packs not found on disk; skipping static JSON import")
+		return nil
+	}
+	currBytes, err := os.ReadFile(currPath)
+	if err != nil {
+		return fmt.Errorf("read curricula pack: %w", err)
+	}
+
+	type seedSkill struct {
+		Code          string            `json:"code"`
+		Grade         int               `json:"grade"`
+		Curricula     []string          `json:"curricula"`
+		Category      string            `json:"category"`
+		HeuristicCode string            `json:"heuristicCode"`
+		AgeBand       string            `json:"ageBand"`
+		Difficulty    int               `json:"difficulty"`
+		Translations  map[string]string `json:"translations"`
+	}
+	var currDoc struct {
+		Skills []seedSkill `json:"skills"`
+	}
+	if err := json.Unmarshal(currBytes, &currDoc); err != nil {
+		return fmt.Errorf("parse curricula pack: %w", err)
+	}
+	templates := mathengine.Registry()
+	knownSkills := make(map[string]bool)
+	for _, sk := range currDoc.Skills {
+		knownSkills[sk.Code] = true
+	}
+	for _, tmpl := range templates {
+		if knownSkills[tmpl.SkillCode] {
+			continue
+		}
+		currDoc.Skills = append(currDoc.Skills, seedSkill{
+			Code: tmpl.SkillCode, Grade: tmpl.Grade, Curricula: []string{tmpl.CurriculumCode},
+			Difficulty: tmpl.Difficulty, HeuristicCode: tmpl.HeuristicCode,
+			Translations: map[string]string{"en": tmpl.SkillName.EN, "id": tmpl.SkillName.ID},
+		})
+		knownSkills[tmpl.SkillCode] = true
+	}
+
+	// Map curriculum code -> id
+	currIDs := make(map[string]string)
+	rows, err := pool.Query(ctx, `SELECT code, id::text FROM curricula WHERE subject_id = $1::uuid`, mathSubjectID)
+	if err != nil {
+		return fmt.Errorf("load curricula ids: %w", err)
+	}
+	for rows.Next() {
+		var code, id string
+		if scanErr := rows.Scan(&code, &id); scanErr == nil {
+			currIDs[code] = id
+		}
+	}
+	rows.Close()
+
+	topicIDs := make(map[string]string)
+	skillIDs := make(map[string]string)
+
+	for _, sk := range currDoc.Skills {
+		primaryCurr := "SINGAPORE_MOE"
+		if len(sk.Curricula) > 0 {
+			primaryCurr = sk.Curricula[0]
+		}
+		currID := currIDs[primaryCurr]
+		if currID == "" {
+			continue
+		}
+		cat := sk.Category
+		switch cat {
+		case "CORE", "WORD_PROBLEM", "CHALLENGING", "HOTS", "EXPLORER":
+		default:
+			cat = "CORE"
+		}
+		topicKey := fmt.Sprintf("%s:%d:%s", currID, sk.Grade, cat)
+		topicID, hasTopic := topicIDs[topicKey]
+		if !hasTopic {
+			err := pool.QueryRow(ctx, `
+				SELECT id::text FROM topics WHERE curriculum_id = $1::uuid AND grade = $2 AND category = $3 LIMIT 1
+			`, currID, sk.Grade, cat).Scan(&topicID)
+			if err != nil {
+				err = pool.QueryRow(ctx, `
+					INSERT INTO topics (curriculum_id, grade, category, translations)
+					VALUES ($1::uuid, $2, $3, jsonb_build_object('en', $4::text, 'id', $5::text))
+					RETURNING id::text
+				`, currID, sk.Grade, cat, fmt.Sprintf("Grade %d %s", sk.Grade, cat), fmt.Sprintf("Kelas %d %s", sk.Grade, cat)).Scan(&topicID)
+				if err != nil {
+					return fmt.Errorf("insert topic %s: %w", topicKey, err)
+				}
+			}
+			topicIDs[topicKey] = topicID
+		}
+
+		var skillID string
+		err := pool.QueryRow(ctx, `SELECT id::text FROM skills WHERE canonical_code = $1 LIMIT 1`, sk.Code).Scan(&skillID)
+		if err != nil {
+			trRaw, _ := json.Marshal(sk.Translations)
+			var heur, band any
+			if sk.HeuristicCode != "" {
+				heur = sk.HeuristicCode
+			}
+			if sk.AgeBand != "" {
+				band = sk.AgeBand
+			}
+			err = pool.QueryRow(ctx, `
+				INSERT INTO skills (canonical_code, topic_id, difficulty, heuristic_code, age_band, translations)
+				VALUES ($1, $2::uuid, $3, $4, $5, $6::jsonb)
+				RETURNING id::text
+			`, sk.Code, topicID, sk.Difficulty, heur, band, trRaw).Scan(&skillID)
+			if err != nil {
+				return fmt.Errorf("insert skill %s: %w", sk.Code, err)
+			}
+		}
+		skillIDs[sk.Code] = skillID
+	}
+
+	// Import 300 curated static questions
+	qPath, ok := resolveContentFile(filepath.Join("content", "questions", "g1-g6-curated-pack.json"))
+	if ok {
+		qBytes, err := os.ReadFile(qPath)
+		if err != nil {
+			return fmt.Errorf("read curated questions: %w", err)
+		}
+		var qDoc struct {
+			Questions []struct {
+				Code         string            `json:"code"`
+				Grade        int               `json:"grade"`
+				SkillCode    string            `json:"skillCode"`
+				Difficulty   int               `json:"difficulty"`
+				Stem         map[string]string `json:"stem"`
+				Answer       string            `json:"answer"`
+				SolutionText map[string]string `json:"solutionText"`
+			} `json:"questions"`
+		}
+		if err := json.Unmarshal(qBytes, &qDoc); err != nil {
+			return fmt.Errorf("parse curated questions: %w", err)
+		}
+		for _, q := range qDoc.Questions {
+			skID := skillIDs[q.SkillCode]
+			if skID == "" {
+				continue
+			}
+			trRaw, _ := json.Marshal(map[string]any{"stem": q.Stem, "solutionText": q.SolutionText})
+			ruleRaw, _ := json.Marshal(map[string]any{"strategy": "exact_numeric", "answer": q.Answer})
+			if _, err := pool.Exec(ctx, `
+				INSERT INTO questions (code, subject_id, skill_id, kind, grade, difficulty, input_type, translations, grading_rule, status)
+				VALUES ($1, $2::uuid, $3::uuid, 'STATIC', $4, $5, 'single_numeric', $6::jsonb, $7::jsonb, 'PUBLISHED')
+				ON CONFLICT (code) DO UPDATE SET
+					translations = EXCLUDED.translations,
+					grading_rule = EXCLUDED.grading_rule,
+					status = 'PUBLISHED',
+					updated_at = NOW()
+			`, q.Code, mathSubjectID, skID, q.Grade, q.Difficulty, trRaw, ruleRaw); err != nil {
+				return fmt.Errorf("upsert curated question %s: %w", q.Code, err)
+			}
+		}
+		logger.Info("imported curated questions", "count", len(qDoc.Questions))
+	}
+
+	// Import 60 procedural template descriptors
+	for _, tmpl := range templates {
+		skID := skillIDs[tmpl.SkillCode]
+		if skID == "" {
+			return fmt.Errorf("missing skill %s for template %s", tmpl.SkillCode, tmpl.Code)
+		}
+		trRaw, _ := json.Marshal(map[string]any{"skillName": map[string]string{"en": tmpl.SkillName.EN, "id": tmpl.SkillName.ID}})
+		cfgRaw, _ := json.Marshal(map[string]any{"templateCode": tmpl.Code, "curriculumCode": tmpl.CurriculumCode})
+		ruleRaw, _ := json.Marshal(map[string]any{"strategy": "procedural"})
+		var heur any
+		if tmpl.HeuristicCode != "" {
+			heur = tmpl.HeuristicCode
+		}
+		if _, err := pool.Exec(ctx, `
+			INSERT INTO questions (code, subject_id, skill_id, kind, grade, difficulty, input_type, heuristic_code, template_config, translations, grading_rule, status)
+			VALUES ($1, $2::uuid, $3::uuid, 'PROCEDURAL', $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, 'PUBLISHED')
+			ON CONFLICT (code) DO UPDATE SET
+				skill_id = EXCLUDED.skill_id,
+				template_config = EXCLUDED.template_config,
+				translations = EXCLUDED.translations,
+				status = 'PUBLISHED',
+				updated_at = NOW()
+		`, "PL-TPL-"+tmpl.Code, mathSubjectID, skID, tmpl.Grade, tmpl.Difficulty, string(tmpl.InputType), heur, cfgRaw, trRaw, ruleRaw); err != nil {
+			return fmt.Errorf("upsert procedural template %s: %w", tmpl.Code, err)
+		}
+	}
+	logger.Info("imported procedural templates", "count", len(templates))
 
 	return nil
 }

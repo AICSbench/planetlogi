@@ -1,0 +1,41 @@
+{
+  "title": "Orbit Harian",
+  "subtitle": "Selesaikan 10 soal berjenjang pukul 06.00–22.00 untuk meraih hingga 17 SP + 5 Koin Astro.",
+  "closedTitle": "Planet sedang mengisi ulang energi!",
+  "closedBody": "Orbit Harian buka pukul 06.00 – 22.00 waktu lokal. Sampai jumpa besok pagi!",
+  "tierButton": "Tingkat Kesulitan",
+  "curriculaButton": "Filter Kurikulum",
+  "todayBreakdown": "Rincian SP Hari Ini",
+  "breakdownDaily": "Orbit Harian",
+  "breakdownDuels": "Duel Bintang",
+  "breakdownSunday": "Meteor Minggu",
+  "breakdownTotal": "Total SP Hari Ini",
+  "changeQuestion": "Ganti Soal",
+  "changeRemaining": "Sisa {{remaining}}/{{limit}} hari ini",
+  "changeEasier": "Buat lebih mudah",
+  "changeHarder": "Buat lebih sulit",
+  "changeTopic": "Ganti topik",
+  "completionBonus": "Bonus +5 Koin Astro Diraih!",
+  "tiers": {
+    "ELEMENTARY": "Dasar (Elementary)",
+    "INTERMEDIATE": "Menengah (15 SP)",
+    "ADVANCED": "Lanjutan (50 SP)",
+    "MASTER": "Master (100 SP)"
+  },
+  "streak": {
+    "title": "Streak Orbit & Hewan Nova",
+    "subtitle": "Jawab minimal 5 soal Orbit Harian dengan benar setiap hari untuk menumbuhkan Hewan Nova!",
+    "currentDays": "Streak {{count}} Hari",
+    "longestDays": "Terpanjang: {{count}} hari",
+    "todayProgress": "Target Hari Ini: {{current}} / {{target}} benar",
+    "petStage": "Tahap Hewan Nova {{stage}} / 5",
+    "cryoTitle": "Perisai Krio (Streak Freeze)",
+    "cryoDesc": "Simpan hingga 3 Perisai Krio. Jika kamu terlewat 1 hari, 1 perisai aktif otomatis saat tengah malam agar streak tetap aman.",
+    "calendarTitle": "Kalender Orbit Bulanan",
+    "reminderOn": "Pengingat Harian Aktif ({{time}})",
+    "reminderOff": "Aktifkan Pengingat Harian",
+    "statusCompleted": "Selesai",
+    "statusFrozen": "Dilindungi Krio",
+    "statusMissed": "Terlewat"
+  }
+}
