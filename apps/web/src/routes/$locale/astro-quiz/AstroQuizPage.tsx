@@ -342,8 +342,9 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           }}
           onSaveDraft={(answers) => {
             // Saving an untouched cached answer would let a stale tab
-            // overwrite a newer save from another tab.
-            if (draftEdits[activeQ.index] === undefined) return Promise.resolve();
+            // overwrite a newer save from another tab. Returning false keeps
+            // QuestionPlayer from claiming the unchanged answer was saved.
+            if (draftEdits[activeQ.index] === undefined) return Promise.resolve(false);
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
             return saveMutation.mutateAsync(payload({ [activeQ.index]: answers }));
           }}

@@ -389,6 +389,43 @@ func TestMergeQuizStateKeepsIncomingSubmittedUnit(t *testing.T) {
 	}
 }
 
+func TestSubmitGradesDurableDraftsAcrossInstances(t *testing.T) {
+	const studentID = "77777777-7777-7777-7777-777777777777"
+	store := newQuizMemoryStore()
+	a := NewServiceWithStore(store, nil)
+	b := NewServiceWithStore(store, nil)
+	ctx := context.Background()
+
+	opened, err := a.OpenPaper(ctx, studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// B caches an empty attempt before A saves the answer.
+	if _, err := b.OpenPaper(ctx, studentID, "G1-ESS-01", "en"); err != nil {
+		t.Fatal(err)
+	}
+	q1 := opened.Questions[0]
+	prob, _ := mathengine.GenerateByCode(q1.Question.TemplateCode, q1.Question.Seed, "en")
+	if _, err := a.SavePaper(ctx, studentID, "G1-ESS-01", "en", 0, map[int]map[string]string{1: prob.Solution.CorrectAnswers}); err != nil {
+		t.Fatal(err)
+	}
+
+	submitted, err := b.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, map[int]map[string]string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if submitted.Score != 1 {
+		t.Fatalf("stale instance graded %d instead of the durable 1/10 answer", submitted.Score)
+	}
+	var stored quizState
+	if _, err := store.Load(ctx, studentID, "astroquiz", &stored); err != nil {
+		t.Fatal(err)
+	}
+	if got := stored.Attempts["G1-ESS-01"]; got.Status != "SUBMITTED" || got.Score != 1 {
+		t.Fatalf("durable submission did not keep the graded answer: %+v", got)
+	}
+}
+
 func TestStaleInstanceUsesPersistedClaimWeek(t *testing.T) {
 	const studentID = "44444444-4444-4444-4444-444444444444"
 	store := newQuizMemoryStore()

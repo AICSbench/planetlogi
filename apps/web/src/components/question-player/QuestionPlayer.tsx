@@ -20,7 +20,7 @@ export interface QuestionPlayerProps {
   onSubmit: (answers: Record<string, string>) => Promise<void> | void;
   onSkip?: () => Promise<void> | void;
   onNext?: () => void;
-  /** May return a promise; "Saved" is shown only after it resolves. */
+  /** May return a promise; "Saved" is shown only after it resolves, unless it resolves to false. */
   onSaveDraft?: (answers: Record<string, string>) => void | Promise<unknown>;
   onDraftChange?: (answers: Record<string, string>) => void;
   extraHeaderActions?: React.ReactNode;
@@ -259,8 +259,8 @@ function QuestionPlayerInner({
                   const revision = draftRevision.current;
                   setSavedNotice(false);
                   try {
-                    await onSaveDraft(answers);
-                    if (draftRevision.current === revision) setSavedNotice(true);
+                    const saved = await onSaveDraft(answers);
+                    if (saved !== false && draftRevision.current === revision) setSavedNotice(true);
                   } catch {
                     // Keep "Save draft" available; the page shows the error.
                   }
