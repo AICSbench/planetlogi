@@ -34,9 +34,9 @@ func gcd(a, b int) int {
 	return a
 }
 
-// Registry returns all 24+ deterministic procedural templates spanning Grades 1-6.
+// Registry returns all 60 deterministic procedural templates spanning Grades 1-6.
 func Registry() []TemplateMeta {
-	return []TemplateMeta{
+	base := []TemplateMeta{
 		// ==================== GRADE 1 ====================
 		{
 			Code: "g1_add_within_20", Grade: 1, SkillCode: "num-add-within-20",
@@ -669,6 +669,7 @@ func Registry() []TemplateMeta {
 			},
 		},
 	}
+	return append(base, extraTemplates()...)
 }
 
 func buildSingleNumeric(

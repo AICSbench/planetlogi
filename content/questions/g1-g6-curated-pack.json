@@ -2,76 +2,4504 @@
   "version": "1.0.0",
   "questions": [
     {
-      "code": "PL-CUR-G1-001", "grade": 1, "skillCode": "num-add-within-20", "difficulty": 1,
-      "stem": { "en": "A rocket has 7 red lights and 6 green lights. How many lights are on the rocket?", "id": "Sebuah roket memiliki 7 lampu merah dan 6 lampu hijau. Berapa jumlah lampu pada roket itu?" },
+      "code": "PL-CUR-G1-001",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A rocket has 7 red lights and 6 green lights. How many lights are on the rocket?",
+        "id": "Sebuah roket memiliki 7 lampu merah dan 6 lampu hijau. Berapa jumlah lampu pada roket itu?"
+      },
       "answer": "13",
-      "solutionText": { "en": "7 + 6 = 13 lights.", "id": "7 + 6 = 13 lampu." }
+      "solutionText": {
+        "en": "7 + 6 = 13 lights.",
+        "id": "7 + 6 = 13 lampu."
+      }
     },
     {
-      "code": "PL-CUR-G1-002", "grade": 1, "skillCode": "hots-look-for-patterns-g1", "difficulty": 2,
-      "stem": { "en": "Stars glow in this order: 3, 6, 9, 12, ___. What is the next number?", "id": "Bintang menyala dengan urutan: 3, 6, 9, 12, ___. Bilangan berapa selanjutnya?" },
+      "code": "PL-CUR-G1-002",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Stars glow in this order: 3, 6, 9, 12, ___. What is the next number?",
+        "id": "Bintang menyala dengan urutan: 3, 6, 9, 12, ___. Bilangan berapa selanjutnya?"
+      },
       "answer": "15",
-      "solutionText": { "en": "Add 3 each step: 12 + 3 = 15.", "id": "Tambah 3 setiap langkah: 12 + 3 = 15." }
+      "solutionText": {
+        "en": "Add 3 each step: 12 + 3 = 15.",
+        "id": "Tambah 3 setiap langkah: 12 + 3 = 15."
+      }
     },
     {
-      "code": "PL-CUR-G2-001", "grade": 2, "skillCode": "wp-bar-model-compare", "difficulty": 3,
-      "stem": { "en": "Budi collected 45 star coins. Maya collected 18 more coins than Budi. How many coins did Maya collect?", "id": "Budi mengumpulkan 45 koin bintang. Maya mengumpulkan 18 koin lebih banyak dari Budi. Berapa koin yang dikumpulkan Maya?" },
-      "answer": "63",
-      "solutionText": { "en": "45 + 18 = 63 coins.", "id": "45 + 18 = 63 koin." }
+      "code": "PL-CUR-G1-003",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 3 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 3 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "7",
+      "solutionText": {
+        "en": "3 + 4 = 7 comets.",
+        "id": "3 + 4 = 7 komet."
+      }
     },
     {
-      "code": "PL-CUR-G2-002", "grade": 2, "skillCode": "num-mul-2-3-4-5-10", "difficulty": 2,
-      "stem": { "en": "There are 8 trays on a space ship. Each tray holds 5 energy bars. How many energy bars are there?", "id": "Ada 8 baki di pesawat luar angkasa. Setiap baki berisi 5 batang energi. Berapa jumlah seluruh batang energi?" },
-      "answer": "40",
-      "solutionText": { "en": "8 × 5 = 40 energy bars.", "id": "8 × 5 = 40 batang energi." }
+      "code": "PL-CUR-G1-004",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 4 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 4 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "13 - 4 = 9 helmets.",
+        "id": "13 - 4 = 9 helm."
+      }
     },
     {
-      "code": "PL-CUR-G3-001", "grade": 3, "skillCode": "geo-area-perimeter-rect", "difficulty": 3,
-      "stem": { "en": "A rectangular landing pad is 12 m long and 7 m wide. What is its area in m²?", "id": "Landasan roket berbentuk persegi panjang memiliki panjang 12 m dan lebar 7 m. Berapa luasnya dalam m²?" },
-      "answer": "84",
-      "solutionText": { "en": "Area = 12 × 7 = 84 m².", "id": "Luas = 12 × 7 = 84 m²." }
+      "code": "PL-CUR-G1-005",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 4 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 4 puluhan dan 5 satuan?"
+      },
+      "answer": "45",
+      "solutionText": {
+        "en": "4 tens + 5 ones = 45.",
+        "id": "4 puluhan + 5 satuan = 45."
+      }
     },
     {
-      "code": "PL-CUR-G3-002", "grade": 3, "skillCode": "num-div-remainder", "difficulty": 3,
-      "stem": { "en": "50 moon pebbles are shared equally among 6 astronauts. How many pebbles are left over?", "id": "50 kerikil bulan dibagi rata kepada 6 astronot. Berapa kerikil bulan yang tersisa?" },
-      "answer": "2",
-      "solutionText": { "en": "50 ÷ 6 = 8 remainder 2 (6 × 8 = 48, 50 − 48 = 2).", "id": "50 ÷ 6 = 8 sisa 2 (6 × 8 = 48, 50 − 48 = 2)." }
+      "code": "PL-CUR-G1-006",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 5, 7, 9, 11, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 5, 7, 9, 11, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "Add 2 each time: 11 + 2 = 13.",
+        "id": "Tambah 2 setiap langkah: 11 + 2 = 13."
+      }
     },
     {
-      "code": "PL-CUR-G4-001", "grade": 4, "skillCode": "hots-work-backwards", "difficulty": 4,
-      "stem": { "en": "After doubling a number and subtracting 9, Lucas gets 25. What was the original number?", "id": "Setelah menggandakan sebuah bilangan lalu menguranginya dengan 9, Lucas mendapat 25. Berapakah bilangan awalnya?" },
-      "answer": "17",
-      "solutionText": { "en": "25 + 9 = 34, then 34 ÷ 2 = 17.", "id": "25 + 9 = 34, lalu 34 ÷ 2 = 17." }
+      "code": "PL-CUR-G1-007",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 7 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 7 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "15",
+      "solutionText": {
+        "en": "7 + 8 = 15 comets.",
+        "id": "7 + 8 = 15 komet."
+      }
     },
     {
-      "code": "PL-CUR-G4-002", "grade": 4, "skillCode": "num-factors-multiples", "difficulty": 3,
-      "stem": { "en": "What is the Lowest Common Multiple (LCM) of 6 and 15?", "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 6 dan 15?" },
-      "answer": "30",
-      "solutionText": { "en": "Multiples of 6: 6, 12, 18, 24, 30. Multiples of 15: 15, 30. LCM = 30.", "id": "Kelipatan 6: 6, 12, 18, 24, 30. Kelipatan 15: 15, 30. KPK = 30." }
+      "code": "PL-CUR-G1-008",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 8 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 8 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "17 - 8 = 9 helmets.",
+        "id": "17 - 8 = 9 helm."
+      }
     },
     {
-      "code": "PL-CUR-G5-001", "grade": 5, "skillCode": "pct-discount", "difficulty": 3,
-      "stem": { "en": "A helmet costs 200 coins. With a 25% discount, how many coins do you pay?", "id": "Sebuah helm berharga 200 koin. Dengan diskon 25%, berapa koin yang harus dibayar?" },
-      "answer": "150",
-      "solutionText": { "en": "25% of 200 = 50. 200 − 50 = 150 coins.", "id": "25% dari 200 = 50. 200 − 50 = 150 koin." }
+      "code": "PL-CUR-G1-009",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 8 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 8 puluhan dan 5 satuan?"
+      },
+      "answer": "85",
+      "solutionText": {
+        "en": "8 tens + 5 ones = 85.",
+        "id": "8 puluhan + 5 satuan = 85."
+      }
     },
     {
-      "code": "PL-CUR-G5-002", "grade": 5, "skillCode": "ratio-two-quantities", "difficulty": 4,
-      "stem": { "en": "Gold stars and silver stars are in the ratio 3 : 5. If there are 64 stars altogether, how many are silver?", "id": "Rasio bintang emas dan perak adalah 3 : 5. Jika total ada 64 bintang, berapa banyak bintang perak?" },
-      "answer": "40",
-      "solutionText": { "en": "8 units = 64 → 1 unit = 8 → 5 units = 40 silver stars.", "id": "8 unit = 64 → 1 unit = 8 → 5 unit = 40 bintang perak." }
+      "code": "PL-CUR-G1-010",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 4, 7, 10, 13, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 4, 7, 10, 13, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "Add 3 each time: 13 + 3 = 16.",
+        "id": "Tambah 3 setiap langkah: 13 + 3 = 16."
+      }
     },
     {
-      "code": "PL-CUR-G6-001", "grade": 6, "skillCode": "rate-speed-dst", "difficulty": 4,
-      "stem": { "en": "A comet cruiser travels 270 km in 3 hours. What is its average speed in km/h?", "id": "Sebuah kapal komet menempuh jarak 270 km dalam 3 jam. Berapa kecepatan rata-ratanya dalam km/jam?" },
-      "answer": "90",
-      "solutionText": { "en": "Speed = 270 ÷ 3 = 90 km/h.", "id": "Kecepatan = 270 ÷ 3 = 90 km/jam." }
-    },
-    {
-      "code": "PL-CUR-G6-002", "grade": 6, "skillCode": "hots-make-supposition", "difficulty": 5,
-      "stem": { "en": "14 space critters have 44 legs in total. Some are 2-legged birds and some are 4-legged bots. How many 4-legged bots are there?", "id": "Ada 14 makhluk ruang angkasa dengan total 44 kaki. Sebagian burung berkaki 2 dan sebagian robot berkaki 4. Berapa jumlah robot berkaki 4?" },
+      "code": "PL-CUR-G1-011",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 4 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 4 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
       "answer": "8",
-      "solutionText": { "en": "Assume all 14 have 2 legs → 28 legs. Extra legs = 44 − 28 = 16. 16 ÷ 2 = 8 bots.", "id": "Andaikan semua berkaki 2 → 28 kaki. Sisa kaki = 44 − 28 = 16. 16 ÷ 2 = 8 robot." }
+      "solutionText": {
+        "en": "4 + 4 = 8 comets.",
+        "id": "4 + 4 = 8 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-012",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 5 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 5 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "13 - 5 = 8 helmets.",
+        "id": "13 - 5 = 8 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-013",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 5 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 5 puluhan dan 5 satuan?"
+      },
+      "answer": "55",
+      "solutionText": {
+        "en": "5 tens + 5 ones = 55.",
+        "id": "5 puluhan + 5 satuan = 55."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-014",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 3, 7, 11, 15, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 3, 7, 11, 15, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "19",
+      "solutionText": {
+        "en": "Add 4 each time: 15 + 4 = 19.",
+        "id": "Tambah 4 setiap langkah: 15 + 4 = 19."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-015",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 8 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 8 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "8 + 8 = 16 comets.",
+        "id": "8 + 8 = 16 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-016",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 9 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 9 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "17 - 9 = 8 helmets.",
+        "id": "17 - 9 = 8 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-017",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 2 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 2 puluhan dan 5 satuan?"
+      },
+      "answer": "25",
+      "solutionText": {
+        "en": "2 tens + 5 ones = 25.",
+        "id": "2 puluhan + 5 satuan = 25."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-018",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 2, 4, 6, 8, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 2, 4, 6, 8, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "Add 2 each time: 8 + 2 = 10.",
+        "id": "Tambah 2 setiap langkah: 8 + 2 = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-019",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 5 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 5 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "5 + 4 = 9 comets.",
+        "id": "5 + 4 = 9 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-020",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 6 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 6 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "7",
+      "solutionText": {
+        "en": "13 - 6 = 7 helmets.",
+        "id": "13 - 6 = 7 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-021",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 6 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 6 puluhan dan 5 satuan?"
+      },
+      "answer": "65",
+      "solutionText": {
+        "en": "6 tens + 5 ones = 65.",
+        "id": "6 puluhan + 5 satuan = 65."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-022",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 6, 9, 12, 15, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 6, 9, 12, 15, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "Add 3 each time: 15 + 3 = 18.",
+        "id": "Tambah 3 setiap langkah: 15 + 3 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-023",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 9 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 9 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "17",
+      "solutionText": {
+        "en": "9 + 8 = 17 comets.",
+        "id": "9 + 8 = 17 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-024",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 3 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 3 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "17 - 3 = 14 helmets.",
+        "id": "17 - 3 = 14 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-025",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 3 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 3 puluhan dan 5 satuan?"
+      },
+      "answer": "35",
+      "solutionText": {
+        "en": "3 tens + 5 ones = 35.",
+        "id": "3 puluhan + 5 satuan = 35."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-026",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 5, 9, 13, 17, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 5, 9, 13, 17, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "21",
+      "solutionText": {
+        "en": "Add 4 each time: 17 + 4 = 21.",
+        "id": "Tambah 4 setiap langkah: 17 + 4 = 21."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-027",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 6 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 6 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "6 + 4 = 10 comets.",
+        "id": "6 + 4 = 10 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-028",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 7 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 7 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "13 - 7 = 6 helmets.",
+        "id": "13 - 7 = 6 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-029",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 7 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 7 puluhan dan 5 satuan?"
+      },
+      "answer": "75",
+      "solutionText": {
+        "en": "7 tens + 5 ones = 75.",
+        "id": "7 puluhan + 5 satuan = 75."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-030",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 4, 6, 8, 10, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 4, 6, 8, 10, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "Add 2 each time: 10 + 2 = 12.",
+        "id": "Tambah 2 setiap langkah: 10 + 2 = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-031",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 3 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 3 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "11",
+      "solutionText": {
+        "en": "3 + 8 = 11 comets.",
+        "id": "3 + 8 = 11 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-032",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 4 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 4 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "17 - 4 = 13 helmets.",
+        "id": "17 - 4 = 13 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-033",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 4 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 4 puluhan dan 5 satuan?"
+      },
+      "answer": "45",
+      "solutionText": {
+        "en": "4 tens + 5 ones = 45.",
+        "id": "4 puluhan + 5 satuan = 45."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-034",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 3, 6, 9, 12, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 3, 6, 9, 12, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "15",
+      "solutionText": {
+        "en": "Add 3 each time: 12 + 3 = 15.",
+        "id": "Tambah 3 setiap langkah: 12 + 3 = 15."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-035",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 7 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 7 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "11",
+      "solutionText": {
+        "en": "7 + 4 = 11 comets.",
+        "id": "7 + 4 = 11 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-036",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 8 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 8 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "13 - 8 = 5 helmets.",
+        "id": "13 - 8 = 5 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-037",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 8 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 8 puluhan dan 5 satuan?"
+      },
+      "answer": "85",
+      "solutionText": {
+        "en": "8 tens + 5 ones = 85.",
+        "id": "8 puluhan + 5 satuan = 85."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-038",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 2, 6, 10, 14, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 2, 6, 10, 14, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "Add 4 each time: 14 + 4 = 18.",
+        "id": "Tambah 4 setiap langkah: 14 + 4 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-039",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 4 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 4 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "4 + 8 = 12 comets.",
+        "id": "4 + 8 = 12 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-040",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 5 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 5 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "17 - 5 = 12 helmets.",
+        "id": "17 - 5 = 12 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-041",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 5 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 5 puluhan dan 5 satuan?"
+      },
+      "answer": "55",
+      "solutionText": {
+        "en": "5 tens + 5 ones = 55.",
+        "id": "5 puluhan + 5 satuan = 55."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-042",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 6, 8, 10, 12, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 6, 8, 10, 12, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "Add 2 each time: 12 + 2 = 14.",
+        "id": "Tambah 2 setiap langkah: 12 + 2 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-043",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 8 comets on Monday and 4 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 8 komet pada hari Senin dan 4 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "8 + 4 = 12 comets.",
+        "id": "8 + 4 = 12 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-044",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 13 space helmets. 9 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 13 helm antariksa. 9 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "13 - 9 = 4 helmets.",
+        "id": "13 - 9 = 4 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-045",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 2 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 2 puluhan dan 5 satuan?"
+      },
+      "answer": "25",
+      "solutionText": {
+        "en": "2 tens + 5 ones = 25.",
+        "id": "2 puluhan + 5 satuan = 25."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-046",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 5, 8, 11, 14, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 5, 8, 11, 14, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "17",
+      "solutionText": {
+        "en": "Add 3 each time: 14 + 3 = 17.",
+        "id": "Tambah 3 setiap langkah: 14 + 3 = 17."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-047",
+      "grade": 1,
+      "skillCode": "num-add-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "Nova spots 5 comets on Monday and 8 comets on Tuesday. How many comets did she spot in total?",
+        "id": "Nova melihat 5 komet pada hari Senin dan 8 komet pada hari Selasa. Berapa total komet yang ia lihat?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "5 + 8 = 13 comets.",
+        "id": "5 + 8 = 13 komet."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-048",
+      "grade": 1,
+      "skillCode": "num-sub-within-20",
+      "difficulty": 1,
+      "stem": {
+        "en": "A shelf holds 17 space helmets. 6 astronauts take one each. How many helmets remain?",
+        "id": "Sebuah rak berisi 17 helm antariksa. 6 astronot masing-masing mengambil satu. Berapa helm yang tersisa?"
+      },
+      "answer": "11",
+      "solutionText": {
+        "en": "17 - 6 = 11 helmets.",
+        "id": "17 - 6 = 11 helm."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-049",
+      "grade": 1,
+      "skillCode": "num-place-value-100",
+      "difficulty": 2,
+      "stem": {
+        "en": "What number has 6 tens and 5 ones?",
+        "id": "Bilangan berapakah yang terdiri dari 6 puluhan dan 5 satuan?"
+      },
+      "answer": "65",
+      "solutionText": {
+        "en": "6 tens + 5 ones = 65.",
+        "id": "6 puluhan + 5 satuan = 65."
+      }
+    },
+    {
+      "code": "PL-CUR-G1-050",
+      "grade": 1,
+      "skillCode": "hots-look-for-patterns-g1",
+      "difficulty": 2,
+      "stem": {
+        "en": "Continue the star pattern: 4, 8, 12, 16, ___. What comes next?",
+        "id": "Lanjutkan pola bintang berikut: 4, 8, 12, 16, ___. Bilangan berapa selanjutnya?"
+      },
+      "answer": "20",
+      "solutionText": {
+        "en": "Add 4 each time: 16 + 4 = 20.",
+        "id": "Tambah 4 setiap langkah: 16 + 4 = 20."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-001",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Budi collected 45 star coins. Maya collected 18 more coins than Budi. How many coins did Maya collect?",
+        "id": "Budi mengumpulkan 45 koin bintang. Maya mengumpulkan 18 koin lebih banyak dari Budi. Berapa koin yang dikumpulkan Maya?"
+      },
+      "answer": "63",
+      "solutionText": {
+        "en": "45 + 18 = 63 coins.",
+        "id": "45 + 18 = 63 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-002",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 8 trays on a space ship. Each tray holds 5 energy bars. How many energy bars are there?",
+        "id": "Ada 8 baki di pesawat luar angkasa. Setiap baki berisi 5 batang energi. Berapa jumlah seluruh batang energi?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "8 × 5 = 40 energy bars.",
+        "id": "8 × 5 = 40 batang energi."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-003",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 120 batteries and receives 45 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 120 baterai dan menerima 45 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "165",
+      "solutionText": {
+        "en": "120 + 45 = 165.",
+        "id": "120 + 45 = 165."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-004",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 4 pods, each holding 3 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 4 kapsul, masing-masing berisi 3 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "4 x 3 = 12.",
+        "id": "4 x 3 = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-005",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 37 moonstones. Sinta collected 14 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 37 batu bulan. Sinta mengumpulkan 14 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "51",
+      "solutionText": {
+        "en": "37 + 14 = 51.",
+        "id": "37 + 14 = 51."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-006",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 35 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 35 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "7",
+      "solutionText": {
+        "en": "35 / 5 = 7.",
+        "id": "35 / 5 = 7."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-007",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 148 batteries and receives 89 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 148 baterai dan menerima 89 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "237",
+      "solutionText": {
+        "en": "148 + 89 = 237.",
+        "id": "148 + 89 = 237."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-008",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 8 pods, each holding 2 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 8 kapsul, masing-masing berisi 2 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "8 x 2 = 16.",
+        "id": "8 x 2 = 16."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-009",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 41 moonstones. Sinta collected 18 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 41 batu bulan. Sinta mengumpulkan 18 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "59",
+      "solutionText": {
+        "en": "41 + 18 = 59.",
+        "id": "41 + 18 = 59."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-010",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 30 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 30 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "30 / 5 = 6.",
+        "id": "30 / 5 = 6."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-011",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 176 batteries and receives 133 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 176 baterai dan menerima 133 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "309",
+      "solutionText": {
+        "en": "176 + 133 = 309.",
+        "id": "176 + 133 = 309."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-012",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 5 pods, each holding 10 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 5 kapsul, masing-masing berisi 10 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "50",
+      "solutionText": {
+        "en": "5 x 10 = 50.",
+        "id": "5 x 10 = 50."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-013",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 45 moonstones. Sinta collected 13 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 45 batu bulan. Sinta mengumpulkan 13 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "58",
+      "solutionText": {
+        "en": "45 + 13 = 58.",
+        "id": "45 + 13 = 58."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-014",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 25 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 25 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "25 / 5 = 5.",
+        "id": "25 / 5 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-015",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 204 batteries and receives 67 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 204 baterai dan menerima 67 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "271",
+      "solutionText": {
+        "en": "204 + 67 = 271.",
+        "id": "204 + 67 = 271."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-016",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 9 pods, each holding 5 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 9 kapsul, masing-masing berisi 5 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "45",
+      "solutionText": {
+        "en": "9 x 5 = 45.",
+        "id": "9 x 5 = 45."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-017",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 49 moonstones. Sinta collected 17 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 49 batu bulan. Sinta mengumpulkan 17 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "66",
+      "solutionText": {
+        "en": "49 + 17 = 66.",
+        "id": "49 + 17 = 66."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-018",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 20 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 20 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "20 / 5 = 4.",
+        "id": "20 / 5 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-019",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 232 batteries and receives 111 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 232 baterai dan menerima 111 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "343",
+      "solutionText": {
+        "en": "232 + 111 = 343.",
+        "id": "232 + 111 = 343."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-020",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 6 pods, each holding 4 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 6 kapsul, masing-masing berisi 4 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "6 x 4 = 24.",
+        "id": "6 x 4 = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-021",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 53 moonstones. Sinta collected 12 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 53 batu bulan. Sinta mengumpulkan 12 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "65",
+      "solutionText": {
+        "en": "53 + 12 = 65.",
+        "id": "53 + 12 = 65."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-022",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 40 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 40 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "40 / 5 = 8.",
+        "id": "40 / 5 = 8."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-023",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 260 batteries and receives 45 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 260 baterai dan menerima 45 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "305",
+      "solutionText": {
+        "en": "260 + 45 = 305.",
+        "id": "260 + 45 = 305."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-024",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 3 pods, each holding 3 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 3 kapsul, masing-masing berisi 3 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "3 x 3 = 9.",
+        "id": "3 x 3 = 9."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-025",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 57 moonstones. Sinta collected 16 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 57 batu bulan. Sinta mengumpulkan 16 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "73",
+      "solutionText": {
+        "en": "57 + 16 = 73.",
+        "id": "57 + 16 = 73."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-026",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 35 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 35 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "7",
+      "solutionText": {
+        "en": "35 / 5 = 7.",
+        "id": "35 / 5 = 7."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-027",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 288 batteries and receives 89 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 288 baterai dan menerima 89 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "377",
+      "solutionText": {
+        "en": "288 + 89 = 377.",
+        "id": "288 + 89 = 377."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-028",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 7 pods, each holding 2 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 7 kapsul, masing-masing berisi 2 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "7 x 2 = 14.",
+        "id": "7 x 2 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-029",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 61 moonstones. Sinta collected 20 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 61 batu bulan. Sinta mengumpulkan 20 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "81",
+      "solutionText": {
+        "en": "61 + 20 = 81.",
+        "id": "61 + 20 = 81."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-030",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 30 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 30 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "30 / 5 = 6.",
+        "id": "30 / 5 = 6."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-031",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 316 batteries and receives 133 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 316 baterai dan menerima 133 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "449",
+      "solutionText": {
+        "en": "316 + 133 = 449.",
+        "id": "316 + 133 = 449."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-032",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 4 pods, each holding 10 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 4 kapsul, masing-masing berisi 10 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "4 x 10 = 40.",
+        "id": "4 x 10 = 40."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-033",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 65 moonstones. Sinta collected 15 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 65 batu bulan. Sinta mengumpulkan 15 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "80",
+      "solutionText": {
+        "en": "65 + 15 = 80.",
+        "id": "65 + 15 = 80."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-034",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 25 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 25 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "25 / 5 = 5.",
+        "id": "25 / 5 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-035",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 344 batteries and receives 67 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 344 baterai dan menerima 67 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "411",
+      "solutionText": {
+        "en": "344 + 67 = 411.",
+        "id": "344 + 67 = 411."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-036",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 8 pods, each holding 5 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 8 kapsul, masing-masing berisi 5 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "8 x 5 = 40.",
+        "id": "8 x 5 = 40."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-037",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 69 moonstones. Sinta collected 19 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 69 batu bulan. Sinta mengumpulkan 19 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "88",
+      "solutionText": {
+        "en": "69 + 19 = 88.",
+        "id": "69 + 19 = 88."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-038",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 20 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 20 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "20 / 5 = 4.",
+        "id": "20 / 5 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-039",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 372 batteries and receives 111 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 372 baterai dan menerima 111 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "483",
+      "solutionText": {
+        "en": "372 + 111 = 483.",
+        "id": "372 + 111 = 483."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-040",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 5 pods, each holding 4 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 5 kapsul, masing-masing berisi 4 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "20",
+      "solutionText": {
+        "en": "5 x 4 = 20.",
+        "id": "5 x 4 = 20."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-041",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 73 moonstones. Sinta collected 14 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 73 batu bulan. Sinta mengumpulkan 14 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "87",
+      "solutionText": {
+        "en": "73 + 14 = 87.",
+        "id": "73 + 14 = 87."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-042",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 40 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 40 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "40 / 5 = 8.",
+        "id": "40 / 5 = 8."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-043",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 400 batteries and receives 45 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 400 baterai dan menerima 45 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "445",
+      "solutionText": {
+        "en": "400 + 45 = 445.",
+        "id": "400 + 45 = 445."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-044",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 9 pods, each holding 3 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 9 kapsul, masing-masing berisi 3 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "27",
+      "solutionText": {
+        "en": "9 x 3 = 27.",
+        "id": "9 x 3 = 27."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-045",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 77 moonstones. Sinta collected 18 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 77 batu bulan. Sinta mengumpulkan 18 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "95",
+      "solutionText": {
+        "en": "77 + 18 = 95.",
+        "id": "77 + 18 = 95."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-046",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 35 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 35 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "7",
+      "solutionText": {
+        "en": "35 / 5 = 7.",
+        "id": "35 / 5 = 7."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-047",
+      "grade": 2,
+      "skillCode": "num-add-1000",
+      "difficulty": 2,
+      "stem": {
+        "en": "Station Alpha has 428 batteries and receives 89 more. How many batteries does it have now?",
+        "id": "Stasiun Alpha memiliki 428 baterai dan menerima 89 baterai lagi. Berapa baterai sekarang?"
+      },
+      "answer": "517",
+      "solutionText": {
+        "en": "428 + 89 = 517.",
+        "id": "428 + 89 = 517."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-048",
+      "grade": 2,
+      "skillCode": "num-mul-2-3-4-5-10",
+      "difficulty": 2,
+      "stem": {
+        "en": "There are 6 pods, each holding 2 mini-probes. How many mini-probes are there altogether?",
+        "id": "Ada 6 kapsul, masing-masing berisi 2 probe mini. Berapa total probe mini seluruhnya?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "6 x 2 = 12.",
+        "id": "6 x 2 = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-049",
+      "grade": 2,
+      "skillCode": "wp-bar-model-compare",
+      "difficulty": 3,
+      "stem": {
+        "en": "Raka collected 81 moonstones. Sinta collected 13 more moonstones than Raka. How many did Sinta collect?",
+        "id": "Raka mengumpulkan 81 batu bulan. Sinta mengumpulkan 13 batu bulan lebih banyak dari Raka. Berapa yang dikumpulkan Sinta?"
+      },
+      "answer": "94",
+      "solutionText": {
+        "en": "81 + 13 = 94.",
+        "id": "81 + 13 = 94."
+      }
+    },
+    {
+      "code": "PL-CUR-G2-050",
+      "grade": 2,
+      "skillCode": "frac-intro-compare",
+      "difficulty": 2,
+      "stem": {
+        "en": "A crate holds 30 star berries. What is 1/5 of the berries?",
+        "id": "Sebuah peti berisi 30 beri bintang. Berapa 1/5 dari seluruh beri tersebut?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "30 / 5 = 6.",
+        "id": "30 / 5 = 6."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-001",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular landing pad is 12 m long and 7 m wide. What is its area in m²?",
+        "id": "Landasan roket berbentuk persegi panjang memiliki panjang 12 m dan lebar 7 m. Berapa luasnya dalam m²?"
+      },
+      "answer": "84",
+      "solutionText": {
+        "en": "Area = 12 × 7 = 84 m².",
+        "id": "Luas = 12 × 7 = 84 m²."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-002",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "50 moon pebbles are shared equally among 6 astronauts. How many pebbles are left over?",
+        "id": "50 kerikil bulan dibagi rata kepada 6 astronot. Berapa kerikil bulan yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "50 ÷ 6 = 8 remainder 2 (6 × 8 = 48, 50 − 48 = 2).",
+        "id": "50 ÷ 6 = 8 sisa 2 (6 × 8 = 48, 50 − 48 = 2)."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-003",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 4 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 4 panel. Berapa total panel?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "6 x 4 = 24.",
+        "id": "6 x 4 = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-004",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "32 star badges are packed equally into 5 pouches. How many badges are left over?",
+        "id": "32 lencana bintang dikemas rata ke 5 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "32 = 5 x 6 + 2, remainder 2.",
+        "id": "32 = 5 x 6 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-005",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 10 m long and 6 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 10 m dan lebar 6 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "32",
+      "solutionText": {
+        "en": "2 x (10 + 6) = 32 m.",
+        "id": "2 x (10 + 6) = 32 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-006",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 1/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 1/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "2 + 1 = 3.",
+        "id": "2 + 1 = 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-007",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 6 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 6 panel. Berapa total panel?"
+      },
+      "answer": "36",
+      "solutionText": {
+        "en": "6 x 6 = 36.",
+        "id": "6 x 6 = 36."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-008",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "43 star badges are packed equally into 4 pouches. How many badges are left over?",
+        "id": "43 lencana bintang dikemas rata ke 4 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "43 = 4 x 10 + 3, remainder 3.",
+        "id": "43 = 4 x 10 + 3, sisa 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-009",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 14 m long and 5 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 14 m dan lebar 5 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "38",
+      "solutionText": {
+        "en": "2 x (14 + 5) = 38 m.",
+        "id": "2 x (14 + 5) = 38 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-010",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 2/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 2/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "2 + 2 = 4.",
+        "id": "2 + 2 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-011",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 8 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 8 panel. Berapa total panel?"
+      },
+      "answer": "48",
+      "solutionText": {
+        "en": "6 x 8 = 48.",
+        "id": "6 x 8 = 48."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-012",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "67 star badges are packed equally into 8 pouches. How many badges are left over?",
+        "id": "67 lencana bintang dikemas rata ke 8 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "67 = 8 x 8 + 3, remainder 3.",
+        "id": "67 = 8 x 8 + 3, sisa 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-013",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 9 m long and 4 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 9 m dan lebar 4 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "26",
+      "solutionText": {
+        "en": "2 x (9 + 4) = 26 m.",
+        "id": "2 x (9 + 4) = 26 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-014",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 3/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 3/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2 + 3 = 5.",
+        "id": "2 + 3 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-015",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 4 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 4 panel. Berapa total panel?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "6 x 4 = 24.",
+        "id": "6 x 4 = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-016",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "44 star badges are packed equally into 7 pouches. How many badges are left over?",
+        "id": "44 lencana bintang dikemas rata ke 7 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "44 = 7 x 6 + 2, remainder 2.",
+        "id": "44 = 7 x 6 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-017",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 13 m long and 8 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 13 m dan lebar 8 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "42",
+      "solutionText": {
+        "en": "2 x (13 + 8) = 42 m.",
+        "id": "2 x (13 + 8) = 42 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-018",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 1/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 1/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "2 + 1 = 3.",
+        "id": "2 + 1 = 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-019",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 6 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 6 panel. Berapa total panel?"
+      },
+      "answer": "36",
+      "solutionText": {
+        "en": "6 x 6 = 36.",
+        "id": "6 x 6 = 36."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-020",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "63 star badges are packed equally into 6 pouches. How many badges are left over?",
+        "id": "63 lencana bintang dikemas rata ke 6 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "63 = 6 x 10 + 3, remainder 3.",
+        "id": "63 = 6 x 10 + 3, sisa 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-021",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 8 m long and 7 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 8 m dan lebar 7 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "30",
+      "solutionText": {
+        "en": "2 x (8 + 7) = 30 m.",
+        "id": "2 x (8 + 7) = 30 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-022",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 2/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 2/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "2 + 2 = 4.",
+        "id": "2 + 2 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-023",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 8 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 8 panel. Berapa total panel?"
+      },
+      "answer": "48",
+      "solutionText": {
+        "en": "6 x 8 = 48.",
+        "id": "6 x 8 = 48."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-024",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "42 star badges are packed equally into 5 pouches. How many badges are left over?",
+        "id": "42 lencana bintang dikemas rata ke 5 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "42 = 5 x 8 + 2, remainder 2.",
+        "id": "42 = 5 x 8 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-025",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 12 m long and 6 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 12 m dan lebar 6 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "36",
+      "solutionText": {
+        "en": "2 x (12 + 6) = 36 m.",
+        "id": "2 x (12 + 6) = 36 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-026",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 3/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 3/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2 + 3 = 5.",
+        "id": "2 + 3 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-027",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 4 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 4 panel. Berapa total panel?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "6 x 4 = 24.",
+        "id": "6 x 4 = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-028",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "26 star badges are packed equally into 4 pouches. How many badges are left over?",
+        "id": "26 lencana bintang dikemas rata ke 4 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "26 = 4 x 6 + 2, remainder 2.",
+        "id": "26 = 4 x 6 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-029",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 16 m long and 5 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 16 m dan lebar 5 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "42",
+      "solutionText": {
+        "en": "2 x (16 + 5) = 42 m.",
+        "id": "2 x (16 + 5) = 42 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-030",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 1/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 1/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "2 + 1 = 3.",
+        "id": "2 + 1 = 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-031",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 6 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 6 panel. Berapa total panel?"
+      },
+      "answer": "36",
+      "solutionText": {
+        "en": "6 x 6 = 36.",
+        "id": "6 x 6 = 36."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-032",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "82 star badges are packed equally into 8 pouches. How many badges are left over?",
+        "id": "82 lencana bintang dikemas rata ke 8 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "82 = 8 x 10 + 2, remainder 2.",
+        "id": "82 = 8 x 10 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-033",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 11 m long and 4 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 11 m dan lebar 4 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "30",
+      "solutionText": {
+        "en": "2 x (11 + 4) = 30 m.",
+        "id": "2 x (11 + 4) = 30 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-034",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 2/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 2/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "2 + 2 = 4.",
+        "id": "2 + 2 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-035",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 8 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 8 panel. Berapa total panel?"
+      },
+      "answer": "48",
+      "solutionText": {
+        "en": "6 x 8 = 48.",
+        "id": "6 x 8 = 48."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-036",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "60 star badges are packed equally into 7 pouches. How many badges are left over?",
+        "id": "60 lencana bintang dikemas rata ke 7 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "60 = 7 x 8 + 4, remainder 4.",
+        "id": "60 = 7 x 8 + 4, sisa 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-037",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 15 m long and 8 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 15 m dan lebar 8 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "46",
+      "solutionText": {
+        "en": "2 x (15 + 8) = 46 m.",
+        "id": "2 x (15 + 8) = 46 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-038",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 3/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 3/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2 + 3 = 5.",
+        "id": "2 + 3 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-039",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 4 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 4 panel. Berapa total panel?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "6 x 4 = 24.",
+        "id": "6 x 4 = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-040",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "39 star badges are packed equally into 6 pouches. How many badges are left over?",
+        "id": "39 lencana bintang dikemas rata ke 6 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "39 = 6 x 6 + 3, remainder 3.",
+        "id": "39 = 6 x 6 + 3, sisa 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-041",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 10 m long and 7 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 10 m dan lebar 7 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "34",
+      "solutionText": {
+        "en": "2 x (10 + 7) = 34 m.",
+        "id": "2 x (10 + 7) = 34 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-042",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 1/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 1/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "3",
+      "solutionText": {
+        "en": "2 + 1 = 3.",
+        "id": "2 + 1 = 3."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-043",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 6 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 6 panel. Berapa total panel?"
+      },
+      "answer": "36",
+      "solutionText": {
+        "en": "6 x 6 = 36.",
+        "id": "6 x 6 = 36."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-044",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "52 star badges are packed equally into 5 pouches. How many badges are left over?",
+        "id": "52 lencana bintang dikemas rata ke 5 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "2",
+      "solutionText": {
+        "en": "52 = 5 x 10 + 2, remainder 2.",
+        "id": "52 = 5 x 10 + 2, sisa 2."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-045",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 14 m long and 6 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 14 m dan lebar 6 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "2 x (14 + 6) = 40 m.",
+        "id": "2 x (14 + 6) = 40 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-046",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 2/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 2/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "2 + 2 = 4.",
+        "id": "2 + 2 = 4."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-047",
+      "grade": 3,
+      "skillCode": "num-mul-6-7-8-9",
+      "difficulty": 2,
+      "stem": {
+        "en": "A solar grid has 6 rows of 8 panels. How many panels are in the grid?",
+        "id": "Jaringan surya memiliki 6 baris yang masing-masing berisi 8 panel. Berapa total panel?"
+      },
+      "answer": "48",
+      "solutionText": {
+        "en": "6 x 8 = 48.",
+        "id": "6 x 8 = 48."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-048",
+      "grade": 3,
+      "skillCode": "num-div-remainder",
+      "difficulty": 3,
+      "stem": {
+        "en": "33 star badges are packed equally into 4 pouches. How many badges are left over?",
+        "id": "33 lencana bintang dikemas rata ke 4 kantong. Berapa lencana yang tersisa?"
+      },
+      "answer": "1",
+      "solutionText": {
+        "en": "33 = 4 x 8 + 1, remainder 1.",
+        "id": "33 = 4 x 8 + 1, sisa 1."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-049",
+      "grade": 3,
+      "skillCode": "geo-area-perimeter-rect",
+      "difficulty": 3,
+      "stem": {
+        "en": "A rectangular moon garden is 9 m long and 5 m wide. What is its perimeter in meters?",
+        "id": "Taman bulan berbentuk persegi panjang berukuran panjang 9 m dan lebar 5 m. Berapa kelilingnya dalam meter?"
+      },
+      "answer": "28",
+      "solutionText": {
+        "en": "2 x (9 + 5) = 28 m.",
+        "id": "2 x (9 + 5) = 28 m."
+      }
+    },
+    {
+      "code": "PL-CUR-G3-050",
+      "grade": 3,
+      "skillCode": "frac-add-like",
+      "difficulty": 3,
+      "stem": {
+        "en": "In 2/9 + 3/9 = ?/9, what is the missing numerator?",
+        "id": "Pada 2/9 + 3/9 = ?/9, berapakah pembilang yang hilang?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2 + 3 = 5.",
+        "id": "2 + 3 = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-001",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "After doubling a number and subtracting 9, Lucas gets 25. What was the original number?",
+        "id": "Setelah menggandakan sebuah bilangan lalu menguranginya dengan 9, Lucas mendapat 25. Berapakah bilangan awalnya?"
+      },
+      "answer": "17",
+      "solutionText": {
+        "en": "25 + 9 = 34, then 34 ÷ 2 = 17.",
+        "id": "25 + 9 = 34, lalu 34 ÷ 2 = 17."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-002",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 6 and 15?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 6 dan 15?"
+      },
+      "answer": "30",
+      "solutionText": {
+        "en": "Multiples of 6: 6, 12, 18, 24, 30. Multiples of 15: 15, 30. LCM = 30.",
+        "id": "Kelipatan 6: 6, 12, 18, 24, 30. Kelipatan 15: 15, 30. KPK = 30."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-003",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 4 and 8?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 4 dan 8?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "8 is already a multiple of 4, so LCM = 8.",
+        "id": "8 sudah merupakan kelipatan 4, jadi KPK = 8."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-004",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 13.5 L and tank B holds 9.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 13,5 L dan tangki B berisi 9,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "23",
+      "solutionText": {
+        "en": "13.5 + 9.5 = 23 L.",
+        "id": "13,5 + 9,5 = 23 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-005",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 42 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 42 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "(2/6) x 42 = 14.",
+        "id": "(2/6) x 42 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-006",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 17. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 17. Berapa bilangan misterius itu?"
+      },
+      "answer": "11",
+      "solutionText": {
+        "en": "(17 + 5) / 2 = 11.",
+        "id": "(17 + 5) / 2 = 11."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-007",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 8 and 24?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 8 dan 24?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "24 is already a multiple of 8, so LCM = 24.",
+        "id": "24 sudah merupakan kelipatan 8, jadi KPK = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-008",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 17.5 L and tank B holds 13.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 17,5 L dan tangki B berisi 13,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "31",
+      "solutionText": {
+        "en": "17.5 + 13.5 = 31 L.",
+        "id": "17,5 + 13,5 = 31 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-009",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 30 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 30 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "(2/6) x 30 = 10.",
+        "id": "(2/6) x 30 = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-010",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 25. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 25. Berapa bilangan misterius itu?"
+      },
+      "answer": "15",
+      "solutionText": {
+        "en": "(25 + 5) / 2 = 15.",
+        "id": "(25 + 5) / 2 = 15."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-011",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 7 and 28?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 7 dan 28?"
+      },
+      "answer": "28",
+      "solutionText": {
+        "en": "28 is already a multiple of 7, so LCM = 28.",
+        "id": "28 sudah merupakan kelipatan 7, jadi KPK = 28."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-012",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 21.5 L and tank B holds 17.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 21,5 L dan tangki B berisi 17,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "39",
+      "solutionText": {
+        "en": "21.5 + 17.5 = 39 L.",
+        "id": "21,5 + 17,5 = 39 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-013",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 54 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 54 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "(2/6) x 54 = 18.",
+        "id": "(2/6) x 54 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-014",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 33. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 33. Berapa bilangan misterius itu?"
+      },
+      "answer": "19",
+      "solutionText": {
+        "en": "(33 + 5) / 2 = 19.",
+        "id": "(33 + 5) / 2 = 19."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-015",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 6 and 12?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 6 dan 12?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "12 is already a multiple of 6, so LCM = 12.",
+        "id": "12 sudah merupakan kelipatan 6, jadi KPK = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-016",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 25.5 L and tank B holds 11.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 25,5 L dan tangki B berisi 11,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "37",
+      "solutionText": {
+        "en": "25.5 + 11.5 = 37 L.",
+        "id": "25,5 + 11,5 = 37 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-017",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 42 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 42 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "(2/6) x 42 = 14.",
+        "id": "(2/6) x 42 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-018",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 41. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 41. Berapa bilangan misterius itu?"
+      },
+      "answer": "23",
+      "solutionText": {
+        "en": "(41 + 5) / 2 = 23.",
+        "id": "(41 + 5) / 2 = 23."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-019",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 5 and 15?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 5 dan 15?"
+      },
+      "answer": "15",
+      "solutionText": {
+        "en": "15 is already a multiple of 5, so LCM = 15.",
+        "id": "15 sudah merupakan kelipatan 5, jadi KPK = 15."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-020",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 29.5 L and tank B holds 15.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 29,5 L dan tangki B berisi 15,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "45",
+      "solutionText": {
+        "en": "29.5 + 15.5 = 45 L.",
+        "id": "29,5 + 15,5 = 45 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-021",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 30 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 30 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "(2/6) x 30 = 10.",
+        "id": "(2/6) x 30 = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-022",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 49. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 49. Berapa bilangan misterius itu?"
+      },
+      "answer": "27",
+      "solutionText": {
+        "en": "(49 + 5) / 2 = 27.",
+        "id": "(49 + 5) / 2 = 27."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-023",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 4 and 16?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 4 dan 16?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "16 is already a multiple of 4, so LCM = 16.",
+        "id": "16 sudah merupakan kelipatan 4, jadi KPK = 16."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-024",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 33.5 L and tank B holds 9.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 33,5 L dan tangki B berisi 9,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "43",
+      "solutionText": {
+        "en": "33.5 + 9.5 = 43 L.",
+        "id": "33,5 + 9,5 = 43 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-025",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 54 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 54 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "(2/6) x 54 = 18.",
+        "id": "(2/6) x 54 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-026",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 57. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 57. Berapa bilangan misterius itu?"
+      },
+      "answer": "31",
+      "solutionText": {
+        "en": "(57 + 5) / 2 = 31.",
+        "id": "(57 + 5) / 2 = 31."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-027",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 8 and 16?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 8 dan 16?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "16 is already a multiple of 8, so LCM = 16.",
+        "id": "16 sudah merupakan kelipatan 8, jadi KPK = 16."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-028",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 37.5 L and tank B holds 13.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 37,5 L dan tangki B berisi 13,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "51",
+      "solutionText": {
+        "en": "37.5 + 13.5 = 51 L.",
+        "id": "37,5 + 13,5 = 51 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-029",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 42 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 42 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "(2/6) x 42 = 14.",
+        "id": "(2/6) x 42 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-030",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 65. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 65. Berapa bilangan misterius itu?"
+      },
+      "answer": "35",
+      "solutionText": {
+        "en": "(65 + 5) / 2 = 35.",
+        "id": "(65 + 5) / 2 = 35."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-031",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 7 and 21?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 7 dan 21?"
+      },
+      "answer": "21",
+      "solutionText": {
+        "en": "21 is already a multiple of 7, so LCM = 21.",
+        "id": "21 sudah merupakan kelipatan 7, jadi KPK = 21."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-032",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 41.5 L and tank B holds 17.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 41,5 L dan tangki B berisi 17,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "59",
+      "solutionText": {
+        "en": "41.5 + 17.5 = 59 L.",
+        "id": "41,5 + 17,5 = 59 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-033",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 30 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 30 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "(2/6) x 30 = 10.",
+        "id": "(2/6) x 30 = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-034",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 73. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 73. Berapa bilangan misterius itu?"
+      },
+      "answer": "39",
+      "solutionText": {
+        "en": "(73 + 5) / 2 = 39.",
+        "id": "(73 + 5) / 2 = 39."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-035",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 6 and 24?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 6 dan 24?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "24 is already a multiple of 6, so LCM = 24.",
+        "id": "24 sudah merupakan kelipatan 6, jadi KPK = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-036",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 45.5 L and tank B holds 11.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 45,5 L dan tangki B berisi 11,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "57",
+      "solutionText": {
+        "en": "45.5 + 11.5 = 57 L.",
+        "id": "45,5 + 11,5 = 57 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-037",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 54 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 54 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "(2/6) x 54 = 18.",
+        "id": "(2/6) x 54 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-038",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 81. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 81. Berapa bilangan misterius itu?"
+      },
+      "answer": "43",
+      "solutionText": {
+        "en": "(81 + 5) / 2 = 43.",
+        "id": "(81 + 5) / 2 = 43."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-039",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 5 and 10?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 5 dan 10?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "10 is already a multiple of 5, so LCM = 10.",
+        "id": "10 sudah merupakan kelipatan 5, jadi KPK = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-040",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 49.5 L and tank B holds 15.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 49,5 L dan tangki B berisi 15,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "65",
+      "solutionText": {
+        "en": "49.5 + 15.5 = 65 L.",
+        "id": "49,5 + 15,5 = 65 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-041",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 42 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 42 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "(2/6) x 42 = 14.",
+        "id": "(2/6) x 42 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-042",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 89. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 89. Berapa bilangan misterius itu?"
+      },
+      "answer": "47",
+      "solutionText": {
+        "en": "(89 + 5) / 2 = 47.",
+        "id": "(89 + 5) / 2 = 47."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-043",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 4 and 12?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 4 dan 12?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "12 is already a multiple of 4, so LCM = 12.",
+        "id": "12 sudah merupakan kelipatan 4, jadi KPK = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-044",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 53.5 L and tank B holds 9.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 53,5 L dan tangki B berisi 9,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "63",
+      "solutionText": {
+        "en": "53.5 + 9.5 = 63 L.",
+        "id": "53,5 + 9,5 = 63 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-045",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 30 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 30 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "10",
+      "solutionText": {
+        "en": "(2/6) x 30 = 10.",
+        "id": "(2/6) x 30 = 10."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-046",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 97. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 97. Berapa bilangan misterius itu?"
+      },
+      "answer": "51",
+      "solutionText": {
+        "en": "(97 + 5) / 2 = 51.",
+        "id": "(97 + 5) / 2 = 51."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-047",
+      "grade": 4,
+      "skillCode": "num-factors-multiples",
+      "difficulty": 3,
+      "stem": {
+        "en": "What is the Lowest Common Multiple (LCM) of 8 and 32?",
+        "id": "Berapakah Kelipatan Persekutuan Terkecil (KPK) dari 8 dan 32?"
+      },
+      "answer": "32",
+      "solutionText": {
+        "en": "32 is already a multiple of 8, so LCM = 32.",
+        "id": "32 sudah merupakan kelipatan 8, jadi KPK = 32."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-048",
+      "grade": 4,
+      "skillCode": "dec-add-sub",
+      "difficulty": 3,
+      "stem": {
+        "en": "Fuel tank A holds 57.5 L and tank B holds 13.5 L. What is their total volume in liters?",
+        "id": "Tangki A berisi 57,5 L dan tangki B berisi 13,5 L. Berapa total volumenya dalam liter?"
+      },
+      "answer": "71",
+      "solutionText": {
+        "en": "57.5 + 13.5 = 71 L.",
+        "id": "57,5 + 13,5 = 71 L."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-049",
+      "grade": 4,
+      "skillCode": "frac-of-set",
+      "difficulty": 3,
+      "stem": {
+        "en": "There are 54 meteorites in a lab. 2/6 of them contain iron. How many contain iron?",
+        "id": "Ada 54 meteorit di laboratorium. 2/6 di antaranya mengandung besi. Berapa banyak yang mengandung besi?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "(2/6) x 54 = 18.",
+        "id": "(2/6) x 54 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G4-050",
+      "grade": 4,
+      "skillCode": "hots-work-backwards",
+      "difficulty": 4,
+      "stem": {
+        "en": "Multiply a mystery number by 2 and subtract 5 to get 105. What is the mystery number?",
+        "id": "Kalikan suatu bilangan misterius dengan 2 lalu kurangi 5 sehingga hasilnya 105. Berapa bilangan misterius itu?"
+      },
+      "answer": "55",
+      "solutionText": {
+        "en": "(105 + 5) / 2 = 55.",
+        "id": "(105 + 5) / 2 = 55."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-001",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A helmet costs 200 coins. With a 25% discount, how many coins do you pay?",
+        "id": "Sebuah helm berharga 200 koin. Dengan diskon 25%, berapa koin yang harus dibayar?"
+      },
+      "answer": "150",
+      "solutionText": {
+        "en": "25% of 200 = 50. 200 − 50 = 150 coins.",
+        "id": "25% dari 200 = 50. 200 − 50 = 150 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-002",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Gold stars and silver stars are in the ratio 3 : 5. If there are 64 stars altogether, how many are silver?",
+        "id": "Rasio bintang emas dan perak adalah 3 : 5. Jika total ada 64 bintang, berapa banyak bintang perak?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "8 units = 64 → 1 unit = 8 → 5 units = 40 silver stars.",
+        "id": "8 unit = 64 → 1 unit = 8 → 5 unit = 40 bintang perak."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-003",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-004",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 20 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 20 suar, berapa banyak suar biru?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "5 units = 20 -> 1 unit = 4 -> 3 units = 12.",
+        "id": "5 unit = 20 -> 1 unit = 4 -> 3 unit = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-005",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 6 cm by 5 cm by 4 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 6 cm x 5 cm x 4 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "120",
+      "solutionText": {
+        "en": "6 x 5 x 4 = 120 cm³.",
+        "id": "6 x 5 x 4 = 120 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-006",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 14, 17, and 20.",
+        "id": "Tentukan nilai rata-rata dari 14, 17, dan 20."
+      },
+      "answer": "17",
+      "solutionText": {
+        "en": "(14 + 17 + 20) / 3 = 17.",
+        "id": "(14 + 17 + 20) / 3 = 17."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-007",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-008",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 40 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 40 suar, berapa banyak suar biru?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "5 units = 40 -> 1 unit = 8 -> 3 units = 24.",
+        "id": "5 unit = 40 -> 1 unit = 8 -> 3 unit = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-009",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 5 cm by 5 cm by 2 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 5 cm x 5 cm x 2 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "50",
+      "solutionText": {
+        "en": "5 x 5 x 2 = 50 cm³.",
+        "id": "5 x 5 x 2 = 50 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-010",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 18, 21, and 24.",
+        "id": "Tentukan nilai rata-rata dari 18, 21, dan 24."
+      },
+      "answer": "21",
+      "solutionText": {
+        "en": "(18 + 21 + 24) / 3 = 21.",
+        "id": "(18 + 21 + 24) / 3 = 21."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-011",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-012",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 30 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 30 suar, berapa banyak suar biru?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "5 units = 30 -> 1 unit = 6 -> 3 units = 18.",
+        "id": "5 unit = 30 -> 1 unit = 6 -> 3 unit = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-013",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 4 cm by 5 cm by 3 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 4 cm x 5 cm x 3 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "60",
+      "solutionText": {
+        "en": "4 x 5 x 3 = 60 cm³.",
+        "id": "4 x 5 x 3 = 60 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-014",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 22, 25, and 28.",
+        "id": "Tentukan nilai rata-rata dari 22, 25, dan 28."
+      },
+      "answer": "25",
+      "solutionText": {
+        "en": "(22 + 25 + 28) / 3 = 25.",
+        "id": "(22 + 25 + 28) / 3 = 25."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-015",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-016",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 20 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 20 suar, berapa banyak suar biru?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "5 units = 20 -> 1 unit = 4 -> 3 units = 12.",
+        "id": "5 unit = 20 -> 1 unit = 4 -> 3 unit = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-017",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 8 cm by 5 cm by 4 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 8 cm x 5 cm x 4 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "160",
+      "solutionText": {
+        "en": "8 x 5 x 4 = 160 cm³.",
+        "id": "8 x 5 x 4 = 160 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-018",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 11, 14, and 17.",
+        "id": "Tentukan nilai rata-rata dari 11, 14, dan 17."
+      },
+      "answer": "14",
+      "solutionText": {
+        "en": "(11 + 14 + 17) / 3 = 14.",
+        "id": "(11 + 14 + 17) / 3 = 14."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-019",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-020",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 40 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 40 suar, berapa banyak suar biru?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "5 units = 40 -> 1 unit = 8 -> 3 units = 24.",
+        "id": "5 unit = 40 -> 1 unit = 8 -> 3 unit = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-021",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 7 cm by 5 cm by 2 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 7 cm x 5 cm x 2 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "70",
+      "solutionText": {
+        "en": "7 x 5 x 2 = 70 cm³.",
+        "id": "7 x 5 x 2 = 70 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-022",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 15, 18, and 21.",
+        "id": "Tentukan nilai rata-rata dari 15, 18, dan 21."
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "(15 + 18 + 21) / 3 = 18.",
+        "id": "(15 + 18 + 21) / 3 = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-023",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-024",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 30 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 30 suar, berapa banyak suar biru?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "5 units = 30 -> 1 unit = 6 -> 3 units = 18.",
+        "id": "5 unit = 30 -> 1 unit = 6 -> 3 unit = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-025",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 6 cm by 5 cm by 3 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 6 cm x 5 cm x 3 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "90",
+      "solutionText": {
+        "en": "6 x 5 x 3 = 90 cm³.",
+        "id": "6 x 5 x 3 = 90 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-026",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 19, 22, and 25.",
+        "id": "Tentukan nilai rata-rata dari 19, 22, dan 25."
+      },
+      "answer": "22",
+      "solutionText": {
+        "en": "(19 + 22 + 25) / 3 = 22.",
+        "id": "(19 + 22 + 25) / 3 = 22."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-027",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-028",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 20 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 20 suar, berapa banyak suar biru?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "5 units = 20 -> 1 unit = 4 -> 3 units = 12.",
+        "id": "5 unit = 20 -> 1 unit = 4 -> 3 unit = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-029",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 5 cm by 5 cm by 4 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 5 cm x 5 cm x 4 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "100",
+      "solutionText": {
+        "en": "5 x 5 x 4 = 100 cm³.",
+        "id": "5 x 5 x 4 = 100 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-030",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 23, 26, and 29.",
+        "id": "Tentukan nilai rata-rata dari 23, 26, dan 29."
+      },
+      "answer": "26",
+      "solutionText": {
+        "en": "(23 + 26 + 29) / 3 = 26.",
+        "id": "(23 + 26 + 29) / 3 = 26."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-031",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-032",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 40 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 40 suar, berapa banyak suar biru?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "5 units = 40 -> 1 unit = 8 -> 3 units = 24.",
+        "id": "5 unit = 40 -> 1 unit = 8 -> 3 unit = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-033",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 4 cm by 5 cm by 2 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 4 cm x 5 cm x 2 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "40",
+      "solutionText": {
+        "en": "4 x 5 x 2 = 40 cm³.",
+        "id": "4 x 5 x 2 = 40 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-034",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 12, 15, and 18.",
+        "id": "Tentukan nilai rata-rata dari 12, 15, dan 18."
+      },
+      "answer": "15",
+      "solutionText": {
+        "en": "(12 + 15 + 18) / 3 = 15.",
+        "id": "(12 + 15 + 18) / 3 = 15."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-035",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-036",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 30 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 30 suar, berapa banyak suar biru?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "5 units = 30 -> 1 unit = 6 -> 3 units = 18.",
+        "id": "5 unit = 30 -> 1 unit = 6 -> 3 unit = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-037",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 8 cm by 5 cm by 3 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 8 cm x 5 cm x 3 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "120",
+      "solutionText": {
+        "en": "8 x 5 x 3 = 120 cm³.",
+        "id": "8 x 5 x 3 = 120 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-038",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 16, 19, and 22.",
+        "id": "Tentukan nilai rata-rata dari 16, 19, dan 22."
+      },
+      "answer": "19",
+      "solutionText": {
+        "en": "(16 + 19 + 22) / 3 = 19.",
+        "id": "(16 + 19 + 22) / 3 = 19."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-039",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-040",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 20 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 20 suar, berapa banyak suar biru?"
+      },
+      "answer": "12",
+      "solutionText": {
+        "en": "5 units = 20 -> 1 unit = 4 -> 3 units = 12.",
+        "id": "5 unit = 20 -> 1 unit = 4 -> 3 unit = 12."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-041",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 7 cm by 5 cm by 4 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 7 cm x 5 cm x 4 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "140",
+      "solutionText": {
+        "en": "7 x 5 x 4 = 140 cm³.",
+        "id": "7 x 5 x 4 = 140 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-042",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 20, 23, and 26.",
+        "id": "Tentukan nilai rata-rata dari 20, 23, dan 26."
+      },
+      "answer": "23",
+      "solutionText": {
+        "en": "(20 + 23 + 26) / 3 = 23.",
+        "id": "(20 + 23 + 26) / 3 = 23."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-043",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 80 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 80 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "10% of 80 = 8 coins.",
+        "id": "10% dari 80 = 8 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-044",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 40 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 40 suar, berapa banyak suar biru?"
+      },
+      "answer": "24",
+      "solutionText": {
+        "en": "5 units = 40 -> 1 unit = 8 -> 3 units = 24.",
+        "id": "5 unit = 40 -> 1 unit = 8 -> 3 unit = 24."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-045",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 6 cm by 5 cm by 2 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 6 cm x 5 cm x 2 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "60",
+      "solutionText": {
+        "en": "6 x 5 x 2 = 60 cm³.",
+        "id": "6 x 5 x 2 = 60 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-046",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 24, 27, and 30.",
+        "id": "Tentukan nilai rata-rata dari 24, 27, dan 30."
+      },
+      "answer": "27",
+      "solutionText": {
+        "en": "(24 + 27 + 30) / 3 = 27.",
+        "id": "(24 + 27 + 30) / 3 = 27."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-047",
+      "grade": 5,
+      "skillCode": "pct-discount",
+      "difficulty": 3,
+      "stem": {
+        "en": "A spacesuit costs 160 coins. How many coins do you save with a 10% discount?",
+        "id": "Baju antariksa berharga 160 koin. Berapa koin yang dihemat dengan diskon 10%?"
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "10% of 160 = 16 coins.",
+        "id": "10% dari 160 = 16 koin."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-048",
+      "grade": 5,
+      "skillCode": "ratio-two-quantities",
+      "difficulty": 4,
+      "stem": {
+        "en": "Red and blue beacons are in ratio 2 : 3. If there are 30 beacons in total, how many are blue?",
+        "id": "Suar merah dan biru berbanding 2 : 3. Jika total ada 30 suar, berapa banyak suar biru?"
+      },
+      "answer": "18",
+      "solutionText": {
+        "en": "5 units = 30 -> 1 unit = 6 -> 3 units = 18.",
+        "id": "5 unit = 30 -> 1 unit = 6 -> 3 unit = 18."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-049",
+      "grade": 5,
+      "skillCode": "geo-volume-cuboid",
+      "difficulty": 3,
+      "stem": {
+        "en": "A cargo box measures 5 cm by 5 cm by 3 cm. What is its volume in cm³?",
+        "id": "Kotak kargo berukuran 5 cm x 5 cm x 3 cm. Berapa volumenya dalam cm³?"
+      },
+      "answer": "75",
+      "solutionText": {
+        "en": "5 x 5 x 3 = 75 cm³.",
+        "id": "5 x 5 x 3 = 75 cm³."
+      }
+    },
+    {
+      "code": "PL-CUR-G5-050",
+      "grade": 5,
+      "skillCode": "data-average",
+      "difficulty": 3,
+      "stem": {
+        "en": "Find the average (mean) of 13, 16, and 19.",
+        "id": "Tentukan nilai rata-rata dari 13, 16, dan 19."
+      },
+      "answer": "16",
+      "solutionText": {
+        "en": "(13 + 16 + 19) / 3 = 16.",
+        "id": "(13 + 16 + 19) / 3 = 16."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-001",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A comet cruiser travels 270 km in 3 hours. What is its average speed in km/h?",
+        "id": "Sebuah kapal komet menempuh jarak 270 km dalam 3 jam. Berapa kecepatan rata-ratanya dalam km/jam?"
+      },
+      "answer": "90",
+      "solutionText": {
+        "en": "Speed = 270 ÷ 3 = 90 km/h.",
+        "id": "Kecepatan = 270 ÷ 3 = 90 km/jam."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-002",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "14 space critters have 44 legs in total. Some are 2-legged birds and some are 4-legged bots. How many 4-legged bots are there?",
+        "id": "Ada 14 makhluk ruang angkasa dengan total 44 kaki. Sebagian burung berkaki 2 dan sebagian robot berkaki 4. Berapa jumlah robot berkaki 4?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "Assume all 14 have 2 legs → 28 legs. Extra legs = 44 − 28 = 16. 16 ÷ 2 = 8 bots.",
+        "id": "Andaikan semua berkaki 2 → 28 kaki. Sisa kaki = 44 − 28 = 16. 16 ÷ 2 = 8 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-003",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 4 = 14, what is x?",
+        "id": "Jika 2x + 4 = 14, berapakah nilai x?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2x = 10 -> x = 5.",
+        "id": "2x = 10 -> x = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-004",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 60 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 60 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "180",
+      "solutionText": {
+        "en": "60 x 3 = 180 km.",
+        "id": "60 x 3 = 180 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-005",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 21 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 21 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "132",
+      "solutionText": {
+        "en": "2 x (22/7) x 21 = 132 cm.",
+        "id": "2 x (22/7) x 21 = 132 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-006",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 13 space creatures (2-legged birds and 4-legged bots) with 38 legs total. How many 4-legged bots are there?",
+        "id": "Ada 13 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 38 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "(38 - 2 x 13) / 2 = 6 bots.",
+        "id": "(38 - 2 x 13) / 2 = 6 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-007",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 8 = 26, what is x?",
+        "id": "Jika 2x + 8 = 26, berapakah nilai x?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "2x = 18 -> x = 9.",
+        "id": "2x = 18 -> x = 9."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-008",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 50 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 50 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "150",
+      "solutionText": {
+        "en": "50 x 3 = 150 km.",
+        "id": "50 x 3 = 150 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-009",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 7 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 7 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "44",
+      "solutionText": {
+        "en": "2 x (22/7) x 7 = 44 cm.",
+        "id": "2 x (22/7) x 7 = 44 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-010",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 9 space creatures (2-legged birds and 4-legged bots) with 26 legs total. How many 4-legged bots are there?",
+        "id": "Ada 9 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 26 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "(26 - 2 x 9) / 2 = 4 bots.",
+        "id": "(26 - 2 x 9) / 2 = 4 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-011",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 5 = 31, what is x?",
+        "id": "Jika 2x + 5 = 31, berapakah nilai x?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "2x = 26 -> x = 13.",
+        "id": "2x = 26 -> x = 13."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-012",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 90 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 90 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "270",
+      "solutionText": {
+        "en": "90 x 3 = 270 km.",
+        "id": "90 x 3 = 270 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-013",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 14 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 14 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "88",
+      "solutionText": {
+        "en": "2 x (22/7) x 14 = 88 cm.",
+        "id": "2 x (22/7) x 14 = 88 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-014",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 17 space creatures (2-legged birds and 4-legged bots) with 50 legs total. How many 4-legged bots are there?",
+        "id": "Ada 17 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 50 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "(50 - 2 x 17) / 2 = 8 bots.",
+        "id": "(50 - 2 x 17) / 2 = 8 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-015",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 9 = 19, what is x?",
+        "id": "Jika 2x + 9 = 19, berapakah nilai x?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2x = 10 -> x = 5.",
+        "id": "2x = 10 -> x = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-016",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 80 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 80 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "240",
+      "solutionText": {
+        "en": "80 x 3 = 240 km.",
+        "id": "80 x 3 = 240 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-017",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 21 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 21 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "132",
+      "solutionText": {
+        "en": "2 x (22/7) x 21 = 132 cm.",
+        "id": "2 x (22/7) x 21 = 132 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-018",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 13 space creatures (2-legged birds and 4-legged bots) with 38 legs total. How many 4-legged bots are there?",
+        "id": "Ada 13 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 38 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "(38 - 2 x 13) / 2 = 6 bots.",
+        "id": "(38 - 2 x 13) / 2 = 6 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-019",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 6 = 24, what is x?",
+        "id": "Jika 2x + 6 = 24, berapakah nilai x?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "2x = 18 -> x = 9.",
+        "id": "2x = 18 -> x = 9."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-020",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 70 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 70 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "210",
+      "solutionText": {
+        "en": "70 x 3 = 210 km.",
+        "id": "70 x 3 = 210 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-021",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 7 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 7 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "44",
+      "solutionText": {
+        "en": "2 x (22/7) x 7 = 44 cm.",
+        "id": "2 x (22/7) x 7 = 44 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-022",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 9 space creatures (2-legged birds and 4-legged bots) with 26 legs total. How many 4-legged bots are there?",
+        "id": "Ada 9 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 26 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "(26 - 2 x 9) / 2 = 4 bots.",
+        "id": "(26 - 2 x 9) / 2 = 4 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-023",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 10 = 36, what is x?",
+        "id": "Jika 2x + 10 = 36, berapakah nilai x?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "2x = 26 -> x = 13.",
+        "id": "2x = 26 -> x = 13."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-024",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 60 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 60 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "180",
+      "solutionText": {
+        "en": "60 x 3 = 180 km.",
+        "id": "60 x 3 = 180 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-025",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 14 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 14 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "88",
+      "solutionText": {
+        "en": "2 x (22/7) x 14 = 88 cm.",
+        "id": "2 x (22/7) x 14 = 88 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-026",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 17 space creatures (2-legged birds and 4-legged bots) with 50 legs total. How many 4-legged bots are there?",
+        "id": "Ada 17 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 50 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "(50 - 2 x 17) / 2 = 8 bots.",
+        "id": "(50 - 2 x 17) / 2 = 8 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-027",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 7 = 17, what is x?",
+        "id": "Jika 2x + 7 = 17, berapakah nilai x?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2x = 10 -> x = 5.",
+        "id": "2x = 10 -> x = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-028",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 50 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 50 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "150",
+      "solutionText": {
+        "en": "50 x 3 = 150 km.",
+        "id": "50 x 3 = 150 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-029",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 21 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 21 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "132",
+      "solutionText": {
+        "en": "2 x (22/7) x 21 = 132 cm.",
+        "id": "2 x (22/7) x 21 = 132 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-030",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 13 space creatures (2-legged birds and 4-legged bots) with 38 legs total. How many 4-legged bots are there?",
+        "id": "Ada 13 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 38 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "(38 - 2 x 13) / 2 = 6 bots.",
+        "id": "(38 - 2 x 13) / 2 = 6 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-031",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 4 = 22, what is x?",
+        "id": "Jika 2x + 4 = 22, berapakah nilai x?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "2x = 18 -> x = 9.",
+        "id": "2x = 18 -> x = 9."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-032",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 90 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 90 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "270",
+      "solutionText": {
+        "en": "90 x 3 = 270 km.",
+        "id": "90 x 3 = 270 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-033",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 7 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 7 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "44",
+      "solutionText": {
+        "en": "2 x (22/7) x 7 = 44 cm.",
+        "id": "2 x (22/7) x 7 = 44 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-034",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 9 space creatures (2-legged birds and 4-legged bots) with 26 legs total. How many 4-legged bots are there?",
+        "id": "Ada 9 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 26 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "(26 - 2 x 9) / 2 = 4 bots.",
+        "id": "(26 - 2 x 9) / 2 = 4 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-035",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 8 = 34, what is x?",
+        "id": "Jika 2x + 8 = 34, berapakah nilai x?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "2x = 26 -> x = 13.",
+        "id": "2x = 26 -> x = 13."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-036",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 80 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 80 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "240",
+      "solutionText": {
+        "en": "80 x 3 = 240 km.",
+        "id": "80 x 3 = 240 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-037",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 14 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 14 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "88",
+      "solutionText": {
+        "en": "2 x (22/7) x 14 = 88 cm.",
+        "id": "2 x (22/7) x 14 = 88 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-038",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 17 space creatures (2-legged birds and 4-legged bots) with 50 legs total. How many 4-legged bots are there?",
+        "id": "Ada 17 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 50 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "(50 - 2 x 17) / 2 = 8 bots.",
+        "id": "(50 - 2 x 17) / 2 = 8 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-039",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 5 = 15, what is x?",
+        "id": "Jika 2x + 5 = 15, berapakah nilai x?"
+      },
+      "answer": "5",
+      "solutionText": {
+        "en": "2x = 10 -> x = 5.",
+        "id": "2x = 10 -> x = 5."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-040",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 70 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 70 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "210",
+      "solutionText": {
+        "en": "70 x 3 = 210 km.",
+        "id": "70 x 3 = 210 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-041",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 21 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 21 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "132",
+      "solutionText": {
+        "en": "2 x (22/7) x 21 = 132 cm.",
+        "id": "2 x (22/7) x 21 = 132 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-042",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 13 space creatures (2-legged birds and 4-legged bots) with 38 legs total. How many 4-legged bots are there?",
+        "id": "Ada 13 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 38 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "6",
+      "solutionText": {
+        "en": "(38 - 2 x 13) / 2 = 6 bots.",
+        "id": "(38 - 2 x 13) / 2 = 6 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-043",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 9 = 27, what is x?",
+        "id": "Jika 2x + 9 = 27, berapakah nilai x?"
+      },
+      "answer": "9",
+      "solutionText": {
+        "en": "2x = 18 -> x = 9.",
+        "id": "2x = 18 -> x = 9."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-044",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 60 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 60 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "180",
+      "solutionText": {
+        "en": "60 x 3 = 180 km.",
+        "id": "60 x 3 = 180 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-045",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 7 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 7 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "44",
+      "solutionText": {
+        "en": "2 x (22/7) x 7 = 44 cm.",
+        "id": "2 x (22/7) x 7 = 44 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-046",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 9 space creatures (2-legged birds and 4-legged bots) with 26 legs total. How many 4-legged bots are there?",
+        "id": "Ada 9 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 26 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "4",
+      "solutionText": {
+        "en": "(26 - 2 x 9) / 2 = 4 bots.",
+        "id": "(26 - 2 x 9) / 2 = 4 robot."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-047",
+      "grade": 6,
+      "skillCode": "alg-linear-eq",
+      "difficulty": 4,
+      "stem": {
+        "en": "If 2x + 6 = 32, what is x?",
+        "id": "Jika 2x + 6 = 32, berapakah nilai x?"
+      },
+      "answer": "13",
+      "solutionText": {
+        "en": "2x = 26 -> x = 13.",
+        "id": "2x = 26 -> x = 13."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-048",
+      "grade": 6,
+      "skillCode": "rate-speed-dst",
+      "difficulty": 4,
+      "stem": {
+        "en": "A shuttle flies at 50 km/h for 3 hours. How many km does it travel?",
+        "id": "Pesawat ulang-alik terbang dengan kecepatan 50 km/jam selama 3 jam. Berapa km jarak yang ditempuh?"
+      },
+      "answer": "150",
+      "solutionText": {
+        "en": "50 x 3 = 150 km.",
+        "id": "50 x 3 = 150 km."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-049",
+      "grade": 6,
+      "skillCode": "geo-circles",
+      "difficulty": 4,
+      "stem": {
+        "en": "A circular hatch has radius 14 cm. Using pi = 22/7, what is its circumference in cm?",
+        "id": "Palka lingkaran memiliki jari-jari 14 cm. Dengan pi = 22/7, berapa kelilingnya dalam cm?"
+      },
+      "answer": "88",
+      "solutionText": {
+        "en": "2 x (22/7) x 14 = 88 cm.",
+        "id": "2 x (22/7) x 14 = 88 cm."
+      }
+    },
+    {
+      "code": "PL-CUR-G6-050",
+      "grade": 6,
+      "skillCode": "hots-make-supposition",
+      "difficulty": 5,
+      "stem": {
+        "en": "There are 17 space creatures (2-legged birds and 4-legged bots) with 50 legs total. How many 4-legged bots are there?",
+        "id": "Ada 17 makhluk antariksa (burung berkaki 2 dan robot berkaki 4) dengan total 50 kaki. Berapa robot berkaki 4?"
+      },
+      "answer": "8",
+      "solutionText": {
+        "en": "(50 - 2 x 17) / 2 = 8 bots.",
+        "id": "(50 - 2 x 17) / 2 = 8 robot."
+      }
     }
   ]
 }

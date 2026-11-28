@@ -10,8 +10,8 @@ import (
 
 func TestAllProceduralTemplatesDeterministicBilingual(t *testing.T) {
 	reg := Registry()
-	if len(reg) < 20 {
-		t.Fatalf("expected at least 20 procedural templates across G1-G6, got %d", len(reg))
+	if len(reg) < 60 {
+		t.Fatalf("expected at least 60 procedural templates across G1-G6, got %d", len(reg))
 	}
 
 	gradeCounts := map[int]int{}
@@ -51,8 +51,8 @@ func TestAllProceduralTemplatesDeterministicBilingual(t *testing.T) {
 	}
 
 	for g := 1; g <= 6; g++ {
-		if gradeCounts[g] < 4 {
-			t.Fatalf("expected at least 4 templates for Grade %d, got %d", g, gradeCounts[g])
+		if gradeCounts[g] < 10 {
+			t.Fatalf("expected at least 10 templates for Grade %d, got %d", g, gradeCounts[g])
 		}
 	}
 }
@@ -151,8 +151,8 @@ func TestContentPacksBilingualSchemaValidation(t *testing.T) {
 	if err := json.Unmarshal(qBytes, &qDoc); err != nil {
 		t.Fatalf("invalid curated questions json: %v", err)
 	}
-	if len(qDoc.Questions) < 12 {
-		t.Fatalf("expected curated bilingual questions across G1-G6, got %d", len(qDoc.Questions))
+	if len(qDoc.Questions) < 300 {
+		t.Fatalf("expected at least 300 curated bilingual questions across G1-G6, got %d", len(qDoc.Questions))
 	}
 	for _, q := range qDoc.Questions {
 		if q.Stem.EN == "" || q.Stem.ID == "" || q.SolutionText.EN == "" || q.SolutionText.ID == "" || q.Answer == "" {
