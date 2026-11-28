@@ -2,12 +2,14 @@ package assignments
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
@@ -86,6 +88,8 @@ type assignmentRecord struct {
 	correct        map[int]bool
 	completed      bool
 	rewarded       bool
+	persisted      bool
+	requestID      string
 }
 
 type Service struct {
@@ -136,6 +140,7 @@ type assignmentRecordDTO struct {
 	Correct        map[int]bool              `json:"correct"`
 	Completed      bool                      `json:"completed"`
 	Rewarded       bool                      `json:"rewarded"`
+	RequestID      string                    `json:"requestId,omitempty"`
 }
 
 type itemSpecDTO struct {
@@ -148,12 +153,24 @@ func toRecordDTO(r *assignmentRecord) assignmentRecordDTO {
 	for i, item := range r.items {
 		items[i] = itemSpecDTO{TemplateCode: item.templateCode, Seed: item.seed}
 	}
+	submitted := make(map[int]map[string]string, len(r.submitted))
+	for q, answers := range r.submitted {
+		copied := make(map[string]string, len(answers))
+		for key, value := range answers {
+			copied[key] = value
+		}
+		submitted[q] = copied
+	}
+	correct := make(map[int]bool, len(r.correct))
+	for q, ok := range r.correct {
+		correct[q] = ok
+	}
 	return assignmentRecordDTO{
 		ID: r.id, StudentID: r.studentID, Title: r.title,
 		AssignedByRole: r.assignedByRole, AssignedByName: r.assignedByName,
 		AcademicYear: r.academicYear, DueDate: r.dueDate, RewardAC: r.rewardAC,
-		Items: items, Submitted: r.submitted, Correct: r.correct,
-		Completed: r.completed, Rewarded: r.rewarded,
+		Items: items, Submitted: submitted, Correct: correct,
+		Completed: r.completed, Rewarded: r.rewarded, RequestID: r.requestID,
 	}
 }
 
@@ -176,6 +193,7 @@ func (d assignmentRecordDTO) toRecord() *assignmentRecord {
 		academicYear: d.AcademicYear, dueDate: d.DueDate, rewardAC: d.RewardAC,
 		items: items, submitted: submitted, correct: correct,
 		completed: d.Completed, rewarded: d.Rewarded,
+		persisted: true, requestID: d.RequestID,
 	}
 }
 
@@ -196,6 +214,10 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 		return err
 	}
 	s.mu.Lock()
+	if s.loaded[studentID] {
+		s.mu.Unlock()
+		return nil
+	}
 	for _, dto := range st.Records {
 		s.records[dto.ID] = dto.toRecord()
 	}
@@ -204,8 +226,54 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	return nil
 }
 
+func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, error) {
+	current := assignmentState{Records: make(map[string]assignmentRecordDTO)}
+	if len(currentRaw) > 0 {
+		if err := json.Unmarshal(currentRaw, &current); err != nil {
+			return nil, err
+		}
+	}
+	if current.Records == nil {
+		current.Records = make(map[string]assignmentRecordDTO)
+	}
+	for id, snap := range snapshot.Records {
+		if existing, ok := current.Records[id]; ok {
+			merged := snap
+			merged.Completed = existing.Completed || snap.Completed
+			merged.Rewarded = existing.Rewarded || snap.Rewarded
+			submitted := make(map[int]map[string]string, len(existing.Submitted)+len(snap.Submitted))
+			for q, answers := range existing.Submitted {
+				submitted[q] = answers
+			}
+			for q, answers := range snap.Submitted {
+				submitted[q] = answers
+			}
+			correct := make(map[int]bool, len(existing.Correct)+len(snap.Correct))
+			for q, ok := range existing.Correct {
+				correct[q] = ok
+			}
+			for q, ok := range snap.Correct {
+				correct[q] = ok
+			}
+			merged.Submitted = submitted
+			merged.Correct = correct
+			current.Records[id] = merged
+		} else {
+			current.Records[id] = snap
+		}
+	}
+	return current, nil
+}
+
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	if s.store == nil || !isUUID(studentID) {
+		s.mu.Lock()
+		for _, rec := range s.records {
+			if rec.studentID == studentID {
+				rec.persisted = true
+			}
+		}
+		s.mu.Unlock()
 		return nil
 	}
 	s.mu.Lock()
@@ -216,7 +284,25 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		}
 	}
 	s.mu.Unlock()
-	return s.store.Save(ctx, studentID, "assignments", st)
+	var err error
+	if ms, ok := s.store.(state.MergeStore); ok {
+		err = ms.SaveMerged(ctx, studentID, "assignments", func(current []byte) (any, error) {
+			return mergeAssignmentState(current, st)
+		})
+	} else {
+		err = s.store.Save(ctx, studentID, "assignments", st)
+	}
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	for _, rec := range s.records {
+		if rec.studentID == studentID {
+			rec.persisted = true
+		}
+	}
+	s.mu.Unlock()
+	return nil
 }
 
 func (s *Service) seedDefaults(studentID string) {
@@ -267,7 +353,10 @@ func isUUID(s string) bool {
 }
 
 func (s *Service) isLinked(ctx context.Context, parentID, studentID string) (bool, error) {
-	if s.pool != nil && isUUID(parentID) && isUUID(studentID) {
+	if s.pool != nil {
+		if !isUUID(parentID) || !isUUID(studentID) {
+			return parentID == "demo-parent" && studentID == "demo-pilot1", nil
+		}
 		var ok bool
 		err := s.pool.QueryRow(ctx, `
 			SELECT EXISTS (
@@ -324,8 +413,8 @@ func (s *Service) ListForStudent(ctx context.Context, studentID, statusFilter, a
 	return out, nil
 }
 
-func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string) (AssignmentSummary, error) {
-	if title == "" || len(title) > MaxTitleLen {
+func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string, requestID string) (AssignmentSummary, error) {
+	if title == "" || utf8.RuneCountInString(title) > MaxTitleLen {
 		return AssignmentSummary{}, fmt.Errorf("title must be 1..%d characters", MaxTitleLen)
 	}
 	if len(templateCodes) == 0 || len(templateCodes) > MaxTemplates {
@@ -345,6 +434,15 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 	summary, err := func() (AssignmentSummary, error) {
 		if len(templateCodes) == 0 {
 			return AssignmentSummary{}, fmt.Errorf("at least one question template is required")
+		}
+		// A retried create request reuses its stable request ID, so an
+		// ambiguous save outcome cannot produce a duplicate assignment.
+		if requestID != "" {
+			for _, rec := range s.records {
+				if rec.studentID == studentID && rec.requestID == requestID {
+					return toSummary(rec), nil
+				}
+			}
 		}
 		// UUIDs stay unique across restarts and replicas, so reward idempotency
 		// keys never collide with a previous assignment.
@@ -373,6 +471,7 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 			items:          items,
 			submitted:      make(map[int]map[string]string),
 			correct:        make(map[int]bool),
+			requestID:      requestID,
 		}
 		s.records[id] = rec
 		return toSummary(rec), nil
@@ -421,12 +520,14 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			return AssignmentDetail{}, fmt.Errorf("invalid question index")
 		}
 		if _, done := rec.submitted[qIndex]; done {
-			// A completed assignment with an uncredited reward may be retried
-			// idempotently; the stored answers are never overwritten.
-			if rec.completed && !rec.rewarded && s.ledger != nil {
-				needsReward = true
-				rewardAC = rec.rewardAC
-				rewardID = rec.id
+			// Retry only flushes an unpersisted snapshot or an uncredited
+			// reward; stored answers are never overwritten.
+			if !rec.persisted || (rec.completed && !rec.rewarded && s.ledger != nil) {
+				if rec.completed && !rec.rewarded && s.ledger != nil {
+					needsReward = true
+					rewardAC = rec.rewardAC
+					rewardID = rec.id
+				}
 				return renderDetail(rec, locale), nil
 			}
 			return AssignmentDetail{}, fmt.Errorf("question %d has already been submitted", qIndex)
@@ -437,6 +538,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		rec.submitted[qIndex] = answers
 		rec.correct[qIndex] = res.IsCorrect
 		rec.completed = len(rec.submitted) == len(rec.items)
+		rec.persisted = false
 		if rec.completed {
 			if !rec.rewarded && s.ledger != nil {
 				needsReward = true
@@ -613,6 +715,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Title         string   `json:"title" minLength:"1" maxLength:"120"`
 			DueDate       string   `json:"dueDate,omitempty"`
 			TemplateCodes []string `json:"templateCodes" minItems:"1" maxItems:"20"`
+			RequestID     string   `json:"requestId,omitempty"`
 		}
 	}) (*struct{ Body AssignmentSummary }, error) {
 		uid, name, role, _, err := h.resolveUser(ctx, in.AuthIn)
@@ -622,7 +725,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if role != auth.RoleParent {
 			return nil, huma.Error403Forbidden("parent access required")
 		}
-		summary, err := h.svc.CreateParentCustomAssignment(ctx, uid, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes)
+		summary, err := h.svc.CreateParentCustomAssignment(ctx, uid, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes, in.Body.RequestID)
 		if err != nil {
 			if errors.Is(err, ErrNotLinkedChild) {
 				return nil, huma.Error403Forbidden(err.Error())

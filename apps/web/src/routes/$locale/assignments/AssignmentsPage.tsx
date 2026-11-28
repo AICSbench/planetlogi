@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
@@ -21,19 +21,23 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
   const [builderToast, setBuilderToast] = useState<string | null>(null);
   const [builderError, setBuilderError] = useState<string | null>(null);
+  const requestIdRef = useRef<string | null>(null);
+  const requestSignatureRef = useRef<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Active assignment solver state
   const [activeId, setActiveId] = useState<string | null>(null);
   const [qIdx, setQIdx] = useState(1);
 
-  // The profile bundle resolves the authenticated parent's linked child (or
-  // the student's own profile), so the builder never targets a demo ID.
-  const bundleQuery = useQuery({
-    queryKey: ["profile-bundle"],
-    queryFn: () => apiClient.getProfileBundle(),
+  // Every linked child is selectable; the builder never targets a demo ID.
+  const childrenQuery = useQuery({
+    queryKey: ["profile-children"],
+    queryFn: () => apiClient.getProfileChildren(),
   });
-  const linkedChild = bundleQuery.data?.child;
+  const children = childrenQuery.data?.children ?? [];
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const linkedChild =
+    children.find((child) => child.studentId === selectedChildId) ?? children[0];
   const grade = linkedChild?.grade ?? user?.grade ?? 1;
   const isParent = user?.role === "PARENT";
 
@@ -45,7 +49,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const skillsQuery = useQuery({
     queryKey: ["training-skills", "ALL", grade, locale],
     queryFn: () => apiClient.getSkills("ALL", grade, locale),
-    enabled: showBuilder,
+    enabled: showBuilder && Boolean(linkedChild?.studentId),
   });
 
   const detailQuery = useQuery({
@@ -59,16 +63,27 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       if (!linkedChild?.studentId) {
         throw new Error("no linked child");
       }
-      return apiClient.createCustomAssignment({
+      const payload = {
         studentId: linkedChild.studentId,
         title: customTitle.trim() || t("portals:assignments.defaultTitle"),
         dueDate,
         templateCodes: selectedTemplates,
+      };
+      const signature = JSON.stringify(payload);
+      if (requestSignatureRef.current !== signature) {
+        requestSignatureRef.current = signature;
+        requestIdRef.current = crypto.randomUUID();
+      }
+      return apiClient.createCustomAssignment({
+        ...payload,
+        requestId: requestIdRef.current ?? undefined,
       });
     },
     onSuccess: () => {
       setBuilderToast(t("portals:assignments.createdSuccess"));
       setBuilderError(null);
+      requestIdRef.current = null;
+      requestSignatureRef.current = null;
       setCustomTitle("");
       setSelectedTemplates([]);
       void queryClient.invalidateQueries({ queryKey: ["assignments"] });
@@ -219,12 +234,37 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
                   grade: linkedChild.grade,
                 })}
               </p>
-            ) : bundleQuery.isError ? (
+            ) : childrenQuery.isError ? (
               <p role="alert" className="text-xs font-bold text-red-300">
                 {t("portals:assignments.childLoadError")}
               </p>
             ) : null}
           </div>
+
+          {children.length > 1 ? (
+            <div>
+              <label className="block text-xs font-bold text-slate-200">
+                {t("portals:assignments.childLabel")}
+              </label>
+              <select
+                value={linkedChild?.studentId ?? ""}
+                onChange={(e) => {
+                  setSelectedChildId(e.target.value);
+                  setSelectedTemplates([]);
+                }}
+                className="mt-1 min-h-11 w-full rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-sm text-white sm:w-80"
+              >
+                {children.map((child) => (
+                  <option key={child.studentId} value={child.studentId}>
+                    {t("portals:assignments.childOption", {
+                      name: child.firstName,
+                      grade: child.grade,
+                    })}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>

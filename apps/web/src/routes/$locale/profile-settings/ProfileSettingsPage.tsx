@@ -11,11 +11,12 @@ import { apiClient, useAuthStore } from "../../../store/authStore";
 export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common"]);
   const queryClient = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id ?? "guest");
   // Saving family settings is parent-only on the API (students get 403).
   const isParent = useAuthStore((s) => s.user?.role === "PARENT");
 
   const bundleQuery = useQuery({
-    queryKey: ["profile-bundle"],
+    queryKey: ["profile-bundle", userId],
     queryFn: () => apiClient.getProfileBundle(),
   });
 
@@ -55,7 +56,8 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
         brainGalaxyDailyCapMin: brainCap,
       }),
     onSuccess: async (updated) => {
-      queryClient.setQueryData(["profile-bundle"], updated);
+      if (useAuthStore.getState().user?.id !== userId) return;
+      queryClient.setQueryData(["profile-bundle", userId], updated);
       setOtpDraft(null);
       setLangDraft(null);
       setBrainCapDraft(null);

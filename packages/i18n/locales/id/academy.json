@@ -15,5 +15,7 @@
   "scrollEarnedBanner": "Gulungan Bintang diraih untuk pelajaran ini!",
   "extraPractice": "Latihan Tambahan di Latihan Galaksi →",
   "loadError": "Gagal memuat pelajaran ini. Periksa koneksi lalu coba lagi.",
-  "actionError": "Jawabanmu belum tersimpan. Silakan coba lagi."
+  "actionError": "Jawabanmu belum tersimpan. Silakan coba lagi.",
+  "retryScroll": "Coba Lagi Gulungan Bintang",
+  "scrollRetryHint": "Keempat soal sudah selesai, tetapi kredit Gulungan Bintang belum berhasil."
 }

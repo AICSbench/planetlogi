@@ -25,7 +25,8 @@
     "toggleAnswerKey": "Sertakan Kunci Jawaban",
     "printNow": "Cetak / Simpan PDF",
     "answerKey": "Kunci Jawaban",
-    "loadError": "Lembar kerja ini tidak dapat dimuat."
+    "loadError": "Lembar kerja ini tidak dapat dimuat.",
+    "keyLocked": "Kunci jawaban tersedia setelah kamu mengirim kertas ini."
   },
   "supplyPodBadge": "🎁 +5 AC Kapsul Hadiah!",
   "actionError": "Progres belum tersimpan. Silakan coba lagi.",
@@ -36,5 +37,6 @@
     "NOT_STARTED": "Belum dimulai",
     "IN_PROGRESS": "Sedang dikerjakan",
     "SUBMITTED": "Sudah dikirim"
-  }
+  },
+  "timerLimitReached": "Batas waktu 24 jam telah tercapai. Simpan atau kirim kertas sekarang."
 }

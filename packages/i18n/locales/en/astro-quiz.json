@@ -25,7 +25,8 @@
     "toggleAnswerKey": "Include Answer Key",
     "printNow": "Print / Save as PDF",
     "answerKey": "Answer Key",
-    "loadError": "This worksheet could not be loaded."
+    "loadError": "This worksheet could not be loaded.",
+    "keyLocked": "Answer keys are available after you submit this paper."
   },
   "supplyPodBadge": "🎁 +5 AC Supply Pod!",
   "actionError": "Progress wasn't saved. Please try again.",
@@ -36,5 +37,6 @@
     "NOT_STARTED": "Not started",
     "IN_PROGRESS": "In progress",
     "SUBMITTED": "Submitted"
-  }
+  },
+  "timerLimitReached": "The 24-hour timer limit has been reached. Save or submit the paper now."
 }

@@ -15,5 +15,7 @@
   "scrollEarnedBanner": "Star Scroll Earned for this lesson!",
   "extraPractice": "Practice More in Galaxy Training →",
   "loadError": "Couldn't load this lesson. Check your connection and try again.",
-  "actionError": "Your answer wasn't saved. Please try again."
+  "actionError": "Your answer wasn't saved. Please try again.",
+  "retryScroll": "Retry Star Scroll",
+  "scrollRetryHint": "All four questions are solved, but the Star Scroll credit did not complete."
 }

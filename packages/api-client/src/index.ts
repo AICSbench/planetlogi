@@ -563,6 +563,12 @@ export function createApiClient(baseUrl: string) {
         body: JSON.stringify({ lessonCode, itemKey, checked }),
       });
     },
+    retryAcademyScroll(lessonCode: string, locale: string) {
+      return request<AcademyLessonDetail>(`/api/v1/academy/scroll/retry?locale=${locale}`, {
+        method: "POST",
+        body: JSON.stringify({ lessonCode }),
+      });
+    },
 
     // AstroQuiz
     getAstroQuizPapers(grade: number, category: string, locale: string) {
@@ -587,9 +593,9 @@ export function createApiClient(baseUrl: string) {
         { method: "POST", body: JSON.stringify({ elapsedSec, drafts }) }
       );
     },
-    getPrintablePaper(code: string, locale: string) {
+    getPrintablePaper(code: string, locale: string, includeKey = false) {
       return request<PrintablePaper>(
-        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}/print?locale=${locale}`
+        `/api/v1/astro-quiz/papers/${encodeURIComponent(code)}/print?locale=${locale}&includeKey=${includeKey}`
       );
     },
 
@@ -604,6 +610,7 @@ export function createApiClient(baseUrl: string) {
       title: string;
       dueDate?: string;
       templateCodes: string[];
+      requestId?: string;
     }) {
       return request<AssignmentSummary>("/api/v1/assignments/custom", {
         method: "POST",
@@ -625,6 +632,9 @@ export function createApiClient(baseUrl: string) {
     // Profile & Parent Portal
     getProfileBundle() {
       return request<ProfileBundle>("/api/v1/profile/bundle");
+    },
+    getProfileChildren() {
+      return request<{ children: ProfileBundle["child"][] }>("/api/v1/profile/children");
     },
     requestParentOTP() {
       return request<{ sent: boolean; devCode?: string }>("/api/v1/auth/otp/request", {

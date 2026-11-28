@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/academy/scroll/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry a failed Star Scroll award for an already-solved lesson */
+        post: operations["academy-scroll-retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/academy/self-check": {
         parameters: {
             query?: never;
@@ -497,6 +514,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profile/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the authenticated parent's linked children */
+        get: operations["profile-children"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profile/settings": {
         parameters: {
             query?: never;
@@ -726,6 +760,15 @@ export interface components {
             /** Format: int64 */
             questionIndex: number;
         };
+        "Academy-scroll-retryRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-scroll-retryRequest.json
+             */
+            readonly $schema?: string;
+            lessonCode: string;
+        };
         "Academy-self-checkRequest": {
             /**
              * Format: uri
@@ -798,6 +841,7 @@ export interface components {
              */
             readonly $schema?: string;
             dueDate?: string;
+            requestId?: string;
             studentId: string;
             templateCodes: string[] | null;
             title: string;
@@ -1360,6 +1404,15 @@ export interface components {
             masteryCount: number;
             skills: components["schemas"]["SkillView"][] | null;
         };
+        "Profile-childrenResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Profile-childrenResponse.json
+             */
+            readonly $schema?: string;
+            children: components["schemas"]["ChildProfile"][] | null;
+        };
         ProfileBundle: {
             /**
              * Format: uri
@@ -1725,6 +1778,45 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-scroll-retry": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Academy-scroll-retryRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -2694,6 +2786,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileBundle"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "profile-children": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile-childrenResponse"];
                 };
             };
             /** @description Error */

@@ -56,7 +56,8 @@ function QuestionPlayerInner({
   const [retryUnlocked, setRetryUnlocked] = useState(false);
 
   const answers = draftAnswers ?? submittedAnswer ?? {};
-  const effectiveLocked = locked && !(mode === "SPACE_ACADEMY" && retryUnlocked);
+  const effectiveLocked =
+    (locked && !(mode === "SPACE_ACADEMY" && retryUnlocked)) || submitting;
 
   function speakQuestion() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -249,6 +250,7 @@ function QuestionPlayerInner({
               <GalaxyButton
                 type="button"
                 variant="secondary"
+                disabled={submitting}
                 onClick={() => {
                   onSaveDraft(answers);
                   setSavedNotice(true);

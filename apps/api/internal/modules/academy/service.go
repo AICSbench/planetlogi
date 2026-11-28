@@ -2,6 +2,8 @@ package academy
 
 import (
 	"context"
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -66,6 +68,44 @@ type LessonDetail struct {
 	ScrollEarned       bool              `json:"scrollEarned"`
 	DoAndLearn         []DoLearnQuestion `json:"doAndLearn"`
 	SelfCheck          []SelfCheckItem   `json:"selfCheck"`
+}
+
+//go:embed media.json
+var lessonMediaJSON []byte
+
+type lessonMedia struct {
+	StoryVideoURLs     map[string]string `json:"storyVideoUrls"`
+	ConceptVideoURLs   map[string]string `json:"conceptVideoUrls"`
+	StoryCaptionURLs   map[string]string `json:"storyCaptionUrls"`
+	ConceptCaptionURLs map[string]string `json:"conceptCaptionUrls"`
+}
+
+type lessonMediaFile struct {
+	Lessons map[string]lessonMedia `json:"lessons"`
+}
+
+func localeTextFromMap(values map[string]string) mathengine.LocaleText {
+	return mathengine.LocaleText{EN: values["en"], ID: values["id"]}
+}
+
+// applyLessonMedia connects the compiled catalog to the runtime media source.
+// Content can add per-lesson URLs without changing the Go catalog.
+func applyLessonMedia(lessons []lessonDef) []lessonDef {
+	var file lessonMediaFile
+	if err := json.Unmarshal(lessonMediaJSON, &file); err != nil {
+		return lessons
+	}
+	for i := range lessons {
+		media, ok := file.Lessons[lessons[i].code]
+		if !ok {
+			continue
+		}
+		lessons[i].storyVideoURL = localeTextFromMap(media.StoryVideoURLs)
+		lessons[i].conceptVideoURL = localeTextFromMap(media.ConceptVideoURLs)
+		lessons[i].storyCaptionsURL = localeTextFromMap(media.StoryCaptionURLs)
+		lessons[i].conceptCaptionsURL = localeTextFromMap(media.ConceptCaptionURLs)
+	}
+	return lessons
 }
 
 type lessonDef struct {
@@ -145,9 +185,29 @@ type lessonProgressDTO struct {
 }
 
 func (p *lessonProgress) toDTO() lessonProgressDTO {
+	drafts := make(map[int]map[string]string, len(p.drafts))
+	for idx, answers := range p.drafts {
+		copied := make(map[string]string, len(answers))
+		for key, value := range answers {
+			copied[key] = value
+		}
+		drafts[idx] = copied
+	}
+	solved := make(map[int]bool, len(p.solved))
+	for idx, ok := range p.solved {
+		solved[idx] = ok
+	}
+	lastWrong := make(map[int]bool, len(p.lastWrong))
+	for idx, wrong := range p.lastWrong {
+		lastWrong[idx] = wrong
+	}
+	selfChecked := make(map[string]bool, len(p.selfChecked))
+	for key, checked := range p.selfChecked {
+		selfChecked[key] = checked
+	}
 	return lessonProgressDTO{
-		Drafts: p.drafts, Solved: p.solved, LastWrong: p.lastWrong,
-		SelfChecked: p.selfChecked, ScrollEarned: p.scrollEarned,
+		Drafts: drafts, Solved: solved, LastWrong: lastWrong,
+		SelfChecked: selfChecked, ScrollEarned: p.scrollEarned,
 	}
 }
 
@@ -206,6 +266,10 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 		return err
 	}
 	s.mu.Lock()
+	if s.loaded[studentID] {
+		s.mu.Unlock()
+		return nil
+	}
 	if s.progress[studentID] == nil {
 		s.progress[studentID] = make(map[string]*lessonProgress)
 	}
@@ -215,6 +279,56 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	s.loaded[studentID] = true
 	s.mu.Unlock()
 	return nil
+}
+
+func mergeLessonProgress(current, snapshot lessonProgressDTO) lessonProgressDTO {
+	out := current
+	if out.Drafts == nil {
+		out.Drafts = make(map[int]map[string]string)
+	}
+	if out.Solved == nil {
+		out.Solved = make(map[int]bool)
+	}
+	if out.LastWrong == nil {
+		out.LastWrong = make(map[int]bool)
+	}
+	if out.SelfChecked == nil {
+		out.SelfChecked = make(map[string]bool)
+	}
+	for idx, answers := range snapshot.Drafts {
+		out.Drafts[idx] = answers
+	}
+	for idx, ok := range snapshot.Solved {
+		out.Solved[idx] = out.Solved[idx] || ok
+	}
+	for idx, wrong := range snapshot.LastWrong {
+		out.LastWrong[idx] = wrong
+	}
+	for key, checked := range snapshot.SelfChecked {
+		out.SelfChecked[key] = checked
+	}
+	out.ScrollEarned = out.ScrollEarned || snapshot.ScrollEarned
+	return out
+}
+
+func mergeAcademyState(currentRaw []byte, snapshot academyState) (any, error) {
+	current := academyState{Lessons: make(map[string]lessonProgressDTO)}
+	if len(currentRaw) > 0 {
+		if err := json.Unmarshal(currentRaw, &current); err != nil {
+			return nil, err
+		}
+	}
+	if current.Lessons == nil {
+		current.Lessons = make(map[string]lessonProgressDTO)
+	}
+	for code, snap := range snapshot.Lessons {
+		if existing, ok := current.Lessons[code]; ok {
+			current.Lessons[code] = mergeLessonProgress(existing, snap)
+		} else {
+			current.Lessons[code] = snap
+		}
+	}
+	return current, nil
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
@@ -227,6 +341,11 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		st.Lessons[code] = p.toDTO()
 	}
 	s.mu.Unlock()
+	if ms, ok := s.store.(state.MergeStore); ok {
+		return ms.SaveMerged(ctx, studentID, "academy", func(current []byte) (any, error) {
+			return mergeAcademyState(current, st)
+		})
+	}
 	return s.store.Save(ctx, studentID, "academy", st)
 }
 
@@ -462,6 +581,62 @@ func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale
 		return res, detail, awardErr
 	}
 	return res, detail, nil
+}
+
+// RetryScrollAward lets a learner retry a failed Star Scroll credit after a
+// reload, without re-answering the four already-solved questions.
+func (s *Service) RetryScrollAward(ctx context.Context, studentID, lessonCode, locale string) (LessonDetail, error) {
+	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
+		return LessonDetail{}, err
+	}
+	s.mu.Lock()
+	l, ok := s.findLesson(lessonCode)
+	if !ok {
+		s.mu.Unlock()
+		return LessonDetail{}, fmt.Errorf("lesson %q not found", lessonCode)
+	}
+	p := s.getProgLocked(studentID, lessonCode)
+	if len(p.solved) != 4 {
+		s.mu.Unlock()
+		return LessonDetail{}, fmt.Errorf("all four Do & Learn questions must be solved first")
+	}
+	if p.scrollEarned {
+		detail := s.buildLessonDetailLocked(l, p, locale)
+		s.mu.Unlock()
+		return detail, nil
+	}
+	detail := s.buildLessonDetailLocked(l, p, locale)
+	s.mu.Unlock()
+
+	var awardErr error
+	if s.ledger == nil {
+		s.mu.Lock()
+		s.getProgLocked(studentID, lessonCode).scrollEarned = true
+		detail = s.buildLessonDetailLocked(l, s.getProgLocked(studentID, lessonCode), locale)
+		s.mu.Unlock()
+	} else if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+		StudentID:      studentID,
+		Currency:       economy.CurrencyScroll,
+		Delta:          1,
+		SourceType:     "SPACE_ACADEMY",
+		SourceID:       lessonCode,
+		IdempotencyKey: fmt.Sprintf("academy_scroll:%s:%s", studentID, lessonCode),
+	}); err != nil {
+		awardErr = fmt.Errorf("award star scroll: %w", err)
+	} else {
+		s.mu.Lock()
+		p = s.getProgLocked(studentID, lessonCode)
+		p.scrollEarned = true
+		detail = s.buildLessonDetailLocked(l, p, locale)
+		s.mu.Unlock()
+	}
+	if err := s.persistStudent(ctx, studentID); err != nil {
+		return detail, err
+	}
+	if awardErr != nil {
+		return detail, awardErr
+	}
+	return detail, nil
 }
 
 func (s *Service) ToggleSelfCheck(ctx context.Context, studentID, lessonCode, itemKey string, checked bool, locale string) (LessonDetail, error) {
@@ -734,7 +909,7 @@ func buildCatalog() ([]topicDef, []lessonDef) {
 			},
 		},
 	}
-	return topics, lessons
+	return topics, applyLessonMedia(lessons)
 }
 
 type Handler struct {
@@ -883,6 +1058,29 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		out.Body.Result = res
 		out.Body.Lesson = detail
 		return out, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID: "academy-scroll-retry",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/academy/scroll/retry",
+		Summary:     "Retry a failed Star Scroll award for an already-solved lesson",
+		Tags:        []string{"SpaceAcademy"},
+	}, func(ctx context.Context, in *struct {
+		AuthIn
+		Body struct {
+			LessonCode string `json:"lessonCode"`
+		}
+	}) (*struct{ Body LessonDetail }, error) {
+		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		detail, err := h.svc.RetryScrollAward(ctx, id, in.Body.LessonCode, locale)
+		if err != nil {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
+		return &struct{ Body LessonDetail }{Body: detail}, nil
 	})
 
 	huma.Register(api, huma.Operation{

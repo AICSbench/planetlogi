@@ -31,7 +31,9 @@
     "createError": "Tugas gagal dibuat. Periksa anak yang terhubung lalu coba lagi.",
     "submitError": "Jawabanmu belum terkirim. Silakan coba lagi.",
     "assigningTo": "Dikirim ke {{name}} (Kelas {{grade}})",
-    "childLoadError": "Belum ada anak terhubung. Buka Portal Orang Tua untuk menautkan anak."
+    "childLoadError": "Belum ada anak terhubung. Buka Portal Orang Tua untuk menautkan anak.",
+    "childLabel": "Anak",
+    "childOption": "{{name}} (Kelas {{grade}})"
   },
   "profile": {
     "title": "Profil & Pengaturan Keluarga",
@@ -56,7 +58,8 @@
     "otpSendError": "Gagal mengirim kode OTP. Coba lagi.",
     "saveError": "Pengaturan gagal disimpan. Periksa kode OTP lalu coba lagi.",
     "loadError": "Gagal memuat pengaturan keluarga.",
-    "minutesShort": "{{count}} menit"
+    "minutesShort": "{{count}} menit",
+    "parentOnly": "Pengaturan keluarga hanya dapat diubah dari akun orang tua."
   },
   "parentPortal": {
     "title": "Pusat Pantau Orang Tua",

@@ -18,12 +18,12 @@ import (
 func TestHTTPParentOnlyEndpoints(t *testing.T) {
 	fx := reqguardtest.New(t,
 		auth.Principal{ID: "stu-1", Role: auth.RoleStudent},
-		auth.Principal{ID: "par-1", Role: auth.RoleParent, DisplayName: "Budi"},
+		auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi"},
 	)
 	svc := NewService(nil, nil, fx.Service, false)
 	_, api := humatest.New(t)
 	NewHandler(svc, fx.Service).RegisterRoutes(nil, api)
-	student, parent := fx.BearerHeader(t, "stu-1"), fx.BearerHeader(t, "par-1")
+	student, parent := fx.BearerHeader(t, "stu-1"), fx.BearerHeader(t, "demo-parent")
 
 	patch := map[string]any{"brainGalaxyDailyCapMin": 25}
 	if resp := api.Patch("/api/v1/profile/settings", patch); resp.Code != http.StatusUnauthorized {
@@ -49,7 +49,7 @@ func TestHTTPParentOnlyEndpoints(t *testing.T) {
 
 func TestSettingsValidationAndFailClosedOTP(t *testing.T) {
 	svc := NewService(nil, nil, nil, false)
-	parent := auth.Principal{ID: "par-1", Role: auth.RoleParent}
+	parent := auth.Principal{ID: "demo-parent", Role: auth.RoleParent}
 
 	for name, in := range map[string]UpdateSettingsInput{
 		"bad language":     {Language: "fr"},

@@ -16,6 +16,12 @@ type Store interface {
 	Save(ctx context.Context, studentID, module string, value any) error
 }
 
+// MergeStore serializes a read-modify-write of one student's document under a
+// row lock, so concurrent saves from multiple instances cannot drop records.
+type MergeStore interface {
+	SaveMerged(ctx context.Context, studentID, module string, merge func(current []byte) (any, error)) error
+}
+
 type PGStore struct {
 	pool *pgxpool.Pool
 }
@@ -52,4 +58,48 @@ func (s *PGStore) Save(ctx context.Context, studentID, module string, value any)
 			updated_at = NOW()
 	`, studentID, module, raw)
 	return err
+}
+
+// SaveMerged locks the student's module row, lets the caller merge its
+// in-memory snapshot with the current durable document, then writes the
+// merged result in the same transaction.
+func (s *PGStore) SaveMerged(ctx context.Context, studentID, module string, merge func(current []byte) (any, error)) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Ensure the row exists before locking it, so two first writers serialize
+	// instead of both merging an absent document.
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO phase2_state (student_id, module, payload)
+		VALUES ($1::uuid, $2, '{}'::jsonb)
+		ON CONFLICT (student_id, module) DO NOTHING
+	`, studentID, module); err != nil {
+		return err
+	}
+	var current []byte
+	if err := tx.QueryRow(ctx, `
+		SELECT payload FROM phase2_state
+		WHERE student_id = $1::uuid AND module = $2
+		FOR UPDATE
+	`, studentID, module).Scan(&current); err != nil {
+		return err
+	}
+	merged, err := merge(current)
+	if err != nil {
+		return err
+	}
+	raw, err := json.Marshal(merged)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE phase2_state SET payload = $3::jsonb, updated_at = NOW()
+		WHERE student_id = $1::uuid AND module = $2
+	`, studentID, module, raw); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

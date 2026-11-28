@@ -40,14 +40,14 @@ func TestCustomAssignmentPayloadBounds(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	if _, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", strings.Repeat("x", MaxTitleLen+1), "", []string{"g1_add_within_20"}); err == nil {
+	if _, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", strings.Repeat("x", MaxTitleLen+1), "", []string{"g1_add_within_20"}, ""); err == nil {
 		t.Fatal("service accepted an oversized title")
 	}
-	if _, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Drill", "", many); err == nil {
+	if _, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Drill", "", many, ""); err == nil {
 		t.Fatal("service accepted too many templates")
 	}
 
-	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Drill", "", []string{"g1_add_within_20"})
+	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Drill", "", []string{"g1_add_within_20"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}

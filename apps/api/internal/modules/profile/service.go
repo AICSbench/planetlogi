@@ -29,6 +29,7 @@ var (
 	ErrNoLinkedChild   = errors.New("no linked child found for this parent")
 	ErrProfileNotFound = errors.New("student profile not found")
 	ErrInvalidInput    = errors.New("invalid settings")
+	ErrParentOnly      = errors.New("parent access required to change family settings")
 )
 
 type ParentProfile struct {
@@ -129,7 +130,13 @@ func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (str
 	if actor.Role != auth.RoleParent {
 		return actor.ID, nil
 	}
-	if s.pool != nil && isUUID(actor.ID) {
+	if s.pool != nil {
+		if !isUUID(actor.ID) {
+			if actor.ID == "demo-parent" {
+				return "demo-pilot1", nil
+			}
+			return "", ErrNoLinkedChild
+		}
 		var child string
 		err := s.pool.QueryRow(ctx, `
 			SELECT id::text FROM student_profiles
@@ -141,6 +148,9 @@ func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (str
 			return "", ErrNoLinkedChild
 		}
 		return child, err
+	}
+	if actor.ID != "demo-parent" {
+		return "", ErrNoLinkedChild
 	}
 	return "demo-pilot1", nil
 }
@@ -319,6 +329,9 @@ func validateSettingsInput(in UpdateSettingsInput) error {
 }
 
 func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in UpdateSettingsInput) (ProfileBundle, error) {
+	if actor.Role != auth.RoleParent {
+		return ProfileBundle{}, ErrParentOnly
+	}
 	if err := validateSettingsInput(in); err != nil {
 		return ProfileBundle{}, err
 	}
@@ -378,35 +391,143 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 		b.Settings.BrainGalaxyWindowEnd = in.BrainGalaxyWindowEnd
 	}
 	if s.pool != nil && isUUID(childID) {
-		var parentID string
-		if err := s.pool.QueryRow(ctx, `SELECT parent_account_id::text FROM student_profiles WHERE id = $1::uuid`, childID).Scan(&parentID); err != nil {
-			return ProfileBundle{}, err
+		sets := make([]string, 0, 6)
+		args := []any{childID}
+		next := 2
+		if in.Language == "en" || in.Language == "id" {
+			sets = append(sets, fmt.Sprintf("preferred_locale = $%d", next))
+			args = append(args, in.Language)
+			next++
 		}
-		daily, _ := json.Marshal(map[string][]string{"math": b.Settings.DailyOrbitCurricula})
-		duel, _ := json.Marshal(map[string][]string{"math": b.Settings.StarDuelCurricula})
-		if _, err := s.pool.Exec(ctx, `
-			UPDATE student_profiles
-			SET preferred_locale = $2, active_daily_curricula_by_subject = $3::jsonb,
-			    active_duel_curricula_by_subject = $4::jsonb,
-			    brain_galaxy_daily_cap_sec = $5,
-			    brain_galaxy_window_start = $6::time, brain_galaxy_window_end = $7::time,
-			    updated_at = NOW()
-			WHERE id = $1::uuid
-		`, childID, b.Settings.Language, daily, duel, b.Settings.BrainGalaxyDailyCapMin*60,
-			b.Settings.BrainGalaxyWindowStart, b.Settings.BrainGalaxyWindowEnd); err != nil {
-			return ProfileBundle{}, fmt.Errorf("persist family settings: %w", err)
+		if len(in.DailyOrbitCurricula) > 0 {
+			daily, _ := json.Marshal(map[string][]string{"math": in.DailyOrbitCurricula})
+			sets = append(sets, fmt.Sprintf("active_daily_curricula_by_subject = $%d::jsonb", next))
+			args = append(args, daily)
+			next++
 		}
-		if in.OTPEnabled != nil && isUUID(parentID) {
-			if _, err := s.pool.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
-				return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)
+		if len(in.StarDuelCurricula) > 0 {
+			duel, _ := json.Marshal(map[string][]string{"math": in.StarDuelCurricula})
+			sets = append(sets, fmt.Sprintf("active_duel_curricula_by_subject = $%d::jsonb", next))
+			args = append(args, duel)
+			next++
+		}
+		if in.BrainGalaxyDailyCapMin != nil {
+			sets = append(sets, fmt.Sprintf("brain_galaxy_daily_cap_sec = $%d", next))
+			args = append(args, b.Settings.BrainGalaxyDailyCapMin*60)
+			next++
+		}
+		if in.BrainGalaxyWindowStart != "" {
+			sets = append(sets, fmt.Sprintf("brain_galaxy_window_start = $%d::time", next))
+			args = append(args, in.BrainGalaxyWindowStart)
+			next++
+		}
+		if in.BrainGalaxyWindowEnd != "" {
+			sets = append(sets, fmt.Sprintf("brain_galaxy_window_end = $%d::time", next))
+			args = append(args, in.BrainGalaxyWindowEnd)
+			next++
+		}
+		if len(sets) > 0 {
+			query := "UPDATE student_profiles SET " + strings.Join(sets, ", ") + ", updated_at = NOW() WHERE id = $1::uuid"
+			if _, err := s.pool.Exec(ctx, query, args...); err != nil {
+				return ProfileBundle{}, fmt.Errorf("persist family settings: %w", err)
 			}
 		}
-	} else {
-		s.mu.Lock()
-		*s.getOrCreateLocked(childID) = b
-		s.mu.Unlock()
+		if in.OTPEnabled != nil {
+			var parentID string
+			if err := s.pool.QueryRow(ctx, `SELECT parent_account_id::text FROM student_profiles WHERE id = $1::uuid`, childID).Scan(&parentID); err != nil {
+				return ProfileBundle{}, err
+			}
+			if isUUID(parentID) {
+				if _, err := s.pool.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
+					return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)
+				}
+			}
+		}
+		return s.loadBundlePG(ctx, childID)
 	}
+
+	s.mu.Lock()
+	b = *s.getOrCreateLocked(childID)
+	if in.OTPEnabled != nil {
+		b.Settings.OTPEnabled = *in.OTPEnabled
+	}
+	if in.Language == "en" || in.Language == "id" {
+		b.Settings.Language = in.Language
+	}
+	if len(in.DailyOrbitCurricula) > 0 {
+		b.Settings.DailyOrbitCurricula = in.DailyOrbitCurricula
+	}
+	if len(in.StarDuelCurricula) > 0 {
+		b.Settings.StarDuelCurricula = in.StarDuelCurricula
+	}
+	if in.BrainGalaxyDailyCapMin != nil {
+		capMin := *in.BrainGalaxyDailyCapMin
+		if capMin < 0 {
+			capMin = 0
+		}
+		if capMin > 25 {
+			capMin = 25
+		}
+		b.Settings.BrainGalaxyDailyCapMin = capMin
+	}
+	if in.BrainGalaxyWindowStart != "" {
+		b.Settings.BrainGalaxyWindowStart = in.BrainGalaxyWindowStart
+	}
+	if in.BrainGalaxyWindowEnd != "" {
+		b.Settings.BrainGalaxyWindowEnd = in.BrainGalaxyWindowEnd
+	}
+	*s.getOrCreateLocked(childID) = b
+	s.mu.Unlock()
 	return b, nil
+}
+
+// ListChildren returns every child linked to the authenticated parent, or the
+// student's own profile, so the assignment builder can select a child.
+func (s *Service) ListChildren(ctx context.Context, actor auth.Principal) ([]ChildProfile, error) {
+	if actor.Role != auth.RoleParent {
+		bundle, err := s.GetBundle(ctx, actor)
+		if err != nil {
+			return nil, err
+		}
+		return []ChildProfile{bundle.Child}, nil
+	}
+	if s.pool == nil || !isUUID(actor.ID) {
+		return []ChildProfile{{StudentID: "demo-pilot1", FirstName: "Demo Pilot", Grade: 1}}, nil
+	}
+	rows, err := s.pool.Query(ctx, `
+		SELECT id::text FROM student_profiles
+		WHERE parent_account_id = $1::uuid
+		ORDER BY created_at, id
+	`, actor.ID)
+	if err != nil {
+		return nil, err
+	}
+	childIDs := make([]string, 0)
+	for rows.Next() {
+		var childID string
+		if err := rows.Scan(&childID); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		childIDs = append(childIDs, childID)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	children := make([]ChildProfile, 0, len(childIDs))
+	for _, childID := range childIDs {
+		bundle, err := s.loadBundlePG(ctx, childID)
+		if err != nil {
+			return nil, err
+		}
+		children = append(children, bundle.Child)
+	}
+	if len(children) == 0 {
+		return nil, ErrNoLinkedChild
+	}
+	return children, nil
 }
 
 func (s *Service) GetParentOverview(ctx context.Context, actor auth.Principal, locale string) (ParentChildOverview, error) {
@@ -506,6 +627,34 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 	})
 
 	huma.Register(api, huma.Operation{
+		OperationID: "profile-children",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/profile/children",
+		Summary:     "List the authenticated parent's linked children",
+		Tags:        []string{"Profile"},
+	}, func(ctx context.Context, in *AuthIn) (*struct {
+		Body struct {
+			Children []ChildProfile `json:"children"`
+		}
+	}, error) {
+		actor, _, err := h.resolvePrincipal(ctx, *in)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		children, err := h.svc.ListChildren(ctx, actor)
+		if err != nil {
+			return nil, huma.Error404NotFound(err.Error())
+		}
+		out := &struct {
+			Body struct {
+				Children []ChildProfile `json:"children"`
+			}
+		}{}
+		out.Body.Children = children
+		return out, nil
+	})
+
+	huma.Register(api, huma.Operation{
 		OperationID: "profile-update-settings",
 		Method:      http.MethodPatch,
 		Path:        "/api/v1/profile/settings",
@@ -526,7 +675,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		updated, err := h.svc.UpdateSettings(ctx, actor, in.Body)
 		if err != nil {
 			switch {
-			case errors.Is(err, ErrOTPRequired):
+			case errors.Is(err, ErrOTPRequired), errors.Is(err, ErrParentOnly):
 				return nil, huma.Error403Forbidden(err.Error())
 			case errors.Is(err, ErrInvalidInput):
 				return nil, huma.Error400BadRequest(err.Error())

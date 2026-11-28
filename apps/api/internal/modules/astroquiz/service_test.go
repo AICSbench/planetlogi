@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
@@ -213,4 +215,124 @@ func TestPapersMatchContentManifest(t *testing.T) {
 			}
 		}
 	}
+}
+
+type quizMemoryStore struct {
+	mu   sync.Mutex
+	data map[string][]byte
+}
+
+func newQuizMemoryStore() *quizMemoryStore {
+	return &quizMemoryStore{data: make(map[string][]byte)}
+}
+
+func (m *quizMemoryStore) key(studentID, module string) string { return studentID + ":" + module }
+
+func (m *quizMemoryStore) Load(_ context.Context, studentID, module string, dest any) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	raw, ok := m.data[m.key(studentID, module)]
+	if !ok {
+		return false, nil
+	}
+	return true, json.Unmarshal(raw, dest)
+}
+
+func (m *quizMemoryStore) Save(_ context.Context, studentID, module string, value any) error {
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	m.mu.Lock()
+	m.data[m.key(studentID, module)] = raw
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *quizMemoryStore) SaveMerged(_ context.Context, studentID, module string, merge func([]byte) (any, error)) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	key := m.key(studentID, module)
+	merged, err := merge(m.data[key])
+	if err != nil {
+		return err
+	}
+	raw, err := json.Marshal(merged)
+	if err != nil {
+		return err
+	}
+	m.data[key] = raw
+	return nil
+}
+
+func TestSupplyPodClaimWeekSurvivesWeekBoundary(t *testing.T) {
+	const studentID = "22222222-2222-2222-2222-222222222222"
+	store := newQuizMemoryStore()
+	ledger := &recordingLedger{failNext: true}
+
+	week1 := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
+	svc := NewServiceWithStore(store, ledger)
+	svc.nowClock = func() time.Time { return week1 }
+
+	opened, err := svc.OpenPaper(context.Background(), studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	drafts := map[int]map[string]string{}
+	for _, pq := range opened.Questions {
+		prob, _ := mathengine.GenerateByCode(pq.Question.TemplateCode, pq.Question.Seed, "en")
+		drafts[pq.Index] = prob.Solution.CorrectAnswers
+	}
+	if _, err := svc.SubmitPaper(context.Background(), studentID, "G1-ESS-01", "en", 60, drafts); err == nil {
+		t.Fatal("expected the first ledger attempt to fail")
+	}
+
+	// The retry happens a week later and after a service restart.
+	week2 := week1.AddDate(0, 0, 8)
+	reloaded := NewServiceWithStore(store, ledger)
+	reloaded.nowClock = func() time.Time { return week2 }
+	sub, err := reloaded.SubmitPaper(context.Background(), studentID, "G1-ESS-01", "en", 60, drafts)
+	if err != nil {
+		t.Fatalf("retry after week boundary: %v", err)
+	}
+	if !sub.SupplyPodAwarded {
+		t.Fatal("expected the original Supply Pod to be awarded on retry")
+	}
+	ledger.mu.Lock()
+	defer ledger.mu.Unlock()
+	if len(ledger.applied) != 1 {
+		t.Fatalf("expected one credit, got %d", len(ledger.applied))
+	}
+	year, week := week1.ISOWeek()
+	want := fmt.Sprintf("supply_pod:%s:%04d-W%02d", studentID, year, week)
+	if ledger.applied[0].IdempotencyKey != want {
+		t.Fatalf("retry changed the claim key: got %q want %q", ledger.applied[0].IdempotencyKey, want)
+	}
+}
+
+func TestConcurrentPrintAndSubmit(t *testing.T) {
+	svc := NewService(nil)
+	opened, err := svc.OpenPaper(context.Background(), "stu-1", "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	drafts := map[int]map[string]string{}
+	for _, pq := range opened.Questions {
+		prob, _ := mathengine.GenerateByCode(pq.Question.TemplateCode, pq.Question.Seed, "en")
+		drafts[pq.Index] = prob.Solution.CorrectAnswers
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			_, _ = svc.GetPrintablePaper(context.Background(), "stu-1", "G1-ESS-01", "en", true)
+		}()
+		go func() {
+			defer wg.Done()
+			_, _ = svc.SubmitPaper(context.Background(), "stu-1", "G1-ESS-01", "en", 10, drafts)
+		}()
+	}
+	wg.Wait()
 }

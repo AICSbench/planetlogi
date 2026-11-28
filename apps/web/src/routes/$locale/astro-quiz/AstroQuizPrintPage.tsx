@@ -22,6 +22,15 @@ export function AstroQuizPrintPage({
     queryFn: () => apiClient.getPrintablePaper(paperCode, locale),
   });
 
+  // Answer keys are a separate, submission-gated request so the worksheet
+  // itself never receives them.
+  const keyQuery = useQuery({
+    queryKey: ["astro-quiz-print-key", paperCode, locale],
+    queryFn: () => apiClient.getPrintablePaper(paperCode, locale, true),
+    enabled: showKey,
+    retry: false,
+  });
+
   const paper = printQuery.data;
   if (printQuery.isError) {
     return (
@@ -127,23 +136,31 @@ export function AstroQuizPrintPage({
             <h2 className="text-lg font-extrabold">
               {t("astro-quiz:print.answerKey")} ({paper.paperCode})
             </h2>
-            <ol className="grid grid-cols-2 gap-2 text-sm">
-              {paper.answerKeys.map((ans, idx) => {
-                const parts: InputPart[] =
-                  paper.questions[idx]?.parts && paper.questions[idx]!.parts!.length > 0
-                    ? paper.questions[idx]!.parts!
-                    : [{ key: "answer" }];
-                return (
-                  <li key={idx}>
-                    <strong>{idx + 1}.</strong>{" "}
-                    {parts
-                      .filter((part) => ans[part.key] !== undefined)
-                      .map((part) => `${part.label ?? part.key}: ${ans[part.key]}`)
-                      .join(" · ")}
-                  </li>
-                );
-              })}
-            </ol>
+            {keyQuery.isError ? (
+              <p role="alert" className="text-sm font-bold text-red-700">
+                {t("astro-quiz:print.keyLocked")}
+              </p>
+            ) : keyQuery.isPending || !keyQuery.data ? (
+              <p className="text-sm text-slate-600">{t("common:common.loading")}</p>
+            ) : (
+              <ol className="grid grid-cols-2 gap-2 text-sm">
+                {(keyQuery.data.answerKeys ?? []).map((ans, idx) => {
+                  const parts: InputPart[] =
+                    paper.questions[idx]?.parts && paper.questions[idx]!.parts!.length > 0
+                      ? paper.questions[idx]!.parts!
+                      : [{ key: "answer" }];
+                  return (
+                    <li key={idx}>
+                      <strong>{idx + 1}.</strong>{" "}
+                      {parts
+                        .filter((part) => ans[part.key] !== undefined)
+                        .map((part) => `${part.label ?? part.key}: ${ans[part.key]}`)
+                        .join(" · ")}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
           </section>
         ) : null}
       </article>

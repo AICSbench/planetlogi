@@ -31,7 +31,9 @@
     "createError": "The assignment couldn't be created. Check the linked child and try again.",
     "submitError": "Your answer wasn't submitted. Please try again.",
     "assigningTo": "Assigning to {{name}} (Grade {{grade}})",
-    "childLoadError": "No linked child found. Open the Parent Portal to link a child first."
+    "childLoadError": "No linked child found. Open the Parent Portal to link a child first.",
+    "childLabel": "Child",
+    "childOption": "{{name}} (Grade {{grade}})"
   },
   "profile": {
     "title": "Profile & Family Settings",
@@ -56,7 +58,8 @@
     "otpSendError": "Couldn't send the OTP code. Try again.",
     "saveError": "Settings weren't saved. Verify the OTP code and try again.",
     "loadError": "Couldn't load family settings.",
-    "minutesShort": "{{count}} min"
+    "minutesShort": "{{count}} min",
+    "parentOnly": "Family settings can only be changed from a parent account."
   },
   "parentPortal": {
     "title": "Parent Mission Control",

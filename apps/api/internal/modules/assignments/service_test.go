@@ -2,6 +2,7 @@ package assignments
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 	"testing"
@@ -63,17 +64,17 @@ func TestParentCustomAssignmentAndCompletionReward(t *testing.T) {
 	svc.LinkParentChild("par-1", "stu-1")
 
 	// Unlinked parent MUST be blocked
-	if _, err := svc.CreateParentCustomAssignment(context.Background(), "par-other", "Other", "stu-1", "Test", "", []string{"g1_add_within_20"}); err != ErrNotLinkedChild {
+	if _, err := svc.CreateParentCustomAssignment(context.Background(), "par-other", "Other", "stu-1", "Test", "", []string{"g1_add_within_20"}, ""); err != ErrNotLinkedChild {
 		t.Fatalf("expected ErrNotLinkedChild, got %v", err)
 	}
 
 	// Invalid due dates are rejected
-	if _, err := svc.CreateParentCustomAssignment(context.Background(), "par-1", "Budi", "stu-1", "Test", "tomorrow", []string{"g1_add_within_20"}); err == nil {
+	if _, err := svc.CreateParentCustomAssignment(context.Background(), "par-1", "Budi", "stu-1", "Test", "tomorrow", []string{"g1_add_within_20"}, ""); err == nil {
 		t.Fatal("expected invalid dueDate to be rejected")
 	}
 
 	// Linked parent creates custom 2-question assignment
-	created, err := svc.CreateParentCustomAssignment(context.Background(), "par-1", "Budi", "stu-1", "Weekend Addition Drill", "2026-12-01", []string{"g1_add_within_20", "g1_sub_within_20"})
+	created, err := svc.CreateParentCustomAssignment(context.Background(), "par-1", "Budi", "stu-1", "Weekend Addition Drill", "2026-12-01", []string{"g1_add_within_20", "g1_sub_within_20"}, "")
 	if err != nil || created.QuestionCount != 2 || created.AssignedByRole != AssignedByParent {
 		t.Fatalf("unexpected created assignment: %+v err=%v", created, err)
 	}
@@ -115,5 +116,128 @@ func TestParentCustomAssignmentAndCompletionReward(t *testing.T) {
 	prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
 	if _, _, err := svc.SubmitQuestion(context.Background(), "stu-1", created.ID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
 		t.Fatal("expected duplicate question submission to be rejected")
+	}
+}
+
+func TestCreateAssignmentRequestIDIsIdempotent(t *testing.T) {
+	svc := NewService(nil)
+	svc.LinkParentChild("par-1", "stu-1")
+	ctx := context.Background()
+
+	first, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Retry Safe", "2026-12-01", []string{"g1_add_within_20"}, "req-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", "stu-1", "Retry Safe", "2026-12-01", []string{"g1_add_within_20"}, "req-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.ID != second.ID {
+		t.Fatalf("retried create produced a second assignment: %s vs %s", first.ID, second.ID)
+	}
+	list, err := svc.ListForStudent(ctx, "stu-1", "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("expected one assignment, got %d", len(list))
+	}
+}
+
+type assignmentMemoryStore struct {
+	mu       sync.Mutex
+	data     map[string][]byte
+	failNext bool
+}
+
+func newAssignmentMemoryStore() *assignmentMemoryStore {
+	return &assignmentMemoryStore{data: make(map[string][]byte)}
+}
+
+func (m *assignmentMemoryStore) key(studentID, module string) string { return studentID + ":" + module }
+
+func (m *assignmentMemoryStore) Load(_ context.Context, studentID, module string, dest any) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	raw, ok := m.data[m.key(studentID, module)]
+	if !ok {
+		return false, nil
+	}
+	return true, json.Unmarshal(raw, dest)
+}
+
+func (m *assignmentMemoryStore) Save(_ context.Context, studentID, module string, value any) error {
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	m.mu.Lock()
+	m.data[m.key(studentID, module)] = raw
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *assignmentMemoryStore) SaveMerged(_ context.Context, studentID, module string, merge func([]byte) (any, error)) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.failNext {
+		m.failNext = false
+		return errors.New("store temporarily unavailable")
+	}
+	key := m.key(studentID, module)
+	merged, err := merge(m.data[key])
+	if err != nil {
+		return err
+	}
+	raw, err := json.Marshal(merged)
+	if err != nil {
+		return err
+	}
+	m.data[key] = raw
+	return nil
+}
+
+func TestAssignmentFinalSubmissionPersistsAfterRetry(t *testing.T) {
+	const studentID = "33333333-3333-3333-3333-333333333333"
+	store := newAssignmentMemoryStore()
+	svc := NewServiceWithDeps(nil, store, nil)
+	svc.LinkParentChild("par-1", studentID)
+	ctx := context.Background()
+
+	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "Persist Retry", "2026-12-01", []string{"g1_add_within_20", "g1_sub_within_20"}, "req-persist")
+	if err != nil {
+		t.Fatal(err)
+	}
+	detail, err := svc.GetDetail(ctx, studentID, created.ID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	q1 := detail.Questions[0]
+	prob1, _ := mathengine.GenerateByCode(q1.Question.TemplateCode, q1.Question.Seed, "en")
+	if _, _, err := svc.SubmitQuestion(ctx, studentID, created.ID, q1.Index, prob1.Solution.CorrectAnswers, "en"); err != nil {
+		t.Fatal(err)
+	}
+
+	q2 := detail.Questions[1]
+	prob2, _ := mathengine.GenerateByCode(q2.Question.TemplateCode, q2.Question.Seed, "en")
+	store.failNext = true
+	if _, _, err := svc.SubmitQuestion(ctx, studentID, created.ID, q2.Index, prob2.Solution.CorrectAnswers, "en"); err == nil {
+		t.Fatal("expected the failed save to surface")
+	}
+	// The same final submission flushes the completed snapshot after the store recovers.
+	if _, detail, err = svc.SubmitQuestion(ctx, studentID, created.ID, q2.Index, prob2.Solution.CorrectAnswers, "en"); err != nil {
+		t.Fatalf("retry after save failure: %v", err)
+	}
+	if detail.Summary.Status != "COMPLETE" {
+		t.Fatalf("expected COMPLETE after retry, got %+v", detail.Summary)
+	}
+
+	reloaded := NewServiceWithDeps(nil, store, nil)
+	list, err := reloaded.ListForStudent(ctx, studentID, "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].Status != "COMPLETE" {
+		t.Fatalf("completed assignment was not durable: %+v", list)
 	}
 }

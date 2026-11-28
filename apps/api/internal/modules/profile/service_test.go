@@ -21,7 +21,7 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 	str := streak.NewService()
 	svc := NewService(rep, str, authSvc, false)
 
-	parent := auth.Principal{ID: "par-1", Role: auth.RoleParent, DisplayName: "Budi"}
+	parent := auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi"}
 
 	// Enable OTP and test Brain Galaxy cap clamped to max 25 min
 	enable := true
@@ -54,5 +54,34 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 	})
 	if err != nil || afterOTP.Settings.Language != "en" {
 		t.Fatalf("expected OTP-verified update to succeed: err=%v lang=%s", err, afterOTP.Settings.Language)
+	}
+}
+
+func TestUpdateSettingsPreservesIndependentPatches(t *testing.T) {
+	svc := NewService(nil, nil, nil, false)
+	parent := auth.Principal{ID: "demo-parent", Role: auth.RoleParent}
+	ctx := context.Background()
+
+	if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{Language: "id"}); err != nil {
+		t.Fatal(err)
+	}
+	capMin := 10
+	if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{BrainGalaxyDailyCapMin: &capMin}); err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := svc.GetBundle(ctx, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bundle.Settings.Language != "id" || bundle.Settings.BrainGalaxyDailyCapMin != 10 {
+		t.Fatalf("concurrent patches overwrote each other: %+v", bundle.Settings)
+	}
+}
+
+func TestUpdateSettingsRejectsStudentRole(t *testing.T) {
+	svc := NewService(nil, nil, nil, false)
+	student := auth.Principal{ID: "stu-1", Role: auth.RoleStudent}
+	if _, err := svc.UpdateSettings(context.Background(), student, UpdateSettingsInput{Language: "id"}); err != ErrParentOnly {
+		t.Fatalf("expected ErrParentOnly, got %v", err)
 	}
 }

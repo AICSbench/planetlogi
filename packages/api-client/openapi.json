@@ -96,6 +96,27 @@
         ],
         "type": "object"
       },
+      "Academy-scroll-retryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Academy-scroll-retryRequest.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "lessonCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lessonCode"
+        ],
+        "type": "object"
+      },
       "Academy-self-checkRequest": {
         "additionalProperties": false,
         "properties": {
@@ -291,6 +312,9 @@
             "type": "string"
           },
           "dueDate": {
+            "type": "string"
+          },
+          "requestId": {
             "type": "string"
           },
           "studentId": {
@@ -1957,6 +1981,33 @@
         ],
         "type": "object"
       },
+      "Profile-childrenResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/Profile-childrenResponse.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/ChildProfile"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "children"
+        ],
+        "type": "object"
+      },
       "ProfileBundle": {
         "additionalProperties": false,
         "properties": {
@@ -2991,6 +3042,72 @@
           }
         },
         "summary": "Get a Space Academy lesson timeline (Story, Watch, Do \u0026 Learn, Self-Check)",
+        "tags": [
+          "SpaceAcademy"
+        ]
+      }
+    },
+    "/api/v1/academy/scroll/retry": {
+      "post": {
+        "operationId": "academy-scroll-retry",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Academy-scroll-retryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonDetail"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Retry a failed Star Scroll award for an already-solved lesson",
         "tags": [
           "SpaceAcademy"
         ]
@@ -4729,6 +4846,62 @@
           }
         },
         "summary": "Get Parent \u0026 Child profile cards and family settings",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/api/v1/profile/children": {
+      "get": {
+        "operationId": "profile-children",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile-childrenResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List the authenticated parent's linked children",
         "tags": [
           "Profile"
         ]

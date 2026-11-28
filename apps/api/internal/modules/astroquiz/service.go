@@ -2,6 +2,7 @@ package astroquiz
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -88,6 +89,7 @@ type attemptState struct {
 	score            int
 	supplyPodAwarded bool
 	rewardClaimed    bool
+	claimWeek        string
 }
 
 type Service struct {
@@ -130,12 +132,22 @@ type attemptStateDTO struct {
 	Score            int                       `json:"score"`
 	SupplyPodAwarded bool                      `json:"supplyPodAwarded"`
 	RewardClaimed    bool                      `json:"rewardClaimed"`
+	ClaimWeek        string                    `json:"claimWeek,omitempty"`
 }
 
 func (st *attemptState) toDTO() attemptStateDTO {
+	drafts := make(map[int]map[string]string, len(st.drafts))
+	for idx, answers := range st.drafts {
+		copied := make(map[string]string, len(answers))
+		for key, value := range answers {
+			copied[key] = value
+		}
+		drafts[idx] = copied
+	}
 	return attemptStateDTO{
-		Status: st.status, ElapsedSec: st.elapsedSec, Drafts: st.drafts,
+		Status: st.status, ElapsedSec: st.elapsedSec, Drafts: drafts,
 		Score: st.score, SupplyPodAwarded: st.supplyPodAwarded, RewardClaimed: st.rewardClaimed,
+		ClaimWeek: st.claimWeek,
 	}
 }
 
@@ -143,6 +155,7 @@ func (d attemptStateDTO) toState() *attemptState {
 	st := &attemptState{
 		status: d.Status, elapsedSec: d.ElapsedSec, drafts: d.Drafts,
 		score: d.Score, supplyPodAwarded: d.SupplyPodAwarded, rewardClaimed: d.RewardClaimed,
+		claimWeek: d.ClaimWeek,
 	}
 	if st.status == "" {
 		st.status = "IN_PROGRESS"
@@ -188,6 +201,10 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 		return err
 	}
 	s.mu.Lock()
+	if s.loaded[studentID] {
+		s.mu.Unlock()
+		return nil
+	}
 	if s.attempts[studentID] == nil {
 		s.attempts[studentID] = make(map[string]*attemptState)
 	}
@@ -202,6 +219,60 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	s.loaded[studentID] = true
 	s.mu.Unlock()
 	return nil
+}
+
+func mergeQuizState(currentRaw []byte, snapshot quizState) (any, error) {
+	current := quizState{
+		Attempts: make(map[string]attemptStateDTO),
+		Weekly:   make(map[string]bool),
+	}
+	if len(currentRaw) > 0 {
+		if err := json.Unmarshal(currentRaw, &current); err != nil {
+			return nil, err
+		}
+	}
+	if current.Attempts == nil {
+		current.Attempts = make(map[string]attemptStateDTO)
+	}
+	if current.Weekly == nil {
+		current.Weekly = make(map[string]bool)
+	}
+	for code, snap := range snapshot.Attempts {
+		existing, ok := current.Attempts[code]
+		if !ok {
+			current.Attempts[code] = snap
+			continue
+		}
+		merged := snap
+		if existing.Status == "SUBMITTED" {
+			merged.Status = "SUBMITTED"
+			merged.Score = existing.Score
+		}
+		if snap.Score > merged.Score {
+			merged.Score = snap.Score
+		}
+		if existing.ElapsedSec > merged.ElapsedSec {
+			merged.ElapsedSec = existing.ElapsedSec
+		}
+		merged.SupplyPodAwarded = existing.SupplyPodAwarded || snap.SupplyPodAwarded
+		merged.RewardClaimed = existing.RewardClaimed || snap.RewardClaimed
+		if existing.ClaimWeek != "" {
+			merged.ClaimWeek = existing.ClaimWeek
+		}
+		drafts := make(map[int]map[string]string, len(existing.Drafts)+len(snap.Drafts))
+		for idx, answers := range existing.Drafts {
+			drafts[idx] = answers
+		}
+		for idx, answers := range snap.Drafts {
+			drafts[idx] = answers
+		}
+		merged.Drafts = drafts
+		current.Attempts[code] = merged
+	}
+	for key, claimed := range snapshot.Weekly {
+		current.Weekly[key] = current.Weekly[key] || claimed
+	}
+	return current, nil
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
@@ -223,6 +294,11 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		}
 	}
 	s.mu.Unlock()
+	if ms, ok := s.store.(state.MergeStore); ok {
+		return ms.SaveMerged(ctx, studentID, "astroquiz", func(current []byte) (any, error) {
+			return mergeQuizState(current, st)
+		})
+	}
 	return s.store.Save(ctx, studentID, "astroquiz", st)
 }
 
@@ -401,17 +477,23 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 			st.score = score
 			st.status = "SUBMITTED"
 		}
-		wk := s.currentWeekKey()
-		wkKey := studentID + ":" + wk
-		if !s.weeklySupplyPod[wkKey] && !st.rewardClaimed {
-			if s.ledger == nil {
-				s.weeklySupplyPod[wkKey] = true
-				st.rewardClaimed = true
-				st.supplyPodAwarded = true
+		if !st.rewardClaimed {
+			// Freeze the claim week on the attempt before any ledger call, so
+			// a retry in a later ISO week reuses the original reward key.
+			if st.claimWeek == "" {
+				st.claimWeek = s.currentWeekKey()
+			}
+			wkKey := studentID + ":" + st.claimWeek
+			if !s.weeklySupplyPod[wkKey] {
+				if s.ledger == nil {
+					s.weeklySupplyPod[wkKey] = true
+					st.rewardClaimed = true
+					st.supplyPodAwarded = true
+				} else {
+					claimWeek = st.claimWeek
+				}
 			} else {
-				// Claim the reward outside the lock, after the attempt state
-				// has been persisted. A failed ledger call stays retryable.
-				claimWeek = wk
+				st.rewardClaimed = true
 			}
 		}
 		return s.renderAttemptLocked(studentID, p, st, locale), nil
@@ -422,6 +504,12 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 	}
 
 	if claimWeek != "" {
+		// Persist the submitted attempt and its original claim week before
+		// calling the ledger; an uncertain result is retryable with the same
+		// key even after a restart or a week boundary.
+		if err := s.persistStudent(ctx, studentID); err != nil {
+			return PaperAttemptView{}, err
+		}
 		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
 			Currency:       economy.CurrencyAC,
@@ -430,11 +518,6 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 			SourceID:       claimWeek,
 			IdempotencyKey: fmt.Sprintf("supply_pod:%s:%s", studentID, claimWeek),
 		}); err != nil {
-			// Persist the submitted paper first so the retry only has to
-			// claim the reward again.
-			if persistErr := s.persistStudent(ctx, studentID); persistErr != nil {
-				return PaperAttemptView{}, persistErr
-			}
 			return PaperAttemptView{}, fmt.Errorf("award weekly supply pod: %w", err)
 		}
 		s.mu.Lock()
@@ -462,9 +545,12 @@ func (s *Service) GetPrintablePaper(ctx context.Context, studentID, paperCode, l
 	}
 	if includeKey {
 		s.mu.Lock()
-		st := s.attempts[studentID][paperCode]
+		status := ""
+		if st := s.attempts[studentID][paperCode]; st != nil {
+			status = st.status
+		}
 		s.mu.Unlock()
-		if st == nil || st.status != "SUBMITTED" {
+		if status != "SUBMITTED" {
 			return PrintablePaper{}, fmt.Errorf("answer key is available only after submission")
 		}
 	}

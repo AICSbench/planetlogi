@@ -8,6 +8,8 @@ import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
 import { apiClient, useAuthStore } from "../../../store/authStore";
 
+const MAX_ELAPSED_SEC = 24 * 60 * 60;
+
 function formatTimer(sec: number): string {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
@@ -50,15 +52,21 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     return { ...merged, ...draftEdits };
   }, [attempt, draftEdits]);
 
-  // Stored elapsed time plus the seconds spent in this session.
-  const elapsedSec = (attempt?.elapsedSec ?? 0) + sessionSec;
+  // Stored elapsed time plus the seconds spent in this session, capped at the
+  // server's 24-hour limit so Save/Submit never hit a 400 at the boundary.
+  const elapsedSec = Math.min(MAX_ELAPSED_SEC, (attempt?.elapsedSec ?? 0) + sessionSec);
+  const timerCapped = elapsedSec >= MAX_ELAPSED_SEC;
 
   // Live elapsed timer while paper is IN_PROGRESS
   useEffect(() => {
     if (!activePaperCode || attempt?.status === "SUBMITTED") return;
-    const id = window.setInterval(() => setSessionSec((s) => s + 1), 1000);
+    const stored = attempt?.elapsedSec ?? 0;
+    const id = window.setInterval(
+      () => setSessionSec((s) => Math.min(s + 1, Math.max(0, MAX_ELAPSED_SEC - stored))),
+      1000
+    );
     return () => window.clearInterval(id);
-  }, [activePaperCode, attempt?.status]);
+  }, [activePaperCode, attempt?.status, attempt?.elapsedSec]);
 
   type PaperPayload = { elapsedSec: number; drafts: Record<number, Record<string, string>> };
 
@@ -160,6 +168,11 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
         {actionError ? (
           <p role="alert" className="text-sm font-bold text-red-300">
             {actionError}
+          </p>
+        ) : null}
+        {timerCapped ? (
+          <p role="status" className="text-sm font-bold text-amber-200">
+            {t("astro-quiz:timerLimitReached")}
           </p>
         ) : null}
 
