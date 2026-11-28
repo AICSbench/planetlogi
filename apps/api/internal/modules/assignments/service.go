@@ -316,10 +316,19 @@ func mergeAssignmentRecord(existing, snap assignmentRecordDTO) assignmentRecordD
 }
 
 func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, error) {
+	merged, _, err := mergeAssignmentStateAliases(currentRaw, snapshot)
+	return merged, err
+}
+
+// mergeAssignmentStateAliases merges a snapshot into the stored document and also reports which
+// local assignment IDs were folded into an existing durable record with the same request ID
+// (localID -> durableID), so the caller can reconcile memory with what was actually stored.
+func mergeAssignmentStateAliases(currentRaw []byte, snapshot assignmentState) (assignmentState, map[string]string, error) {
+	aliases := make(map[string]string)
 	current := assignmentState{Records: make(map[string]assignmentRecordDTO)}
 	if len(currentRaw) > 0 {
 		if err := json.Unmarshal(currentRaw, &current); err != nil {
-			return nil, err
+			return assignmentState{}, nil, err
 		}
 	}
 	if current.Records == nil {
@@ -335,6 +344,9 @@ func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, err
 		if snap.RequestID != "" {
 			if existingID, ok := requestIDs[snap.StudentID+"\x00"+snap.RequestID]; ok {
 				current.Records[existingID] = mergeAssignmentRecord(current.Records[existingID], snap)
+				if existingID != id {
+					aliases[id] = existingID
+				}
 				continue
 			}
 		}
@@ -344,7 +356,7 @@ func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, err
 			current.Records[id] = snap
 		}
 	}
-	return current, nil
+	return current, aliases, nil
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
@@ -369,9 +381,13 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	}
 	s.mu.Unlock()
 	var err error
+	var aliases map[string]string
+	var durable assignmentState
 	if ms, ok := s.store.(state.MergeStore); ok {
 		err = ms.SaveMerged(ctx, studentID, "assignments", func(current []byte) (any, error) {
-			return mergeAssignmentState(current, st)
+			merged, a, mergeErr := mergeAssignmentStateAliases(current, st)
+			durable, aliases = merged, a
+			return merged, mergeErr
 		})
 	} else {
 		err = s.store.Save(ctx, studentID, "assignments", st)
@@ -380,6 +396,20 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		return err
 	}
 	s.mu.Lock()
+	// A concurrent create (e.g. on another instance) with the same request ID won the durable
+	// slot: drop our local duplicate and adopt the stored record, so responses and later reads
+	// use an ID every instance can load.
+	for localID, durableID := range aliases {
+		delete(s.records, localID)
+		delete(revisions, localID)
+		if _, ok := s.records[durableID]; !ok {
+			if dto, ok := durable.Records[durableID]; ok {
+				rec := dto.toRecord()
+				rec.persisted = true
+				s.records[durableID] = rec
+			}
+		}
+	}
 	for id, rec := range s.records {
 		if rec.studentID == studentID && rec.revision == revisions[id] {
 			rec.persisted = true
@@ -417,25 +447,8 @@ func (s *Service) LinkParentChild(parentID, studentID string) {
 	s.parentLinks[parentID] = append(s.parentLinks[parentID], studentID)
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
+// isUUID reports whether studentID is a real (PostgreSQL-backed) ID.
+func isUUID(s string) bool { return reqguard.IsUUID(s) }
 
 func (s *Service) isLinked(ctx context.Context, parentID, studentID string) (bool, error) {
 	if s.pool != nil {
@@ -570,6 +583,17 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 	if err := s.persistStudent(ctx, studentID); err != nil {
 		return AssignmentSummary{}, err
 	}
+	if requestID != "" {
+		// Answer with the durable record for this request (it may have been created by a
+		// concurrent request with the same request ID).
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		for _, rec := range s.records {
+			if rec.studentID == studentID && rec.requestID == requestID {
+				return toSummary(rec), nil
+			}
+		}
+	}
 	return summary, nil
 }
 
@@ -615,9 +639,14 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 					rewardAC = rec.rewardAC
 					rewardID = rec.id
 				}
-				return renderDetail(rec, locale), nil
 			}
-			return AssignmentDetail{}, fmt.Errorf("%w: question %d has already been submitted", ErrInvalidInput, qIndex)
+			// Re-submitting an answered question is idempotent: the stored answer and its result
+			// are returned (never overwritten), so a client retrying after a failed response gets
+			// the real outcome instead of an error.
+			item := rec.items[qIndex-1]
+			prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
+			res = mathengine.Grade(prob, rec.submitted[qIndex])
+			return renderDetail(rec, locale), nil
 		}
 		item := rec.items[qIndex-1]
 		prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
@@ -646,6 +675,12 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 
 	var rewardErr error
 	if needsReward {
+		// Make the completing answer durable before crediting: a crash after the credit must
+		// never lose the progress that earned it (a retry then only re-attempts the credit,
+		// which the idempotency key keeps single).
+		if err := s.persistStudent(ctx, studentID); err != nil {
+			return res, detail, err
+		}
 		// The ledger can block on its own transaction; never hold the service
 		// mutex across it. The idempotency key makes a retry safe.
 		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{

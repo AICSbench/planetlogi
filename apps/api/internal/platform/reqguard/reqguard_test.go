@@ -44,3 +44,18 @@ func TestValidateAnswers(t *testing.T) {
 		t.Fatalf("drafts: expected ErrInvalidAnswers, got %v", err)
 	}
 }
+
+func TestIsUUID(t *testing.T) {
+	for s, want := range map[string]bool{
+		"6a82b3f8-6104-433d-9a04-930c70a73242": true,
+		"6A82B3F8-6104-433D-9A04-930C70A73242": true,
+		"demo-pilot1":                          false,
+		"6a82b3f8-6104-433d-9a04-930c70a7324":  false,
+		"6a82b3f8x6104-433d-9a04-930c70a73242": false,
+		"6a82b3f8-6104-433d-9a04-930c70a7324g": false,
+	} {
+		if got := IsUUID(s); got != want {
+			t.Fatalf("IsUUID(%q) = %v, want %v", s, got, want)
+		}
+	}
+}

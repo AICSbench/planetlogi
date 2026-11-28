@@ -57,3 +57,26 @@ func ValidateDrafts(drafts map[int]map[string]string) error {
 	}
 	return nil
 }
+
+// IsUUID reports whether s is a canonical 36-character UUID (8-4-4-4-12 hex). Phase 2 services
+// use it to tell real (PostgreSQL-backed) student IDs from demo/test identities.
+func IsUUID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+	for i := 0; i < 36; i++ {
+		c := s[i]
+		switch i {
+		case 8, 13, 18, 23:
+			if c != '-' {
+				return false
+			}
+		default:
+			isHex := (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+			if !isHex {
+				return false
+			}
+		}
+	}
+	return true
+}

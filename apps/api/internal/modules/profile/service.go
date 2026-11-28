@@ -106,25 +106,8 @@ func NewServiceWithPG(pool *pgxpool.Pool, reportsH *reports.Handler, streakSvc *
 	return svc
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
+// isUUID reports whether studentID is a real (PostgreSQL-backed) ID.
+func isUUID(s string) bool { return reqguard.IsUUID(s) }
 
 func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (string, error) {
 	if actor.Role != auth.RoleParent {
@@ -453,7 +436,6 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 		if in.BrainGalaxyWindowEnd != "" {
 			sets = append(sets, fmt.Sprintf("brain_galaxy_window_end = $%d::time", next))
 			args = append(args, in.BrainGalaxyWindowEnd)
-			next++
 		}
 		if len(sets) > 0 {
 			query := "UPDATE student_profiles SET " + strings.Join(sets, ", ") + ", updated_at = NOW() WHERE id = $1::uuid"

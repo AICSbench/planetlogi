@@ -270,25 +270,8 @@ func (d lessonProgressDTO) toProgress() *lessonProgress {
 	return p
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
+// isUUID reports whether studentID is a real (PostgreSQL-backed) ID.
+func isUUID(s string) bool { return reqguard.IsUUID(s) }
 
 func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) error {
 	if s.store == nil || !isUUID(studentID) {
@@ -626,6 +609,12 @@ func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale
 
 	var awardErr error
 	if shouldAward {
+		// Make the four solved answers durable before crediting: a crash after the credit must
+		// never lose the progress that earned it. The scroll-retry path then only re-attempts the
+		// (idempotent) credit.
+		if err := s.persistStudent(ctx, studentID); err != nil {
+			return res, detail, err
+		}
 		// Keep the ledger outside the service lock; the idempotency key makes
 		// a retry after a transient failure safe.
 		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{

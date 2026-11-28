@@ -39,6 +39,8 @@ var (
 	ErrPaperNotFound = errors.New("paper not found")
 	// ErrAnswerKeyLocked means the caller may not see this paper's answer key yet.
 	ErrAnswerKeyLocked = errors.New("answer key is available only after submission")
+	// ErrRewardUnavailable means the Supply Pod credit failed; re-submitting retries it.
+	ErrRewardUnavailable = errors.New("supply pod could not be credited; please retry")
 )
 
 type tzKey struct{}
@@ -215,25 +217,8 @@ func (d attemptStateDTO) toState() *attemptState {
 	return st
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
+// isUUID reports whether studentID is a real (PostgreSQL-backed) ID.
+func isUUID(s string) bool { return reqguard.IsUUID(s) }
 
 func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) error {
 	if s.store == nil || !isUUID(studentID) {
@@ -342,21 +327,6 @@ func mergeQuizState(currentRaw []byte, snapshot quizState) (any, error) {
 		current.Weekly[key] = current.Weekly[key] || claimed
 	}
 	return current, nil
-}
-
-func (s *Service) persistedClaimWeek(ctx context.Context, studentID, paperCode string) (string, error) {
-	if s.store == nil || !isUUID(studentID) {
-		return "", nil
-	}
-	var st quizState
-	found, err := s.store.Load(ctx, studentID, "astroquiz", &st)
-	if err != nil {
-		return "", err
-	}
-	if !found {
-		return "", nil
-	}
-	return st.Attempts[paperCode].ClaimWeek, nil
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
@@ -684,19 +654,11 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 				}
 			}
 			s.mu.Unlock()
-		} else {
-			var err error
-			submitted, err = s.submitLocal(ctx, studentID, p, drafts, locale, claimWeek)
-			if err != nil {
-				return PaperAttemptView{}, err
-			}
-		}
-	} else {
-		var err error
-		submitted, err = s.submitLocal(ctx, studentID, p, drafts, locale, claimWeek)
-		if err != nil {
+		} else if _, err := s.submitLocal(ctx, studentID, p, drafts, locale, claimWeek); err != nil {
 			return PaperAttemptView{}, err
 		}
+	} else if _, err := s.submitLocal(ctx, studentID, p, drafts, locale, claimWeek); err != nil {
+		return PaperAttemptView{}, err
 	}
 
 	// The submitted attempt is durable now. Award the weekly pod from the
@@ -733,7 +695,7 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 				SourceID:       claimWeek,
 				IdempotencyKey: fmt.Sprintf("supply_pod:%s:%s", studentID, claimWeek),
 			}); err != nil {
-				return PaperAttemptView{}, fmt.Errorf("award weekly supply pod: %w", err)
+				return PaperAttemptView{}, fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
 			}
 			s.mu.Lock()
 			st = s.getOrCreateAttemptLocked(studentID, p.code)
@@ -954,6 +916,9 @@ func toHTTPError(ctx context.Context, err error) error {
 		return huma.Error404NotFound(err.Error())
 	case errors.Is(err, reqguard.ErrInvalidAnswers):
 		return huma.Error400BadRequest(err.Error())
+	case errors.Is(err, ErrRewardUnavailable):
+		slog.WarnContext(ctx, "astroquiz reward credit failed", "err", err)
+		return huma.Error503ServiceUnavailable(ErrRewardUnavailable.Error())
 	default:
 		slog.ErrorContext(ctx, "astroquiz request failed", "err", err)
 		return huma.Error500InternalServerError("internal error")

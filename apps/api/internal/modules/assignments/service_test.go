@@ -111,11 +111,14 @@ func TestParentCustomAssignmentAndCompletionReward(t *testing.T) {
 		t.Fatalf("expected exactly +5 AC credited once, got %d", got)
 	}
 
-	// A second submission for an answered question is rejected.
-	q := detail.Questions[0]
-	prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
-	if _, _, err := svc.SubmitQuestion(context.Background(), "stu-1", created.ID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
-		t.Fatal("expected duplicate question submission to be rejected")
+	// Re-submitting an answered question is idempotent: the stored answer and result come back
+	// unchanged (a different answer cannot overwrite it) and no second reward is paid.
+	again, after, err := svc.SubmitQuestion(context.Background(), "stu-1", created.ID, 1, map[string]string{"answer": "-1"}, "en")
+	if err != nil || !again.IsCorrect || after.Summary.Score != 2 {
+		t.Fatalf("re-submit must return the stored correct result: res=%+v score=%d err=%v", again, after.Summary.Score, err)
+	}
+	if got := ledger.totalAC(); got != 5 {
+		t.Fatalf("re-submit paid the reward again: %d", got)
 	}
 }
 
