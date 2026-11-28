@@ -908,6 +908,9 @@
           "id": {
             "type": "string"
           },
+          "status": {
+            "type": "string"
+          },
           "submittedAt": {
             "format": "date-time",
             "type": "string"
@@ -925,6 +928,7 @@
           "grade",
           "title",
           "summary",
+          "status",
           "submittedAt"
         ],
         "type": "object"
@@ -6292,16 +6296,6 @@
               "default": "en",
               "type": "string"
             }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -6358,16 +6352,6 @@
               "default": "en",
               "type": "string"
             }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -6423,16 +6407,6 @@
             "schema": {
               "default": "en",
               "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
             }
           }
         ],
@@ -6530,16 +6504,6 @@
             "schema": {
               "default": "en",
               "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
             }
           }
         ],
@@ -7180,16 +7144,6 @@
               "default": "en",
               "type": "string"
             }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -7420,16 +7374,6 @@
               "default": "en",
               "type": "string"
             }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -7485,16 +7429,6 @@
             "schema": {
               "default": "en",
               "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
             }
           }
         ],
@@ -7704,16 +7638,6 @@
               "default": "en",
               "type": "string"
             }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
-            }
           }
         ],
         "responses": {
@@ -7769,16 +7693,6 @@
             "schema": {
               "default": "en",
               "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
             }
           }
         ],
@@ -8672,16 +8586,6 @@
             "schema": {
               "default": "en",
               "type": "string"
-            }
-          },
-          {
-            "explode": false,
-            "in": "query",
-            "name": "grade",
-            "schema": {
-              "default": 1,
-              "format": "int64",
-              "type": "integer"
             }
           }
         ],

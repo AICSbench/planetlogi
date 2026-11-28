@@ -15,6 +15,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -333,30 +334,22 @@ type authIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
-	Grade         int    `query:"grade" default:"1"`
 }
 
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, int, string, string) {
+// resolve returns the authenticated student identity. Grade and timezone come
+// from the trusted principal — never from client query strings — and missing,
+// invalid, or non-student credentials are rejected.
+func (h *Handler) resolve(ctx context.Context, in authIn) (auth.StudentIdentity, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	grade := in.Grade
-	if grade < 1 || grade > 6 {
-		grade = 1
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
+	ident, err := h.authSvc.ResolveStudent(ctx, tok)
+	if err != nil {
+		return auth.StudentIdentity{}, locale, auth.StudentAuthHTTPError(err)
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, max(1, p.Grade), p.Timezone, locale
-			}
-		}
-	}
-	return "demo-pilot1", grade, "Asia/Jakarta", locale
+	return ident, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -367,8 +360,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get Super Nova weekly diamond S score and score history",
 		Tags:        []string{"SuperNova"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body HubSummary }, error) {
-		id, _, tz, _ := h.resolve(ctx, *in)
-		return &struct{ Body HubSummary }{Body: h.svc.GetHub(id, tz)}, nil
+		ident, _, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body HubSummary }{Body: h.svc.GetHub(ident.ID, ident.Timezone)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -383,8 +379,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			IsPractice bool `json:"isPractice"`
 		}
 	}) (*struct{ Body SuperSightSession }, error) {
-		id, _, tz, locale := h.resolve(ctx, in.authIn)
-		sess, err := h.svc.StartSuperSight(id, tz, locale, in.Body.IsPractice)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		sess, err := h.svc.StartSuperSight(ident.ID, ident.Timezone, locale, in.Body.IsPractice)
 		if err != nil {
 			return nil, huma.Error403Forbidden(err.Error())
 		}
@@ -410,8 +409,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Session SuperSightSession `json:"session"`
 		}
 	}, error) {
-		id, _, _, locale := h.resolve(ctx, in.authIn)
-		hit, sess, err := h.svc.TapSuperSight(ctx, id, in.Body.SessionID, in.Body.X, in.Body.Y, locale)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		hit, sess, err := h.svc.TapSuperSight(ctx, ident.ID, in.Body.SessionID, in.Body.X, in.Body.Y, locale)
 		if err != nil && !errors.Is(err, ErrSessionEnded) {
 			return nil, huma.Error400BadRequest(err.Error())
 		}
@@ -438,8 +440,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			IsPractice bool `json:"isPractice"`
 		}
 	}) (*struct{ Body SuperWarpStart }, error) {
-		id, grade, tz, locale := h.resolve(ctx, in.authIn)
-		start, err := h.svc.StartSuperWarp(id, tz, locale, grade, in.Body.IsPractice)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		start, err := h.svc.StartSuperWarp(ident.ID, ident.Timezone, locale, ident.Grade, in.Body.IsPractice)
 		if err != nil {
 			return nil, huma.Error403Forbidden(err.Error())
 		}
@@ -464,8 +469,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Hub   HubSummary `json:"hub"`
 		}
 	}, error) {
-		id, _, _, locale := h.resolve(ctx, in.authIn)
-		score, hub, err := h.svc.FinishSuperWarp(ctx, id, in.Body.SessionID, locale, in.Body.Answers)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		score, hub, err := h.svc.FinishSuperWarp(ctx, ident.ID, in.Body.SessionID, locale, in.Body.Answers)
 		if err != nil {
 			return nil, huma.Error400BadRequest(err.Error())
 		}

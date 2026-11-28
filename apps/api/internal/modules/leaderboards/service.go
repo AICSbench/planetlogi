@@ -16,6 +16,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -95,6 +96,7 @@ type CreatorSubmission struct {
 	Grade       int       `json:"grade"`
 	Title       string    `json:"title"`
 	Summary     string    `json:"summary"`
+	Status      string    `json:"status"` // PENDING | APPROVED
 	SubmittedAt time.Time `json:"submittedAt"`
 }
 
@@ -127,25 +129,27 @@ type meteorSession struct {
 }
 
 type Service struct {
-	mu            sync.Mutex
-	ledger        economy.Ledger
-	pilots        []LeaderboardEntry
-	bonusClaimed  map[string]bool // studentID:YYYY-MM-DD
-	notifications map[string][]NotificationItem
-	creatorList   []CreatorSubmission
-	meteorSess    map[string]*meteorSession
-	seq           int
-	nowClock      func() time.Time
+	mu              sync.Mutex
+	ledger          economy.Ledger
+	pilots          []LeaderboardEntry
+	bonusClaimed    map[string]bool // studentID:YYYY-MM-DD
+	notifications   map[string][]NotificationItem
+	creatorList     []CreatorSubmission            // approved entries only (public)
+	pendingCreators map[string][]CreatorSubmission // studentID -> moderation queue
+	meteorSess      map[string]*meteorSession
+	seq             int
+	nowClock        func() time.Time
 }
 
 func NewService(ledger economy.Ledger) *Service {
 	s := &Service{
-		ledger:        ledger,
-		pilots:        seedPilots(120),
-		bonusClaimed:  make(map[string]bool),
-		notifications: make(map[string][]NotificationItem),
-		meteorSess:    make(map[string]*meteorSession),
-		nowClock:      time.Now,
+		ledger:          ledger,
+		pilots:          seedPilots(120),
+		bonusClaimed:    make(map[string]bool),
+		notifications:   make(map[string][]NotificationItem),
+		pendingCreators: make(map[string][]CreatorSubmission),
+		meteorSess:      make(map[string]*meteorSession),
+		nowClock:        time.Now,
 	}
 	s.creatorList = []CreatorSubmission{
 		{
@@ -154,6 +158,7 @@ func NewService(ledger economy.Ledger) *Service {
 			Grade:       3,
 			Title:       "Rocket Fuel Fraction Relay",
 			Summary:     "Combine 1/4 and 3/4 fuel canisters to launch the PlanetLogi shuttle!",
+			Status:      "APPROVED",
 			SubmittedAt: time.Now().Add(-48 * time.Hour),
 		},
 		{
@@ -162,6 +167,7 @@ func NewService(ledger economy.Ledger) *Service {
 			Grade:       4,
 			Title:       "Crater Perimeter Adventure",
 			Summary:     "Measure rectangular moon bases to shield Astro Buddies from meteor showers.",
+			Status:      "APPROVED",
 			SubmittedAt: time.Now().Add(-24 * time.Hour),
 		},
 	}
@@ -553,7 +559,11 @@ func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, 
 	}, nil
 }
 
-func (s *Service) SubmitCreatorChallenge(displayName string, grade int, title, summary string) CreatorSubmission {
+// SubmitCreatorChallenge stores a child's submission in a private moderation
+// queue with status PENDING. Nothing is added to the public Creator Entries
+// list until a moderator approves it, so raw child-submitted text (phone
+// numbers, emails, unsafe content) never reaches other readers unreviewed.
+func (s *Service) SubmitCreatorChallenge(studentID, displayName string, grade int, title, summary string) CreatorSubmission {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.seq++
@@ -563,9 +573,10 @@ func (s *Service) SubmitCreatorChallenge(displayName string, grade int, title, s
 		Grade:       grade,
 		Title:       strings.TrimSpace(title),
 		Summary:     strings.TrimSpace(summary),
+		Status:      "PENDING",
 		SubmittedAt: s.nowClock(),
 	}
-	s.creatorList = append([]CreatorSubmission{entry}, s.creatorList...)
+	s.pendingCreators[studentID] = append(s.pendingCreators[studentID], entry)
 	return entry
 }
 
@@ -582,39 +593,22 @@ type authIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
-	Grade         int    `query:"grade" default:"1"`
 }
 
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, int, string, string) {
-	id, name, grade, tz := "demo-pilot1", "Raka Pratama", in.Grade, "Asia/Jakarta"
-	if grade < 1 || grade > 6 {
-		grade = 1
-	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				id = p.ID
-				if p.DisplayName != "" {
-					name = p.DisplayName
-				}
-				if p.Grade >= 1 && p.Grade <= 6 {
-					grade = p.Grade
-				}
-				if p.Timezone != "" {
-					tz = p.Timezone
-				}
-			}
-		}
-	}
+// resolve returns the authenticated student identity. Grade and timezone come
+// from the trusted principal — never from client query strings — and missing,
+// invalid, or non-student credentials are rejected.
+func (h *Handler) resolve(ctx context.Context, in authIn) (auth.StudentIdentity, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	return id, name, grade, tz, locale
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
+	ident, err := h.authSvc.ResolveStudent(ctx, tok)
+	if err != nil {
+		return auth.StudentIdentity{}, locale, auth.StudentAuthHTTPError(err)
+	}
+	return ident, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -653,8 +647,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		FilterGrade int    `query:"filterGrade" default:"0"`
 		ViewMode    string `query:"viewMode" default:"TOP50"`
 	}) (*struct{ Body LeaderboardBoard }, error) {
-		id, name, grade, _, locale := h.resolve(ctx, in.authIn)
-		board := h.svc.GetBoard(id, name, grade, in.Challenge, in.Scope, in.FilterGrade, in.ViewMode, locale)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		board := h.svc.GetBoard(ident.ID, ident.DisplayName, ident.Grade, in.Challenge, in.Scope, in.FilterGrade, in.ViewMode, locale)
 		return &struct{ Body LeaderboardBoard }{Body: board}, nil
 	})
 
@@ -669,13 +666,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Items []NotificationItem `json:"items"`
 		}
 	}, error) {
-		id, _, _, _, locale := h.resolve(ctx, *in)
+		ident, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
 		out := &struct {
 			Body struct {
 				Items []NotificationItem `json:"items"`
 			}
 		}{}
-		out.Body.Items = h.svc.ListNotifications(id, locale)
+		out.Body.Items = h.svc.ListNotifications(ident.ID, locale)
 		return out, nil
 	})
 
@@ -690,8 +690,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			OK bool `json:"ok"`
 		}
 	}, error) {
-		id, _, _, _, _ := h.resolve(ctx, *in)
-		h.svc.MarkAllNotificationsRead(id)
+		ident, _, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		h.svc.MarkAllNotificationsRead(ident.ID)
 		out := &struct {
 			Body struct {
 				OK bool `json:"ok"`
@@ -708,8 +711,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get Daily Bonus Gift status",
 		Tags:        []string{"Events"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body BonusGiftStatus }, error) {
-		id, _, _, tz, _ := h.resolve(ctx, *in)
-		return &struct{ Body BonusGiftStatus }{Body: h.svc.GetBonusGift(id, tz)}, nil
+		ident, _, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body BonusGiftStatus }{Body: h.svc.GetBonusGift(ident.ID, ident.Timezone)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -719,10 +725,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Claim Daily Bonus Gift (+2 Astro Coins, idempotent once per day)",
 		Tags:        []string{"Events"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body BonusGiftStatus }, error) {
-		id, _, _, tz, _ := h.resolve(ctx, *in)
-		status, err := h.svc.ClaimBonusGift(ctx, id, tz)
+		ident, _, err := h.resolve(ctx, *in)
 		if err != nil {
-			return nil, huma.Error409Conflict(err.Error())
+			return nil, err
+		}
+		status, err := h.svc.ClaimBonusGift(ctx, ident.ID, ident.Timezone)
+		if err != nil {
+			if errors.Is(err, ErrAlreadyClaimedToday) {
+				return nil, huma.Error409Conflict(err.Error())
+			}
+			return nil, err
 		}
 		return &struct{ Body BonusGiftStatus }{Body: status}, nil
 	})
@@ -734,8 +746,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get Cosmic Events hub (Sunday Meteor Challenge + Quarterly Creator Challenge)",
 		Tags:        []string{"Events"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body EventsHub }, error) {
-		_, _, _, tz, locale := h.resolve(ctx, *in)
-		return &struct{ Body EventsHub }{Body: h.svc.GetEventsHub(tz, locale)}, nil
+		ident, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body EventsHub }{Body: h.svc.GetEventsHub(ident.Timezone, locale)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -745,8 +760,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Start a 10-question Sunday Meteor Challenge set",
 		Tags:        []string{"Events"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body SundayMeteorStart }, error) {
-		id, _, grade, _, locale := h.resolve(ctx, *in)
-		return &struct{ Body SundayMeteorStart }{Body: h.svc.StartSundayMeteor(id, grade, locale)}, nil
+		ident, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		start := h.svc.StartSundayMeteor(ident.ID, ident.Grade, locale)
+		return &struct{ Body SundayMeteorStart }{Body: start}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -762,8 +781,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Answers   map[int]map[string]string `json:"answers"`
 		}
 	}) (*struct{ Body SundayMeteorResult }, error) {
-		id, _, _, _, locale := h.resolve(ctx, in.authIn)
-		res, err := h.svc.SubmitSundayMeteor(ctx, id, in.Body.SessionID, locale, in.Body.Answers)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		res, err := h.svc.SubmitSundayMeteor(ctx, ident.ID, in.Body.SessionID, locale, in.Body.Answers)
 		if err != nil {
 			return nil, huma.Error404NotFound(err.Error())
 		}
@@ -783,8 +805,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Summary string `json:"summary" minLength:"10" maxLength:"400"`
 		}
 	}) (*struct{ Body CreatorSubmission }, error) {
-		_, name, grade, _, _ := h.resolve(ctx, in.authIn)
-		entry := h.svc.SubmitCreatorChallenge(name, grade, in.Body.Title, in.Body.Summary)
+		ident, _, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		entry := h.svc.SubmitCreatorChallenge(ident.ID, ident.DisplayName, ident.Grade, in.Body.Title, in.Body.Summary)
 		return &struct{ Body CreatorSubmission }{Body: entry}, nil
 	})
 }

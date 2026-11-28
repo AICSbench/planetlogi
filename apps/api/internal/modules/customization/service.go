@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -14,6 +15,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 const MissedBadgeRecoverCostAC = 20
@@ -45,14 +47,14 @@ type ShowcaseEntry struct {
 }
 
 type DailyBadgeCard struct {
-	Date         string `json:"date"`
-	DayOfMonth   int    `json:"dayOfMonth"`
-	Tier         int    `json:"tier"` // 0=locked, 1=Bronze, 2=Silver, 3=Gold, 4=Holographic
-	TierName     string `json:"tierName"`
-	Category     string `json:"category"`
-	TriviaTitle  string `json:"triviaTitle"`
-	TriviaFact   string `json:"triviaFact"`
-	RecoverCost  int    `json:"recoverCostAc"`
+	Date        string `json:"date"`
+	DayOfMonth  int    `json:"dayOfMonth"`
+	Tier        int    `json:"tier"` // 0=locked, 1=Bronze, 2=Silver, 3=Gold, 4=Holographic
+	TierName    string `json:"tierName"`
+	Category    string `json:"category"`
+	TriviaTitle string `json:"triviaTitle"`
+	TriviaFact  string `json:"triviaFact"`
+	RecoverCost int    `json:"recoverCostAc"`
 }
 
 type Service struct {
@@ -276,23 +278,23 @@ type authIn struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, string) {
+// resolve returns the authenticated student ID, first name, and locale. Missing
+// or invalid credentials map to HTTP 401 and non-students to HTTP 403.
+func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, p.DisplayName, locale
-			}
-		}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
+	ident, err := h.authSvc.ResolveStudent(ctx, tok)
+	if err != nil {
+		return "", "", locale, auth.StudentAuthHTTPError(err)
 	}
-	return "demo-pilot1", "Raka", locale
+	firstName := ident.DisplayName
+	if fields := strings.Fields(firstName); len(fields) > 0 {
+		firstName = fields[0]
+	}
+	return ident.ID, firstName, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -310,7 +312,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Adjectives  []string         `json:"adjectives"`
 		}
 	}, error) {
-		id, name, locale := h.resolve(ctx, *in)
+		id, name, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
 		out := &struct {
 			Body struct {
 				Buddy       AstroBuddyConfig `json:"buddy"`
@@ -336,7 +341,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		authIn
 		Body AstroBuddyConfig
 	}) (*struct{ Body AstroBuddyConfig }, error) {
-		id, name, _ := h.resolve(ctx, in.authIn)
+		id, name, _, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		return &struct{ Body AstroBuddyConfig }{Body: h.svc.SaveBuddy(id, name, in.Body)}, nil
 	})
 
@@ -376,7 +384,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Cards []DailyBadgeCard `json:"cards"`
 		}
 	}, error) {
-		id, _, locale := h.resolve(ctx, in.authIn)
+		id, _, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		out := &struct {
 			Body struct {
 				Cards []DailyBadgeCard `json:"cards"`
@@ -398,7 +409,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Date string `json:"date"`
 		}
 	}) (*struct{ Body DailyBadgeCard }, error) {
-		id, _, locale := h.resolve(ctx, in.authIn)
+		id, _, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		card, err := h.svc.RecoverMissedBadge(ctx, id, in.Body.Date, locale)
 		if err != nil {
 			if errors.Is(err, economy.ErrInsufficientFunds) {

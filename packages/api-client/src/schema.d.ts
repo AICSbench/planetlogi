@@ -1570,6 +1570,7 @@ export interface components {
             /** Format: int64 */
             grade: number;
             id: string;
+            status: string;
             /** Format: date-time */
             submittedAt: string;
             summary: string;
@@ -3699,7 +3700,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -3735,7 +3735,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -3771,7 +3770,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -3840,7 +3838,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -4180,7 +4177,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -4348,7 +4344,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -4384,7 +4379,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -4519,7 +4513,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -4555,7 +4548,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;
@@ -5082,7 +5074,6 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
-                grade?: number;
             };
             header?: {
                 Authorization?: string;

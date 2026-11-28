@@ -72,8 +72,18 @@ func TestBonusGiftIdempotencyAndEvents(t *testing.T) {
 		t.Fatalf("SubmitSundayMeteor failed: %v %+v", err, res)
 	}
 
-	cr := svc.SubmitCreatorChallenge("Raka Pratama", 2, "Orbit Cookies", "Share 12 space cookies equally among 4 astronauts!")
+	cr := svc.SubmitCreatorChallenge("stu-gift", "Raka Pratama", 2, "Orbit Cookies", "Share 12 space cookies equally among 4 astronauts!")
 	if cr.AuthorMask != "Raka P." {
 		t.Fatalf("expected masked author 'Raka P.', got %q", cr.AuthorMask)
+	}
+	if cr.Status != "PENDING" {
+		t.Fatalf("expected pending moderation status, got %q", cr.Status)
+	}
+	// Pending child submissions must never appear in the public events hub.
+	hub := svc.GetEventsHub("Asia/Jakarta", "en")
+	for _, e := range hub.CreatorEntries {
+		if e.ID == cr.ID {
+			t.Fatalf("pending creator submission leaked into public creator entries")
+		}
 	}
 }

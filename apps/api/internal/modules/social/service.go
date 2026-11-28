@@ -17,6 +17,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -605,39 +606,22 @@ type authIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
-	Grade         int    `query:"grade" default:"1"`
 }
 
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, int, string, string) {
-	id, name, grade, tz := "demo-pilot1", "Raka Pratama", in.Grade, "Asia/Jakarta"
-	if grade < 1 || grade > 6 {
-		grade = 1
-	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				id = p.ID
-				if p.DisplayName != "" {
-					name = p.DisplayName
-				}
-				if p.Grade >= 1 && p.Grade <= 6 {
-					grade = p.Grade
-				}
-				if p.Timezone != "" {
-					tz = p.Timezone
-				}
-			}
-		}
-	}
+// resolve returns the authenticated student identity. Grade and timezone come
+// from the trusted principal — never from client query strings — and missing,
+// invalid, or non-student credentials are rejected.
+func (h *Handler) resolve(ctx context.Context, in authIn) (auth.StudentIdentity, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	return id, name, grade, tz, locale
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
+	ident, err := h.authSvc.ResolveStudent(ctx, tok)
+	if err != nil {
+		return auth.StudentIdentity{}, locale, auth.StudentAuthHTTPError(err)
+	}
+	return ident, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -648,8 +632,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get Star Duels lobby with daily energy cells, masked opponents, incoming & history",
 		Tags:        []string{"Social"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body DuelLobby }, error) {
-		id, _, grade, tz, locale := h.resolve(ctx, *in)
-		return &struct{ Body DuelLobby }{Body: h.svc.GetLobby(id, grade, tz, locale)}, nil
+		ident, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body DuelLobby }{Body: h.svc.GetLobby(ident.ID, ident.Grade, ident.Timezone, locale)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -670,8 +657,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			EnergyLeft int        `json:"energyLeft"`
 		}
 	}, error) {
-		id, _, grade, tz, locale := h.resolve(ctx, in.authIn)
-		duel, left, err := h.svc.StartDuel(id, grade, tz, locale, in.Body.Mode, in.Body.OpponentID)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		duel, left, err := h.svc.StartDuel(ident.ID, ident.Grade, ident.Timezone, locale, in.Body.Mode, in.Body.OpponentID)
 		if err != nil {
 			if errors.Is(err, ErrNoEnergy) {
 				return nil, huma.Error429TooManyRequests(err.Error())
@@ -699,8 +689,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		authIn
 		ID string `path:"id"`
 	}) (*struct{ Body DuelRecord }, error) {
-		id, _, _, _, locale := h.resolve(ctx, in.authIn)
-		duel, err := h.svc.AcceptIncoming(id, in.ID, locale)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		duel, err := h.svc.AcceptIncoming(ident.ID, in.ID, locale)
 		if err != nil {
 			return nil, huma.Error404NotFound(err.Error())
 		}
@@ -720,8 +713,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Answers map[int]map[string]string `json:"answers"`
 		}
 	}) (*struct{ Body DuelRecord }, error) {
-		id, _, _, _, locale := h.resolve(ctx, in.authIn)
-		duel, err := h.svc.SubmitDuel(ctx, id, in.ID, locale, in.Body.Answers)
+		ident, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		duel, err := h.svc.SubmitDuel(ctx, ident.ID, in.ID, locale, in.Body.Answers)
 		if err != nil {
 			return nil, huma.Error404NotFound(err.Error())
 		}
@@ -735,8 +731,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get or initialize the student's Star Crew (BFF) with 9-digit invite code",
 		Tags:        []string{"Social"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body StarCrewView }, error) {
-		id, name, grade, _, _ := h.resolve(ctx, *in)
-		return &struct{ Body StarCrewView }{Body: h.svc.GetOrCreateCrew(id, name, grade)}, nil
+		ident, _, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body StarCrewView }{Body: h.svc.GetOrCreateCrew(ident.ID, ident.DisplayName, ident.Grade)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -751,8 +750,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			CrewCode string `json:"crewCode"`
 		}
 	}) (*struct{ Body StarCrewView }, error) {
-		id, name, grade, _, _ := h.resolve(ctx, in.authIn)
-		view, err := h.svc.JoinCrew(id, name, grade, in.Body.CrewCode)
+		ident, _, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
+		view, err := h.svc.JoinCrew(ident.ID, ident.DisplayName, ident.Grade, in.Body.CrewCode)
 		if err != nil {
 			if errors.Is(err, ErrCrewNotFound) {
 				return nil, huma.Error404NotFound(err.Error())
@@ -769,7 +771,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Leave current Star Crew and create a fresh personal crew",
 		Tags:        []string{"Social"},
 	}, func(ctx context.Context, in *authIn) (*struct{ Body StarCrewView }, error) {
-		id, name, grade, _, _ := h.resolve(ctx, *in)
-		return &struct{ Body StarCrewView }{Body: h.svc.LeaveCrew(id, name, grade)}, nil
+		ident, _, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
+		return &struct{ Body StarCrewView }{Body: h.svc.LeaveCrew(ident.ID, ident.DisplayName, ident.Grade)}, nil
 	})
 }

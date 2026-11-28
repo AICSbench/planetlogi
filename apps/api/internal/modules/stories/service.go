@@ -13,6 +13,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 const ChapterUnlockCostAC = 20
@@ -259,17 +260,17 @@ func buildPlanets() ([]planetDef, []chapterDef) {
 		chapters = append(chapters,
 			chapterDef{
 				code: d.code + "-ch0", planetCode: d.code, index: 0, unlockCostAC: 0, pageCount: 20,
-				title: mathengine.LocaleText{EN: "Opening Chapter — " + d.enHero, ID: "Bab Pembuka — " + d.idHero},
+				title:    mathengine.LocaleText{EN: "Opening Chapter — " + d.enHero, ID: "Bab Pembuka — " + d.idHero},
 				heroName: hero, planetName: pName, grade: d.grade, accentColor: d.color,
 			},
 			chapterDef{
 				code: d.code + "-ch1", planetCode: d.code, index: 1, unlockCostAC: ChapterUnlockCostAC, pageCount: 20,
-				title: mathengine.LocaleText{EN: "Chapter 1 — Hidden Orbit", ID: "Bab 1 — Orbit Rahasia"},
+				title:    mathengine.LocaleText{EN: "Chapter 1 — Hidden Orbit", ID: "Bab 1 — Orbit Rahasia"},
 				heroName: hero, planetName: pName, grade: d.grade, accentColor: d.color,
 			},
 			chapterDef{
 				code: d.code + "-ch2", planetCode: d.code, index: 2, unlockCostAC: ChapterUnlockCostAC, pageCount: 20,
-				title: mathengine.LocaleText{EN: "Chapter 2 — Star Core Mystery", ID: "Bab 2 — Misteri Inti Bintang"},
+				title:    mathengine.LocaleText{EN: "Chapter 2 — Star Core Mystery", ID: "Bab 2 — Misteri Inti Bintang"},
 				heroName: hero, planetName: pName, grade: d.grade, accentColor: d.color,
 			},
 		)
@@ -292,23 +293,20 @@ type authIn struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, string) {
+// resolve returns the authenticated student ID and locale. Missing or invalid
+// credentials map to HTTP 401 and non-student principals to HTTP 403; there is
+// no shared demo identity in production routes.
+func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, locale
-			}
-		}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
+	ident, err := h.authSvc.ResolveStudent(ctx, tok)
+	if err != nil {
+		return "", locale, auth.StudentAuthHTTPError(err)
 	}
-	return "demo-pilot1", locale
+	return ident.ID, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -323,7 +321,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Planets []PlanetWorld `json:"planets"`
 		}
 	}, error) {
-		id, locale := h.resolve(ctx, *in)
+		id, locale, err := h.resolve(ctx, *in)
+		if err != nil {
+			return nil, err
+		}
 		out := &struct {
 			Body struct {
 				Planets []PlanetWorld `json:"planets"`
@@ -343,7 +344,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		authIn
 		Code string `path:"code"`
 	}) (*struct{ Body ChapterViewer }, error) {
-		id, locale := h.resolve(ctx, in.authIn)
+		id, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		viewer, err := h.svc.OpenChapter(id, in.Code, locale)
 		if err != nil {
 			if errors.Is(err, economy.ErrInsufficientFunds) {
@@ -364,7 +368,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		authIn
 		Code string `path:"code"`
 	}) (*struct{ Body ChapterViewer }, error) {
-		id, locale := h.resolve(ctx, in.authIn)
+		id, locale, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		viewer, err := h.svc.UnlockChapter(ctx, id, in.Code, locale)
 		if err != nil {
 			if errors.Is(err, economy.ErrInsufficientFunds) {
@@ -392,7 +399,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			OK bool `json:"ok"`
 		}
 	}, error) {
-		id, _ := h.resolve(ctx, in.authIn)
+		id, _, err := h.resolve(ctx, in.authIn)
+		if err != nil {
+			return nil, err
+		}
 		if err := h.svc.BookmarkPage(id, in.Code, in.Body.Page); err != nil {
 			return nil, huma.Error404NotFound(err.Error())
 		}
