@@ -238,6 +238,7 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 			s.records[id] = dto.toRecord()
 		}
 	}
+	s.reconcileRequestAliasesLocked(studentID)
 	s.mu.Unlock()
 
 	// A merge may have completed an assignment while this instance was
@@ -292,6 +293,37 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 		}
 	}
 	return nil
+}
+
+// reconcileRequestAliasesLocked folds a local record whose create failed into
+// the durable record another instance stored for the same request ID. It runs
+// before any read or submission so a local duplicate can never be graded or
+// rewarded.
+func (s *Service) reconcileRequestAliasesLocked(studentID string) {
+	durableByRequest := make(map[string]string)
+	for id, rec := range s.records {
+		if rec.studentID == studentID && rec.requestID != "" && rec.persisted {
+			durableByRequest[rec.requestID] = id
+		}
+	}
+	for id, rec := range s.records {
+		if rec.studentID != studentID || rec.persisted || rec.requestID == "" {
+			continue
+		}
+		durableID, ok := durableByRequest[rec.requestID]
+		if !ok || durableID == id {
+			continue
+		}
+		if durable, ok := s.records[durableID]; ok {
+			merged := mergeAssignmentRecord(toRecordDTO(durable), toRecordDTO(rec)).toRecord()
+			merged.persisted = true
+			if merged.revision < durable.revision {
+				merged.revision = durable.revision
+			}
+			s.records[durableID] = merged
+		}
+		delete(s.records, id)
+	}
 }
 
 func sameAssignmentItems(a, b []itemSpecDTO) bool {
@@ -543,6 +575,17 @@ func (s *Service) ListForStudent(ctx context.Context, studentID, statusFilter, a
 	return out, nil
 }
 
+func assignmentSeed(requestID string, index int) int64 {
+	const offset = 1469598103934665603
+	const prime = 1099511628211
+	h := uint64(offset)
+	for _, r := range requestID {
+		h ^= uint64(r)
+		h *= prime
+	}
+	return int64(h) + int64(index*7919)
+}
+
 func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string, requestID string) (AssignmentSummary, error) {
 	if title == "" || utf8.RuneCountInString(title) > MaxTitleLen {
 		return AssignmentSummary{}, fmt.Errorf("%w: title must be 1..%d characters", ErrInvalidInput, MaxTitleLen)
@@ -582,7 +625,13 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 			if _, ok := mathengine.GenerateByCode(code, int64(1000+i), "en"); !ok {
 				return AssignmentSummary{}, fmt.Errorf("%w: unknown question template %q", ErrInvalidInput, code)
 			}
-			items = append(items, itemSpec{templateCode: code, seed: time.Now().UnixNano() + int64(i*7919)})
+			seed := time.Now().UnixNano() + int64(i*7919)
+			if requestID != "" {
+				// A retried create must reproduce the same questions; otherwise
+				// a local retry and the durable alias describe different items.
+				seed = assignmentSeed(requestID, i)
+			}
+			items = append(items, itemSpec{templateCode: code, seed: seed})
 		}
 		if dueDate == "" {
 			dueDate = time.Now().UTC().AddDate(0, 0, 7).Format("2006-01-02")

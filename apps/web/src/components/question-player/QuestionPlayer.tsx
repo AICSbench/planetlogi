@@ -17,6 +17,7 @@ export interface QuestionPlayerProps {
   submittedAnswer?: Record<string, string>;
   workedSolution?: WorkedSolution | null;
   submitting?: boolean;
+  saving?: boolean;
   onSubmit: (answers: Record<string, string>) => Promise<void> | void;
   onSkip?: () => Promise<void> | void;
   onNext?: () => void;
@@ -39,6 +40,7 @@ function QuestionPlayerInner({
   submittedAnswer,
   workedSolution,
   submitting = false,
+  saving = false,
   onSubmit,
   onSkip,
   onNext,
@@ -254,7 +256,7 @@ function QuestionPlayerInner({
               <GalaxyButton
                 type="button"
                 variant="secondary"
-                disabled={submitting}
+                disabled={submitting || saving}
                 onClick={async () => {
                   const revision = draftRevision.current;
                   setSavedNotice(false);

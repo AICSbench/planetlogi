@@ -332,6 +332,11 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
                 <span>{t("astro-quiz:retrySupplyPod")}</span>
               </GalaxyButton>
             ) : null}
+            {attempt.supplyPodPendingPaper ? (
+              <p className="w-full text-xs font-semibold text-amber-200">
+                {t("astro-quiz:supplyPodPendingOn", { paper: attempt.supplyPodPendingPaper })}
+              </p>
+            ) : null}
           </GalaxyCard>
         ) : null}
 
@@ -375,6 +380,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               : (drafts[activeQ.index] ?? activeQ.draftAnswer)
           }
           submitting={submitMutation.isPending}
+          saving={saveMutation.isPending}
           workedSolution={submitted ? (activeQ.workedSolution ?? null) : null}
           onDraftChange={(answers) => {
             markDraft(activeQ.index, answers);

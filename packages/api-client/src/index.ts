@@ -278,6 +278,7 @@ export interface AstroQuizAttemptView {
   supplyPodAwarded: boolean;
   supplyPodClaimedThisWeek: boolean;
   supplyPodRetryable: boolean;
+  supplyPodPendingPaper?: string;
   questions: Array<{
     index: number;
     question: RenderedQuestion;

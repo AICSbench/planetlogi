@@ -538,6 +538,9 @@ func TestSupplyPodIdentitySurvivesCrossInstanceRetry(t *testing.T) {
 	if bView.SupplyPodAwarded {
 		t.Fatal("paper B received a badge from paper A's weekly credit")
 	}
+	if bView.SupplyPodPending != "G1-ESS-01" {
+		t.Fatalf("paper B did not report the pending award on A: %+v", bView)
+	}
 	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
 		t.Fatalf("paper B double-credited the week: %d", got)
 	}

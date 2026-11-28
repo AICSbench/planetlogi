@@ -99,6 +99,7 @@ type PaperAttemptView struct {
 	SupplyPodAwarded   bool            `json:"supplyPodAwarded"`
 	SupplyPodClaimedWk bool            `json:"supplyPodClaimedThisWeek"`
 	SupplyPodRetryable bool            `json:"supplyPodRetryable"`
+	SupplyPodPending   string          `json:"supplyPodPendingPaper,omitempty"`
 	Questions          []PaperQuestion `json:"questions"`
 }
 
@@ -911,11 +912,15 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 	}
 
 	retryable := st.status == "SUBMITTED" && !st.supplyPodAwarded
+	pendingPaper := ""
 	if retryable && st.claimWeek != "" {
 		wkKey := studentID + ":" + st.claimWeek
 		owner := s.weeklyPaper[wkKey]
 		if owner != "" && owner != p.code {
 			retryable = false
+			if !s.weeklySupplyPod[wkKey] {
+				pendingPaper = owner
+			}
 		} else if owner == "" && s.weeklySupplyPod[wkKey] {
 			retryable = false
 		}
@@ -932,6 +937,7 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 		SupplyPodAwarded:   st.supplyPodAwarded,
 		SupplyPodClaimedWk: s.weeklySupplyPod[studentID+":"+s.currentWeekKey(ctx)],
 		SupplyPodRetryable: retryable,
+		SupplyPodPending:   pendingPaper,
 		Questions:          qs,
 	}
 }

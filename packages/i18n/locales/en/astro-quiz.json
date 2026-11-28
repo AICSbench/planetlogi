@@ -39,5 +39,6 @@
     "SUBMITTED": "Submitted"
   },
   "timerLimitReached": "The 24-hour timer limit has been reached. Save or submit the paper now.",
-  "retrySupplyPod": "Retry Supply Pod"
+  "retrySupplyPod": "Retry Supply Pod",
+  "supplyPodPendingOn": "Weekly Supply Pod is pending on paper {{paper}}. Reopen that paper to retry."
 }

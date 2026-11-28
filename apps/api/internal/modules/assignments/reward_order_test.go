@@ -3,6 +3,7 @@ package assignments
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
@@ -126,6 +127,68 @@ func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 	}
 	if got := acCredited(ledger.recordingLedger); got != 5 {
 		t.Fatalf("expected exactly +5 AC after durable reconciliation, got %d", got)
+	}
+}
+
+func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
+	ctx := context.Background()
+	store := newAssignmentMemoryStore()
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+
+	store.failNext = true
+	if _, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-failed-create"); err == nil {
+		t.Fatal("expected create to fail")
+	}
+	var localID string
+	a.mu.Lock()
+	for id, rec := range a.records {
+		if rec.requestID == "req-failed-create" {
+			localID = id
+		}
+	}
+	a.mu.Unlock()
+	if localID == "" {
+		t.Fatal("local assignment was not retained after the failed create")
+	}
+	local, err := a.GetDetail(ctx, stuUUID, localID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(local.Questions[0].Question.TemplateCode, local.Questions[0].Question.Seed, "en")
+
+	// The local answer stays in memory when its save fails; no reward yet.
+	store.failNext = true
+	if _, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
+		t.Fatal("expected local answer save to fail")
+	}
+	if got := acCredited(ledger); got != 0 {
+		t.Fatalf("local completion credited before the durable alias existed: %d", got)
+	}
+
+	durable, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-failed-create")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if durable.ID == localID {
+		t.Fatal("test expected the retry to use a different durable ID")
+	}
+	list, err := a.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 || list[0].ID != durable.ID || list[0].Status != "COMPLETE" {
+		t.Fatalf("alias reconciliation lost progress or kept a duplicate: %+v", list)
+	}
+	if got := acCredited(ledger); got != 5 {
+		t.Fatalf("expected exactly one completion reward, got %d", got)
+	}
+	if _, err := a.GetDetail(ctx, stuUUID, localID, "en"); !errors.Is(err, ErrAssignmentNotFound) {
+		t.Fatalf("local duplicate is still visible: %v", err)
 	}
 }
 

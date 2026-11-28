@@ -1280,6 +1280,7 @@ export interface components {
             status: string;
             supplyPodAwarded: boolean;
             supplyPodClaimedThisWeek: boolean;
+            supplyPodPendingPaper?: string;
             supplyPodRetryable: boolean;
             title: string;
             /** Format: int64 */

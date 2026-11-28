@@ -39,5 +39,6 @@
     "SUBMITTED": "Sudah dikirim"
   },
   "timerLimitReached": "Batas waktu 24 jam telah tercapai. Simpan atau kirim kertas sekarang.",
-  "retrySupplyPod": "Coba Lagi Kapsul Hadiah"
+  "retrySupplyPod": "Coba Lagi Kapsul Hadiah",
+  "supplyPodPendingOn": "Kapsul Hadiah mingguan tertunda di kertas {{paper}}. Buka kembali kertas itu untuk mencoba lagi."
 }
