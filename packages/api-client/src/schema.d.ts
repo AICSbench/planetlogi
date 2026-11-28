@@ -1971,6 +1971,12 @@ export interface components {
              */
             readonly $schema?: string;
             history: components["schemas"]["ScoreHistoryEntry"][] | null;
+            /** Format: int64 */
+            historyPage: number;
+            /** Format: int64 */
+            historyPageSize: number;
+            /** Format: int64 */
+            historyPages: number;
             isOpen: boolean;
             /** Format: int64 */
             weeklyDiamondScore: number;
@@ -5073,15 +5079,11 @@ export interface operations {
     "supernova-hub": {
         parameters: {
             query?: {
-                locale?: string;
+                page?: number;
             };
-            header?: {
-                Authorization?: string;
-            };
+            header?: never;
             path?: never;
-            cookie?: {
-                pl_access?: string;
-            };
+            cookie?: never;
         };
         requestBody?: never;
         responses: {

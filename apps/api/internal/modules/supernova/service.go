@@ -2,6 +2,10 @@ package supernova
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -11,11 +15,13 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -23,12 +29,31 @@ const (
 	SuperSightDiffCount  = 5
 	SuperSightMaxWrong   = 5
 	SuperSightPointsEach = 10
+	SuperSightTimeLimitS = 300
+	WarpDurationS        = 120
+	// WarpFinishGraceS lets slow network submissions land just past the
+	// server-side deadline before the session expires.
+	WarpFinishGraceS   = 3
+	HubHistoryPageSize = 20
+	HistoryCap         = 100
 )
 
 var (
 	ErrSuperNovaClosed = errors.New("super nova challenge is open Mon-Sat 06:00-22:00 local time")
 	ErrSessionEnded    = errors.New("super sight session already ended")
+	// ErrRewardPending signals the ledger could not be reached, so the score
+	// was not recorded; the client can safely retry.
+	ErrRewardPending = errors.New("super nova score could not be recorded; try again")
 )
+
+// supernovaProgressDoc is the durable weekly score + score history document
+// per student, so diamond S totals survive restarts.
+type supernovaProgressDoc struct {
+	Weekly  map[string]int      `json:"weekly"`
+	History []ScoreHistoryEntry `json:"history"`
+}
+
+const supernovaProgressModule = "supernova_progress_v1"
 
 type DiffTarget struct {
 	ID     int     `json:"id"`
@@ -64,6 +89,9 @@ type HubSummary struct {
 	WindowNotice       string              `json:"windowNotice,omitempty"`
 	WeeklyDiamondScore int                 `json:"weeklyDiamondScore"`
 	History            []ScoreHistoryEntry `json:"history"`
+	HistoryPage        int                 `json:"historyPage"`
+	HistoryPages       int                 `json:"historyPages"`
+	PageSize           int                 `json:"historyPageSize"`
 }
 
 type WarpQuestion struct {
@@ -90,6 +118,7 @@ type sightState struct {
 	score      int
 	completed  bool
 	isPractice bool
+	deadline   time.Time
 }
 
 type warpState struct {
@@ -100,31 +129,88 @@ type warpState struct {
 	seeds      []int64
 	score      int
 	finished   bool
+	deadline   time.Time
 }
 
 type Service struct {
-	mu           sync.Mutex
-	ledger       economy.Ledger
-	weeklyScores map[string]int // studentID:weekKey -> diamond S score
-	history      map[string][]ScoreHistoryEntry
-	sightSess    map[string]*sightState
-	warpSess     map[string]*warpState
-	seq          int
-	nowClock     func() time.Time
-	enforceOpen  bool
+	mu             sync.Mutex
+	ledger         economy.Ledger
+	pool           *pgxpool.Pool
+	store          *state.PGStore
+	weeklyScores   map[string]int // studentID:weekKey -> diamond S score
+	history        map[string][]ScoreHistoryEntry
+	progressLoaded map[string]bool
+	sightSess      map[string]*sightState
+	warpSess       map[string]*warpState
+	seq            int
+	nowClock       func() time.Time
+	enforceOpen    bool
 }
 
 func NewService(ledger economy.Ledger) *Service {
 	return &Service{
-		ledger:       ledger,
-		weeklyScores: make(map[string]int),
-		history:      make(map[string][]ScoreHistoryEntry),
-		sightSess:    make(map[string]*sightState),
-		warpSess:     make(map[string]*warpState),
-		seq:          100,
-		nowClock:     time.Now,
-		enforceOpen:  false, // Enforced in prod/tests when enabled; kept open for demo testing
+		ledger:         ledger,
+		weeklyScores:   make(map[string]int),
+		history:        make(map[string][]ScoreHistoryEntry),
+		progressLoaded: make(map[string]bool),
+		sightSess:      make(map[string]*sightState),
+		warpSess:       make(map[string]*warpState),
+		seq:            100,
+		nowClock:       time.Now,
+		// Ranked windows are enforced by default in production; tests and
+		// demos can relax it via config (SUPERNOVA_ENFORCE_OPEN) or the
+		// SetEnforceWindow setter. Per-question auto-skip stays client-side.
+		enforceOpen: true,
 	}
+}
+
+// NewServiceWithPG wires the durable phase2_state store, so weekly diamond S
+// scores and history survive restarts.
+func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {
+	s := NewService(ledger)
+	s.pool = pool
+	s.store = state.NewPGStore(pool)
+	return s
+}
+
+// SetEnforceWindow toggles whether the ranked schedule window is enforced
+// server-side (true in production; false only for local demos/tests).
+func (s *Service) SetEnforceWindow(enforce bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.enforceOpen = enforce
+}
+
+func (s *Service) SetClockForTest(fn func() time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.nowClock = fn
+}
+
+// newSessionID returns a random session ID so reward ledger keys are unique
+// across process restarts (CR-10).
+func newSessionID(prefix string) string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("%s-%d", prefix, time.Now().UnixNano())
+	}
+	return prefix + "-" + hex.EncodeToString(b[:])
+}
+
+// randSeed returns a random positive question seed.
+func randSeed() int64 {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return time.Now().UnixNano()
+	}
+	v := int64(binary.BigEndian.Uint64(b[:]))
+	if v < 0 {
+		v = -v
+	}
+	if v == 0 {
+		return 1
+	}
+	return v
 }
 
 func (s *Service) weekKey() string {
@@ -132,11 +218,28 @@ func (s *Service) weekKey() string {
 	return fmt.Sprintf("%04d-W%02d", yr, wk)
 }
 
-func (s *Service) GetHub(studentID, tz string) HubSummary {
+func (s *Service) GetHub(ctx context.Context, studentID, tz string, page int) HubSummary {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.ensureProgressLocked(ctx, studentID)
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.SuperNovaWindow)
 	hist := s.history[studentID]
+	total := len(hist)
+	pages := (total + HubHistoryPageSize - 1) / HubHistoryPageSize
+	if page < 1 {
+		page = 1
+	}
+	if pages > 0 && page > pages {
+		page = pages
+	}
+	start := (page - 1) * HubHistoryPageSize
+	if start > total {
+		start = total
+	}
+	end := start + HubHistoryPageSize
+	if end > total {
+		end = total
+	}
 	if hist == nil {
 		hist = []ScoreHistoryEntry{}
 	}
@@ -144,8 +247,30 @@ func (s *Service) GetHub(studentID, tz string) HubSummary {
 		IsOpen:             !s.enforceOpen || eval.IsOpen,
 		WindowNotice:       eval.Reason,
 		WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
-		History:            hist,
+		History:            hist[start:end],
+		HistoryPage:        page,
+		HistoryPages:       pages,
+		PageSize:           HubHistoryPageSize,
 	}
+}
+
+// ensureProgressLocked lazily loads the student's durable score document on
+// first access after a restart (PG mode).
+func (s *Service) ensureProgressLocked(ctx context.Context, studentID string) {
+	if s.store == nil || s.progressLoaded[studentID] {
+		return
+	}
+	s.progressLoaded[studentID] = true
+	var doc supernovaProgressDoc
+	found, err := s.store.Load(ctx, studentID, supernovaProgressModule, &doc)
+	if err != nil || !found {
+		return
+	}
+	week := s.weekKey()
+	if doc.Weekly != nil {
+		s.weeklyScores[studentID+":"+week] = doc.Weekly[week]
+	}
+	s.history[studentID] = doc.History
 }
 
 func (s *Service) StartSuperSight(studentID, tz, locale string, isPractice bool) (SuperSightSession, error) {
@@ -156,13 +281,14 @@ func (s *Service) StartSuperSight(studentID, tz, locale string, isPractice bool)
 		return SuperSightSession{}, ErrSuperNovaClosed
 	}
 	s.seq++
-	id := fmt.Sprintf("sight-%d", s.seq)
+	id := newSessionID("sight")
 	st := &sightState{
 		id:         id,
 		studentID:  studentID,
 		puzzleID:   "ss-puzzle-01",
 		title:      mathengine.LocaleText{EN: "Cosmic Observatory #01", ID: "Observatorium Kosmik #01"},
 		isPractice: isPractice,
+		deadline:   s.nowClock().Add(SuperSightTimeLimitS * time.Second),
 		targets: []DiffTarget{
 			{ID: 1, X: 0.18, Y: 0.25, Radius: 0.08},
 			{ID: 2, X: 0.50, Y: 0.22, Radius: 0.08},
@@ -186,6 +312,18 @@ func (s *Service) TapSuperSight(ctx context.Context, studentID, sessionID string
 		return false, renderSight(st, locale), ErrSessionEnded
 	}
 
+	// Server-side 5-minute deadline: a tap after the deadline completes the
+	// session with whatever score was reached, and no further taps count.
+	if now := s.nowClock(); now.After(st.deadline) {
+		if err := s.recordScore(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id); err != nil {
+			// The score was not recorded; leave the session open so a retry
+			// (or the next tap) can record it.
+			return false, renderSight(st, locale), err
+		}
+		st.completed = true
+		return false, renderSight(st, locale), ErrSessionEnded
+	}
+
 	hit := false
 	for i := range st.targets {
 		if st.targets[i].Found {
@@ -205,8 +343,12 @@ func (s *Service) TapSuperSight(ctx context.Context, studentID, sessionID string
 	}
 
 	if st.found >= SuperSightDiffCount || st.wrong >= SuperSightMaxWrong {
+		if err := s.recordScore(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id); err != nil {
+			// The score was not recorded; leave the session open so a retry
+			// can still record it.
+			return false, renderSight(st, locale), err
+		}
 		st.completed = true
-		s.recordScoreLocked(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id)
 	}
 
 	return hit, renderSight(st, locale), nil
@@ -220,14 +362,14 @@ func (s *Service) StartSuperWarp(studentID, tz, locale string, grade int, isPrac
 		return SuperWarpStart{}, ErrSuperNovaClosed
 	}
 	s.seq++
-	id := fmt.Sprintf("warp-%d", s.seq)
+	id := newSessionID("warp")
 	tmpls := mathengine.TemplatesForGrade(grade)
 	qs := make([]WarpQuestion, 15)
 	codes := make([]string, 15)
 	seeds := make([]int64, 15)
 	for i := 0; i < 15; i++ {
 		t := tmpls[i%len(tmpls)]
-		seed := int64(s.seq*100 + i + 1)
+		seed := randSeed()
 		codes[i] = t.Code
 		seeds[i] = seed
 		prob, _ := mathengine.GenerateByCode(t.Code, seed, locale)
@@ -239,11 +381,12 @@ func (s *Service) StartSuperWarp(studentID, tz, locale string, grade int, isPrac
 		isPractice: isPractice,
 		templates:  codes,
 		seeds:      seeds,
+		deadline:   s.nowClock().Add((WarpDurationS + WarpFinishGraceS) * time.Second),
 	}
 	return SuperWarpStart{
 		SessionID:  id,
 		IsPractice: isPractice,
-		DurationS:  120,
+		DurationS:  WarpDurationS,
 		AutoSkipS:  10,
 		Questions:  qs,
 	}, nil
@@ -257,6 +400,22 @@ func (s *Service) FinishSuperWarp(ctx context.Context, studentID, sessionID stri
 		return 0, HubSummary{}, fmt.Errorf("super warp session not found")
 	}
 	if !ws.finished {
+		// Server-side 2-minute deadline (plus a small network grace): a
+		// submission arriving past it expires the session with score 0 and
+		// records nothing.
+		if now := s.nowClock(); now.After(ws.deadline) {
+			ws.finished = true
+			ws.score = 0
+			hist := s.history[studentID]
+			if hist == nil {
+				hist = []ScoreHistoryEntry{}
+			}
+			return 0, HubSummary{
+				IsOpen:             true,
+				WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
+				History:            hist,
+			}, nil
+		}
 		score := 0
 		for i, code := range ws.templates {
 			prob, _ := mathengine.GenerateByCode(code, ws.seeds[i], locale)
@@ -264,40 +423,94 @@ func (s *Service) FinishSuperWarp(ctx context.Context, studentID, sessionID stri
 				score++
 			}
 		}
+		if err := s.recordScore(ctx, studentID, "SUPER_WARP", ws.isPractice, score, ws.id); err != nil {
+			// The score was not recorded; leave the session unfinished so a
+			// retry can still record it.
+			return 0, HubSummary{}, err
+		}
 		ws.score = score
 		ws.finished = true
-		s.recordScoreLocked(ctx, studentID, "SUPER_WARP", ws.isPractice, score, ws.id)
+	}
+	hist := s.history[studentID]
+	if hist == nil {
+		hist = []ScoreHistoryEntry{}
 	}
 	return ws.score, HubSummary{
 		IsOpen:             true,
 		WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
-		History:            s.history[studentID],
+		History:            hist,
 	}, nil
 }
 
-func (s *Service) recordScoreLocked(ctx context.Context, studentID, mode string, isPractice bool, score int, sourceID string) {
-	s.history[studentID] = append([]ScoreHistoryEntry{{
-		ID:         sourceID,
+// recordScore applies the ledger FIRST (a failure propagates and leaves the
+// session unrecorded so the student can retry), then persists weekly score +
+// history durably (PG mode) and mirrors them in memory. The session ID is a
+// random UUID, so the ledger idempotency key stays unique across restarts.
+func (s *Service) recordScore(ctx context.Context, studentID, mode string, isPractice bool, score int, sessionID string) error {
+	// Practice mode NEVER alters weekly diamond S score or the ledger!
+	if !isPractice && score > 0 && s.ledger != nil {
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			StudentID:      studentID,
+			Currency:       economy.CurrencySuperS,
+			Delta:          int64(score),
+			SourceType:     mode,
+			SourceID:       sessionID,
+			IdempotencyKey: fmt.Sprintf("supernova:%s:%s", studentID, sessionID),
+		}); err != nil {
+			return fmt.Errorf("%w: %v", ErrRewardPending, err)
+		}
+	}
+
+	entry := ScoreHistoryEntry{
+		ID:         sessionID,
 		Mode:       mode,
 		IsPractice: isPractice,
 		Score:      score,
 		RecordedAt: s.nowClock().UTC(),
-	}}, s.history[studentID]...)
-
-	// Practice mode NEVER alters weekly diamond S score!
-	if !isPractice && score > 0 {
-		s.weeklyScores[studentID+":"+s.weekKey()] += score
-		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencySuperS,
-				Delta:          int64(score),
-				SourceType:     mode,
-				SourceID:       sourceID,
-				IdempotencyKey: fmt.Sprintf("supernova:%s:%s", studentID, sourceID),
-			})
-		}
 	}
+	week := s.weekKey()
+
+	if s.store != nil {
+		var weeklyValue int
+		if err := s.store.SaveMerged(ctx, studentID, supernovaProgressModule, func(current []byte) (any, error) {
+			var doc supernovaProgressDoc
+			if len(current) > 0 {
+				if err := json.Unmarshal(current, &doc); err != nil {
+					return nil, err
+				}
+			}
+			if doc.Weekly == nil {
+				doc.Weekly = map[string]int{}
+			}
+			if !isPractice {
+				doc.Weekly[week] += score
+			}
+			doc.History = append([]ScoreHistoryEntry{entry}, doc.History...)
+			if len(doc.History) > HistoryCap {
+				doc.History = doc.History[:HistoryCap]
+			}
+			weeklyValue = doc.Weekly[week]
+			return doc, nil
+		}); err != nil {
+			return err
+		}
+		s.weeklyScores[studentID+":"+week] = weeklyValue
+		// Reload the merged history so the in-memory mirror matches the doc.
+		var doc supernovaProgressDoc
+		if _, err := s.store.Load(ctx, studentID, supernovaProgressModule, &doc); err == nil {
+			s.history[studentID] = doc.History
+		}
+		return nil
+	}
+
+	s.history[studentID] = append([]ScoreHistoryEntry{entry}, s.history[studentID]...)
+	if len(s.history[studentID]) > HistoryCap {
+		s.history[studentID] = s.history[studentID][:HistoryCap]
+	}
+	if !isPractice && score > 0 {
+		s.weeklyScores[studentID+":"+week] += score
+	}
+	return nil
 }
 
 func renderSight(st *sightState, locale string) SuperSightSession {
@@ -317,7 +530,7 @@ func renderSight(st *sightState, locale string) SuperSightSession {
 		Score:       st.score,
 		Completed:   st.completed,
 		FoundPoints: foundOnly,
-		TimeLimitS:  300,
+		TimeLimitS:  SuperSightTimeLimitS,
 	}
 }
 
@@ -359,12 +572,15 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/super-nova/hub",
 		Summary:     "Get Super Nova weekly diamond S score and score history",
 		Tags:        []string{"SuperNova"},
-	}, func(ctx context.Context, in *authIn) (*struct{ Body HubSummary }, error) {
-		ident, _, err := h.resolve(ctx, *in)
+	}, func(ctx context.Context, in *struct {
+		authIn
+		Page int `query:"page" default:"1"`
+	}) (*struct{ Body HubSummary }, error) {
+		ident, _, err := h.resolve(ctx, in.authIn)
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body HubSummary }{Body: h.svc.GetHub(ident.ID, ident.Timezone)}, nil
+		return &struct{ Body HubSummary }{Body: h.svc.GetHub(ctx, ident.ID, ident.Timezone, in.Page)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -415,6 +631,9 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		hit, sess, err := h.svc.TapSuperSight(ctx, ident.ID, in.Body.SessionID, in.Body.X, in.Body.Y, locale)
 		if err != nil && !errors.Is(err, ErrSessionEnded) {
+			if errors.Is(err, ErrRewardPending) {
+				return nil, huma.Error503ServiceUnavailable(err.Error())
+			}
 			return nil, huma.Error400BadRequest(err.Error())
 		}
 		out := &struct {
@@ -475,6 +694,9 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		score, hub, err := h.svc.FinishSuperWarp(ctx, ident.ID, in.Body.SessionID, locale, in.Body.Answers)
 		if err != nil {
+			if errors.Is(err, ErrRewardPending) {
+				return nil, huma.Error503ServiceUnavailable(err.Error())
+			}
 			return nil, huma.Error400BadRequest(err.Error())
 		}
 		out := &struct {

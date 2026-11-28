@@ -33,6 +33,9 @@ type Config struct {
 	JWTRefreshTTL    time.Duration
 	OTPDevEcho       bool
 	BillingEnabled   bool
+	// SuperNovaEnforceOpen enforces the ranked Mon-Sat 06:00-22:00 window
+	// server-side. Only demos/tests may disable it.
+	SuperNovaEnforceOpen bool
 }
 
 func Load() Config {
@@ -49,23 +52,24 @@ func Load() Config {
 	}
 
 	return Config{
-		AppEnv:           appEnv,
-		APIPort:          getEnv("API_PORT", "8080"),
-		WebOrigin:        webOrigin,
-		AllowedOrigins:   origins,
-		CookieDomain:     getEnv("COOKIE_DOMAIN", ""),
-		CookieSecure:     getEnvBool("COOKIE_SECURE", isProd),
-		CookieSameSite:   strings.ToLower(getEnv("COOKIE_SAME_SITE", "lax")),
-		DatabaseURL:      getEnv("DATABASE_URL", "postgres://planetlogi:planetlogi_dev@localhost:5432/planetlogi?sslmode=disable"),
-		RedisAddr:        getEnv("REDIS_ADDR", "localhost:6379"),
-		RedisPassword:    getEnv("REDIS_PASSWORD", ""),
-		RedisDB:          getEnvInt("REDIS_DB", 0),
-		JWTAccessSecret:  getEnv("JWT_ACCESS_SECRET", DefaultDevAccessSecret),
-		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", DefaultDevRefreshSecret),
-		JWTAccessTTL:     time.Duration(getEnvInt("JWT_ACCESS_TTL_MIN", 15)) * time.Minute,
-		JWTRefreshTTL:    time.Duration(getEnvInt("JWT_REFRESH_TTL_DAYS", 14)) * 24 * time.Hour,
-		OTPDevEcho:       getEnvBool("OTP_DEV_ECHO", false),
-		BillingEnabled:   getEnvBool("BILLING_ENABLED", false),
+		AppEnv:               appEnv,
+		APIPort:              getEnv("API_PORT", "8080"),
+		WebOrigin:            webOrigin,
+		AllowedOrigins:       origins,
+		CookieDomain:         getEnv("COOKIE_DOMAIN", ""),
+		CookieSecure:         getEnvBool("COOKIE_SECURE", isProd),
+		CookieSameSite:       strings.ToLower(getEnv("COOKIE_SAME_SITE", "lax")),
+		DatabaseURL:          getEnv("DATABASE_URL", "postgres://planetlogi:planetlogi_dev@localhost:5432/planetlogi?sslmode=disable"),
+		RedisAddr:            getEnv("REDIS_ADDR", "localhost:6379"),
+		RedisPassword:        getEnv("REDIS_PASSWORD", ""),
+		RedisDB:              getEnvInt("REDIS_DB", 0),
+		JWTAccessSecret:      getEnv("JWT_ACCESS_SECRET", DefaultDevAccessSecret),
+		JWTRefreshSecret:     getEnv("JWT_REFRESH_SECRET", DefaultDevRefreshSecret),
+		JWTAccessTTL:         time.Duration(getEnvInt("JWT_ACCESS_TTL_MIN", 15)) * time.Minute,
+		JWTRefreshTTL:        time.Duration(getEnvInt("JWT_REFRESH_TTL_DAYS", 14)) * 24 * time.Hour,
+		OTPDevEcho:           getEnvBool("OTP_DEV_ECHO", false),
+		BillingEnabled:       getEnvBool("BILLING_ENABLED", false),
+		SuperNovaEnforceOpen: getEnvBool("SUPERNOVA_ENFORCE_OPEN", true),
 	}
 }
 

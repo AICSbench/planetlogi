@@ -2089,6 +2089,18 @@
               "null"
             ]
           },
+          "historyPage": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "historyPageSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "historyPages": {
+            "format": "int64",
+            "type": "integer"
+          },
           "isOpen": {
             "type": "boolean"
           },
@@ -2103,7 +2115,10 @@
         "required": [
           "isOpen",
           "weeklyDiamondScore",
-          "history"
+          "history",
+          "historyPage",
+          "historyPages",
+          "historyPageSize"
         ],
         "type": "object"
       },
@@ -8566,26 +8581,13 @@
         "operationId": "supernova-hub",
         "parameters": [
           {
-            "in": "cookie",
-            "name": "pl_access",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Authorization",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "explode": false,
             "in": "query",
-            "name": "locale",
+            "name": "page",
             "schema": {
-              "default": "en",
-              "type": "string"
+              "default": 1,
+              "format": "int64",
+              "type": "integer"
             }
           }
         ],
