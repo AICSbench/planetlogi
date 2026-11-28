@@ -790,7 +790,10 @@ func (s *Service) refreshAssignment(ctx context.Context, studentID, assignmentID
 		merged = mergeAssignmentRecord(dto, toRecordDTO(local))
 	}
 	rec := merged.toRecord()
-	rec.persisted = true
+	// Keep the local durability state: a concurrent submission may have merged
+	// progress that this refresh did not save, and crediting its reward before
+	// that answer is durable is forbidden.
+	rec.persisted = local == nil || local.persisted
 	s.records[durableID] = rec
 	if local != nil && local.id != durableID {
 		delete(s.records, local.id)

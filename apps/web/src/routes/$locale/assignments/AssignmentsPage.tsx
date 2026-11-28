@@ -25,7 +25,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const [builderError, setBuilderError] = useState<string | null>(null);
   const requestIdRef = useRef<string | null>(null);
   const requestSignatureRef = useRef<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ assignmentId: string; message: string } | null>(null);
 
   // Active assignment solver state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -114,12 +114,18 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       if (err instanceof ApiError && err.status === 409) {
         if (account === vars.account) {
           setActiveId((current) => (current === vars.assignmentId ? null : current));
-          setActionError(t("portals:assignments.assignmentChanged"));
+          setActionError({
+            assignmentId: vars.assignmentId,
+            message: t("portals:assignments.assignmentChanged"),
+          });
         }
         void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
         return;
       }
-      setActionError(t("portals:assignments.submitError"));
+      setActionError({
+        assignmentId: vars.assignmentId,
+        message: t("portals:assignments.submitError"),
+      });
     },
   });
 
@@ -183,9 +189,9 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
           }
         />
 
-        {actionError ? (
+        {actionError?.assignmentId === activeId ? (
           <p role="alert" className="text-sm font-bold text-red-300">
-            {actionError}
+            {actionError.message}
           </p>
         ) : null}
       </div>

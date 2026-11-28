@@ -422,3 +422,43 @@ func TestPersistAcknowledgesOnlySavedRevision(t *testing.T) {
 		t.Fatal("an older save acknowledged a newer revision as persisted")
 	}
 }
+
+func TestRefreshAssignmentKeepsUnsavedProgressUnpersisted(t *testing.T) {
+	const studentID = "66666666-6666-6666-6666-666666666666"
+	store := newAssignmentMemoryStore()
+	ledger := &recordingLedger{}
+	svc := NewServiceWithDeps(nil, store, ledger)
+	svc.LinkParentChild("par-1", studentID)
+	ctx := context.Background()
+
+	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "Refresh durability", "2026-12-01", []string{"g1_add_within_20"}, "req-refresh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// A concurrent submission recorded the completing answer in memory, but
+	// its save failed. A refresh must not present that answer as durable.
+	svc.mu.Lock()
+	rec := svc.records[created.ID]
+	rec.submitted[1] = map[string]string{"answer": "9"}
+	rec.submittedAt[1] = 1
+	rec.correct[1] = true
+	rec.completed = true
+	rec.revision++
+	rec.persisted = false
+	svc.mu.Unlock()
+
+	if err := svc.refreshAssignment(ctx, studentID, created.ID, "req-refresh"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The next read must persist the completing answer before crediting its
+	// reward; while the store is down the reward stays deferred.
+	store.failNext = true
+	if _, err := svc.ListForStudent(ctx, studentID, "ALL", "ALL", 0); err != nil {
+		t.Fatalf("read failed while progress was pending: %v", err)
+	}
+	if len(ledger.applied) != 0 {
+		t.Fatalf("reward credited before the completing answer was durable: %+v", ledger.applied)
+	}
+}
