@@ -64,7 +64,8 @@
     "grade": "Grade {{grade}}",
     "level": "Lvl {{level}}",
     "loading": "Preparing launchpad...",
-    "comingInPhase": "Arriving in Phase {{phase}}"
+    "comingInPhase": "Arriving in Phase {{phase}}",
+    "retry": "Try again"
   },
   "a11y": {
     "stars": "{{stars}} of 3 stars",

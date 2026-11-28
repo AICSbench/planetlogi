@@ -10,6 +10,9 @@ export const I18N_NAMESPACES = [
   "daily-orbit",
   "training",
   "player",
+  "academy",
+  "astro-quiz",
+  "portals",
 ] as const;
 export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
 

@@ -64,7 +64,8 @@
     "grade": "Kelas {{grade}}",
     "level": "Lvl {{level}}",
     "loading": "Menyiapkan landasan roket...",
-    "comingInPhase": "Hadir di Phase {{phase}}"
+    "comingInPhase": "Hadir di Phase {{phase}}",
+    "retry": "Coba lagi"
   },
   "a11y": {
     "stars": "{{stars}} dari 3 bintang",

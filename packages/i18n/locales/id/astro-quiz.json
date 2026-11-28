@@ -1,0 +1,44 @@
+{
+  "title": "Kuis Astro & Kertas Ujian",
+  "subtitle": "Kertas revisi ber-timer, tryout akhir tahun, kertas HOTS, dan lembar kerja siap cetak A4.",
+  "supplyPodBanner": "Selesaikan 1 kertas minggu ini untuk meraih 1 Kapsul Hadiah Mingguan (+5 Koin Astro)!",
+  "supplyPodClaimed": "Kapsul Hadiah Mingguan sudah diklaim (+5 AC) — hebat!",
+  "categories": {
+    "ALL": "Semua Kategori",
+    "ESSENTIAL": "Keterampilan Esensial",
+    "TOP_SCHOOL": "Ujian Akhir Tahun",
+    "HOTS": "Kertas HOTS"
+  },
+  "openPaper": "Mulai / Lanjutkan",
+  "printWorksheet": "Cetak A4",
+  "backToPapers": "Kembali ke Daftar Kertas",
+  "elapsedTimer": "Waktu Berjalan",
+  "savePaper": "Simpan Progres",
+  "submitPaper": "Kirim Kertas untuk Lihat Pembahasan",
+  "scoreBanner": "Kertas Terkirim! Skor: {{score}} / {{total}}",
+  "print": {
+    "studentName": "Nama Siswa",
+    "className": "Kelas",
+    "date": "Tanggal",
+    "scoreBox": "Nilai",
+    "workingSpace": "Tulis cara pengerjaanmu:",
+    "toggleAnswerKey": "Sertakan Kunci Jawaban",
+    "printNow": "Cetak / Simpan PDF",
+    "answerKey": "Kunci Jawaban",
+    "loadError": "Lembar kerja ini tidak dapat dimuat.",
+    "keyLocked": "Kunci jawaban tersedia setelah kamu mengirim kertas ini."
+  },
+  "supplyPodBadge": "🎁 +5 AC Kapsul Hadiah!",
+  "actionError": "Progres belum tersimpan. Silakan coba lagi.",
+  "submitError": "Kertas belum terkirim. Silakan coba lagi.",
+  "loadError": "Gagal memuat Kuis Astro. Periksa koneksi lalu coba lagi.",
+  "questionShort": "{{count}} Soal",
+  "statuses": {
+    "NOT_STARTED": "Belum dimulai",
+    "IN_PROGRESS": "Sedang dikerjakan",
+    "SUBMITTED": "Sudah dikirim"
+  },
+  "timerLimitReached": "Batas waktu 24 jam telah tercapai. Simpan atau kirim kertas sekarang.",
+  "retrySupplyPod": "Coba Lagi Kapsul Hadiah",
+  "supplyPodPendingOn": "Kapsul Hadiah mingguan tertunda di kertas {{paper}}. Buka kembali kertas itu untuk mencoba lagi."
+}

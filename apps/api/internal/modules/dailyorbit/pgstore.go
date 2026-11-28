@@ -121,7 +121,11 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 		WHERE student_id = $1::uuid
 	`, studentID).Scan(&grade, &tier, &curriculaRaw, &totalSP)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
+		// No prefs row yet: seed the selection from the parent-managed curriculum in
+		// student_profiles so a parent's settings change takes effect before the
+		// student's first Daily Orbit visit (getOrCreateSessionLocked persists the row
+		// on the next save). Returning nil falls back to the built-in defaults.
+		return s.seedCurriculaFromProfilePG(ctx, studentID)
 	}
 	if err != nil {
 		return nil, err
@@ -138,6 +142,46 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 		tier:            Tier(tier),
 		activeCurricula: curricula,
 		totalSP:         totalSP,
+	}, nil
+}
+
+// seedCurriculaFromProfilePG returns initial prefs whose active curricula come from the
+// parent-managed selection in student_profiles (the "math" subject list), filtered to the
+// curricula Daily Orbit supports. It returns nil, nil when the student profile is missing
+// or carries no usable selection, so the caller falls back to its built-in defaults.
+func (s *Service) seedCurriculaFromProfilePG(ctx context.Context, studentID string) (*studentPrefs, error) {
+	if s.pool == nil || !isUUID(studentID) {
+		return nil, nil
+	}
+	var curriculaRaw []byte
+	err := s.dbPG().QueryRow(ctx, `
+		SELECT active_daily_curricula_by_subject->'math'
+		FROM student_profiles
+		WHERE id = $1::uuid
+	`, studentID).Scan(&curriculaRaw)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var selected []string
+	if err := json.Unmarshal(curriculaRaw, &selected); err != nil {
+		return nil, err
+	}
+	valid := make([]string, 0, len(selected))
+	for _, c := range selected {
+		if validCurriculaSet[c] {
+			valid = append(valid, c)
+		}
+	}
+	if len(valid) == 0 {
+		return nil, nil
+	}
+	return &studentPrefs{
+		tier:            TierElementary,
+		activeCurricula: valid,
+		totalSP:         12,
 	}, nil
 }
 

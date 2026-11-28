@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Flag, HelpCircle, PlayCircle, Sparkles, Volume2 } from "lucide-react";
 import type { RenderedQuestion, WorkedSolution } from "@planetlogi/api-client";
@@ -17,10 +17,13 @@ export interface QuestionPlayerProps {
   submittedAnswer?: Record<string, string>;
   workedSolution?: WorkedSolution | null;
   submitting?: boolean;
+  saving?: boolean;
   onSubmit: (answers: Record<string, string>) => Promise<void> | void;
   onSkip?: () => Promise<void> | void;
   onNext?: () => void;
-  onSaveDraft?: (answers: Record<string, string>) => void;
+  /** May return a promise; "Saved" is shown only after it resolves, unless it resolves to false. */
+  onSaveDraft?: (answers: Record<string, string>) => void | Promise<unknown>;
+  onDraftChange?: (answers: Record<string, string>) => void;
   extraHeaderActions?: React.ReactNode;
 }
 
@@ -37,10 +40,12 @@ function QuestionPlayerInner({
   submittedAnswer,
   workedSolution,
   submitting = false,
+  saving = false,
   onSubmit,
   onSkip,
   onNext,
   onSaveDraft,
+  onDraftChange,
   extraHeaderActions,
 }: QuestionPlayerProps) {
   const { t } = useTranslation("player");
@@ -52,9 +57,11 @@ function QuestionPlayerInner({
   const [feedbackText, setFeedbackText] = useState("");
   const [savedNotice, setSavedNotice] = useState(false);
   const [retryUnlocked, setRetryUnlocked] = useState(false);
+  const draftRevision = useRef(0);
 
-  const answers = draftAnswers ?? submittedAnswer ?? {};
-  const effectiveLocked = locked && !(mode === "SPACE_ACADEMY" && retryUnlocked);
+  const effectiveLocked =
+    (locked && !(mode === "SPACE_ACADEMY" && retryUnlocked && isCorrect === false)) || submitting;
+  const answers = (effectiveLocked ? submittedAnswer : draftAnswers ?? submittedAnswer) ?? {};
 
   function speakQuestion() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -66,7 +73,11 @@ function QuestionPlayerInner({
   }
 
   function handleFieldChange(key: string, val: string) {
-    setDraftAnswers((prev) => ({ ...(prev ?? submittedAnswer ?? {}), [key]: val }));
+    const next = { ...answers, [key]: val };
+    draftRevision.current += 1;
+    setSavedNotice(false);
+    setDraftAnswers(next);
+    onDraftChange?.(next);
   }
 
   async function handleFormSubmit(e: React.FormEvent) {
@@ -245,9 +256,16 @@ function QuestionPlayerInner({
               <GalaxyButton
                 type="button"
                 variant="secondary"
-                onClick={() => {
-                  onSaveDraft(answers);
-                  setSavedNotice(true);
+                disabled={submitting || saving}
+                onClick={async () => {
+                  const revision = draftRevision.current;
+                  setSavedNotice(false);
+                  try {
+                    const saved = await onSaveDraft(answers);
+                    if (saved !== false && draftRevision.current === revision) setSavedNotice(true);
+                  } catch {
+                    // Keep "Save draft" available; the page shows the error.
+                  }
                 }}
               >
                 {savedNotice ? t("saved") : t("saveDraft")}

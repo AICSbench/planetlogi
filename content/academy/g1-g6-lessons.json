@@ -1,0 +1,195 @@
+{
+  "version": "1.0.0",
+  "topics": [
+    {
+      "code": "g1-whole-numbers-1", "grade": 1, "ageBand": "6-8", "totalScrolls": 2,
+      "translations": { "en": "Whole Numbers & Place Value", "id": "Bilangan Cacah & Nilai Tempat" },
+      "lessons": [
+        {
+          "code": "g1-wn-l1", "ageBand": "6-8", "templateCode": "g1_add_within_20", "skillCode": "num-add-within-20",
+          "translations": { "en": "Counting On & Adding within 20", "id": "Hitung Maju & Penjumlahan sampai 20" },
+          "storyVideo": { "en": "Counting Blue & Gold Stars on Terra Pebble", "id": "Menghitung Bintang Biru & Emas di Planet Kerikil" },
+          "conceptVideo": { "en": "Using a Number Line to Add", "id": "Menggunakan Garis Bilangan untuk Penjumlahan" },
+          "selfCheck": [
+            { "key": "count_20", "en": "I can count on from the larger number within 20.", "id": "Saya bisa menghitung maju dari bilangan lebih besar sampai 20." },
+            { "key": "numline_add", "en": "I can add two numbers using a number line.", "id": "Saya bisa menjumlahkan dua bilangan memakai garis bilangan." }
+          ]
+        },
+        {
+          "code": "g1-wn-l2", "ageBand": "6-8", "templateCode": "g1_place_value_tens_ones", "skillCode": "num-place-value-100",
+          "translations": { "en": "Tens and Ones up to 100", "id": "Puluhan dan Satuan sampai 100" },
+          "storyVideo": { "en": "Packing Star Rocks in Bundles of 10", "id": "Mengemas Batu Bintang dalam Ikat 10" },
+          "conceptVideo": { "en": "Breaking Numbers into Tens and Ones", "id": "Menguraikan Bilangan Menjadi Puluhan & Satuan" },
+          "selfCheck": [
+            { "key": "tens_ones", "en": "I can split any 2-digit number into tens and ones.", "id": "Saya bisa menguraikan bilangan 2 angka menjadi puluhan dan satuan." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g1-sub-patterns", "grade": 1, "ageBand": "6-8", "totalScrolls": 1,
+      "translations": { "en": "Subtraction & Star Patterns", "id": "Pengurangan & Pola Bintang" },
+      "lessons": [
+        {
+          "code": "g1-sp-l1", "ageBand": "6-8", "templateCode": "g1_sub_within_20", "skillCode": "num-sub-within-20",
+          "translations": { "en": "Taking Away within 20", "id": "Pengurangan sampai 20" },
+          "storyVideo": { "en": "Sharing Space Stickers", "id": "Berbagi Stiker Antariksa" },
+          "conceptVideo": { "en": "Counting Backwards to Subtract", "id": "Menghitung Mundur untuk Pengurangan" },
+          "selfCheck": [
+            { "key": "sub_20", "en": "I can subtract numbers within 20 accurately.", "id": "Saya bisa mengurangkan bilangan sampai 20 dengan tepat." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g2-add-1000", "grade": 2, "ageBand": "7-9", "totalScrolls": 1,
+      "translations": { "en": "Addition within 1,000", "id": "Penjumlahan sampai 1.000" },
+      "lessons": [
+        {
+          "code": "g2-a1k-l1", "ageBand": "7-9", "templateCode": "g2_add_within_1000", "skillCode": "num-add-1000",
+          "translations": { "en": "Vertical Addition with Regrouping", "id": "Penjumlahan Bersusun dengan Menyimpan" },
+          "storyVideo": { "en": "Moon Rock Delivery on Planet Tropica", "id": "Pengiriman Batu Bulan di Planet Tropika" },
+          "conceptVideo": { "en": "Adding Ones, Tens, and Hundreds", "id": "Menjumlahkan Satuan, Puluhan, dan Ratusan" },
+          "selfCheck": [
+            { "key": "add_1000", "en": "I can regroup ones and tens when adding 3-digit numbers.", "id": "Saya bisa menyimpan satuan & puluhan saat menjumlahkan 3 angka." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g2-bar-models", "grade": 2, "ageBand": "7-9", "totalScrolls": 1,
+      "translations": { "en": "Multiplication & Comparison Models", "id": "Perkalian & Model Perbandingan" },
+      "lessons": [
+        {
+          "code": "g2-bm-l1", "ageBand": "7-9", "templateCode": "g2_bar_model_compare", "skillCode": "wp-bar-model-compare",
+          "translations": { "en": "Solving 'More Than' with Bar Models", "id": "Menyelesaikan Soal 'Lebih Banyak' dengan Model Batang" },
+          "storyVideo": { "en": "Comparing Cosmic Card Collections", "id": "Membandingkan Koleksi Kartu Kosmik" },
+          "conceptVideo": { "en": "Drawing Two Bars to Compare Quantities", "id": "Menggambar Dua Batang untuk Membandingkan" },
+          "selfCheck": [
+            { "key": "draw_bar", "en": "I can draw a comparison bar model for word problems.", "id": "Saya bisa menggambar model batang perbandingan untuk soal cerita." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g3-mul-div", "grade": 3, "ageBand": "8-10", "totalScrolls": 1,
+      "translations": { "en": "Multiplication & Division with Remainders", "id": "Perkalian & Pembagian Bersisa" },
+      "lessons": [
+        {
+          "code": "g3-md-l1", "ageBand": "8-10", "templateCode": "g3_div_with_remainder", "skillCode": "num-div-remainder",
+          "translations": { "en": "Packing Star Crystals with Remainders", "id": "Mengemas Kristal Bintang dengan Sisa" },
+          "storyVideo": { "en": "Aquaris Cargo Boxes", "id": "Kotak Kargo Planet Akuaris" },
+          "conceptVideo": { "en": "Quotient and Remainder Explained", "id": "Penjelasan Hasil Bagi dan Sisa" },
+          "selfCheck": [
+            { "key": "div_rem", "en": "I can find both quotient and remainder in division.", "id": "Saya bisa mencari hasil bagi dan sisa pembagian." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g3-area-perim", "grade": 3, "ageBand": "8-10", "totalScrolls": 1,
+      "translations": { "en": "Area & Perimeter", "id": "Luas & Keliling" },
+      "lessons": [
+        {
+          "code": "g3-ap-l1", "ageBand": "8-10", "templateCode": "g3_area_perimeter_rect", "skillCode": "geo-area-perimeter-rect",
+          "translations": { "en": "Solar Panel Area vs Perimeter", "id": "Luas vs Keliling Panel Surya" },
+          "storyVideo": { "en": "Building Solar Wings on Aquaris", "id": "Membangun Sayap Surya di Akuaris" },
+          "conceptVideo": { "en": "Length × Width vs Walking Around the Edge", "id": "Panjang × Lebar vs Mengelilingi Sisi" },
+          "selfCheck": [
+            { "key": "area_perim", "en": "I can tell the difference between area (cm²) and perimeter (cm).", "id": "Saya bisa membedakan luas (cm²) dan keliling (cm)." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g4-factors-multiples", "grade": 4, "ageBand": "9-11", "totalScrolls": 1,
+      "translations": { "en": "Factors & Multiples (LCM/GCF)", "id": "Faktor & Kelipatan (KPK/FPB)" },
+      "lessons": [
+        {
+          "code": "g4-fm-l1", "ageBand": "9-11", "templateCode": "g4_lcm_gcf", "skillCode": "num-factors-multiples",
+          "translations": { "en": "Syncing Space Beacons with LCM", "id": "Menyelaraskan Mercusuar Antariksa dengan KPK" },
+          "storyVideo": { "en": "Flashing Crystals of Crystalia", "id": "Kristal Berkedip di Planet Kristalia" },
+          "conceptVideo": { "en": "Finding the Lowest Common Multiple", "id": "Menentukan Kelipatan Persekutuan Terkecil" },
+          "selfCheck": [
+            { "key": "lcm", "en": "I can find the LCM of two whole numbers.", "id": "Saya bisa menentukan KPK dari dua bilangan." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g4-decimals", "grade": 4, "ageBand": "9-11", "totalScrolls": 1,
+      "translations": { "en": "Decimals & Fractions of a Set", "id": "Desimal & Pecahan Himpunan" },
+      "lessons": [
+        {
+          "code": "g4-dec-l1", "ageBand": "9-11", "templateCode": "g4_decimal_add_sub", "skillCode": "dec-add-sub",
+          "translations": { "en": "Adding Tenths & Hundredths", "id": "Menjumlahkan Persepuluhan & Perseratusan" },
+          "storyVideo": { "en": "Rover Distance Log", "id": "Catatan Jarak Rover" },
+          "conceptVideo": { "en": "Aligning Decimal Points Correctly", "id": "Menyejajarkan Tanda Desimal dengan Benar" },
+          "selfCheck": [
+            { "key": "dec_add", "en": "I can add decimals accurately.", "id": "Saya bisa menjumlahkan bilangan desimal dengan tepat." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g5-percentage", "grade": 5, "ageBand": "10-12", "totalScrolls": 1,
+      "translations": { "en": "Percentage & Discounts", "id": "Persentase & Diskon" },
+      "lessons": [
+        {
+          "code": "g5-pct-l1", "ageBand": "10-12", "templateCode": "g5_percentage_discount", "skillCode": "pct-discount",
+          "translations": { "en": "Calculating Galaxy Week Discounts", "id": "Menghitung Diskon Pekan Galaksi" },
+          "storyVideo": { "en": "Shopping in Lumina Star Market", "id": "Belanja di Pasar Bintang Lumina" },
+          "conceptVideo": { "en": "Finding Part of 100%", "id": "Menghitung Bagian dari 100%" },
+          "selfCheck": [
+            { "key": "pct_disc", "en": "I can compute sale prices after a percentage discount.", "id": "Saya bisa menghitung harga akhir setelah diskon persen." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g5-ratio-volume", "grade": 5, "ageBand": "10-12", "totalScrolls": 1,
+      "translations": { "en": "Ratio & Cuboid Volume", "id": "Rasio & Volume Balok" },
+      "lessons": [
+        {
+          "code": "g5-rv-l1", "ageBand": "10-12", "templateCode": "g5_ratio_word_problem", "skillCode": "ratio-two-quantities",
+          "translations": { "en": "Solving Ratio Word Problems with Units", "id": "Menyelesaikan Soal Rasio dengan Unit" },
+          "storyVideo": { "en": "Sorting Lumina Gems", "id": "Menyortir Permata Lumina" },
+          "conceptVideo": { "en": "Unit Method for Two-Quantity Ratios", "id": "Metode Unit untuk Rasio Dua Kuantitas" },
+          "selfCheck": [
+            { "key": "ratio_unit", "en": "I can find 1 unit from a ratio and total.", "id": "Saya bisa mencari nilai 1 unit dari rasio dan total." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g6-algebra-speed", "grade": 6, "ageBand": "11-13", "totalScrolls": 1,
+      "translations": { "en": "Algebra & Speed", "id": "Aljabar & Kecepatan" },
+      "lessons": [
+        {
+          "code": "g6-as-l1", "ageBand": "11-13", "templateCode": "g6_algebra_linear", "skillCode": "alg-linear-eq",
+          "translations": { "en": "Balancing Simple Equations", "id": "Menyeimbangkan Persamaan Sederhana" },
+          "storyVideo": { "en": "The Balance Vault of Solaris", "id": "Brankas Keseimbangan Planet Solaris" },
+          "conceptVideo": { "en": "Isolating the Unknown Variable x", "id": "Mencari Nilai Variabel x" },
+          "selfCheck": [
+            { "key": "alg_x", "en": "I can solve simple linear equations for x.", "id": "Saya bisa menyelesaikan persamaan linear sederhana untuk x." }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g6-circles-hots", "grade": 6, "ageBand": "11-13", "totalScrolls": 1,
+      "translations": { "en": "Circles & Supposition HOTS", "id": "Lingkaran & HOTS Pengandaian" },
+      "lessons": [
+        {
+          "code": "g6-ch-l1", "ageBand": "11-13", "templateCode": "g6_circle_circumference", "skillCode": "geo-circles",
+          "translations": { "en": "Measuring Orbit Ring Circumference", "id": "Mengukur Keliling Cincin Orbit" },
+          "storyVideo": { "en": "Solaris Ring Architects", "id": "Arsitek Cincin Solaris" },
+          "conceptVideo": { "en": "Using π = 22/7 to Find Circumference", "id": "Menggunakan π = 22/7 untuk Keliling Lingkaran" },
+          "selfCheck": [
+            { "key": "circle_c", "en": "I can compute circumference from radius or diameter.", "id": "Saya bisa menghitung keliling dari jari-jari atau diameter." }
+          ]
+        }
+      ]
+    }
+  ]
+}

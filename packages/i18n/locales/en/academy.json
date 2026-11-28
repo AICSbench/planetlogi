@@ -1,0 +1,21 @@
+{
+  "title": "Space Academy",
+  "subtitle": "Master every math concept step-by-step: Story Launch → Watch & Learn → Do & Learn → Mission Self-Check.",
+  "scrollsProgress": "{{earned}} / {{total}} Star Scrolls",
+  "ageTag": "Ages {{band}}",
+  "openLesson": "Open Lesson",
+  "backToTopics": "Back to Topics",
+  "stages": {
+    "storyLaunch": "1. Story Launch",
+    "watchLearn": "2. Watch & Learn",
+    "doLearn": "3. Do & Learn (Earn 1 Star Scroll)",
+    "selfCheck": "4. Mission Self-Check"
+  },
+  "videoPlaceholder": "Bilingual lesson video player (EN & ID audio/captions ready)",
+  "scrollEarnedBanner": "Star Scroll Earned for this lesson!",
+  "extraPractice": "Practice More in Galaxy Training →",
+  "loadError": "Couldn't load this lesson. Check your connection and try again.",
+  "actionError": "Your answer wasn't saved. Please try again.",
+  "retryScroll": "Retry Star Scroll",
+  "scrollRetryHint": "All four questions are solved, but the Star Scroll credit did not complete."
+}

@@ -4,6 +4,261 @@
  */
 
 export interface paths {
+    "/api/v1/academy/do-learn/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check a Do & Learn answer (supports Try Again & awards Star Scroll) */
+        post: operations["academy-do-learn-check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academy/do-learn/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a draft answer inside Space Academy Do & Learn */
+        post: operations["academy-do-learn-save"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academy/lessons/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a Space Academy lesson timeline (Story, Watch, Do & Learn, Self-Check) */
+        get: operations["academy-lesson-detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academy/scroll/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry a failed Star Scroll award for an already-solved lesson */
+        post: operations["academy-scroll-retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/academy/self-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Toggle a Space Academy Mission Self-Check learning objective */
+        patch: operations["academy-self-check"];
+        trace?: never;
+    };
+    "/api/v1/academy/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Space Academy topics with Star Scroll progress */
+        get: operations["academy-topics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List student assignments with status, year, and assigned-by filters */
+        get: operations["assignments-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/custom": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Parent Personalised Assignment Builder — create targeted homework for a linked child */
+        post: operations["assignments-create-custom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open an assignment and inspect its questions */
+        get: operations["assignments-detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit an assignment question answer and award AC upon full completion */
+        post: operations["assignments-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astro-quiz/papers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List AstroQuiz papers across Essential, Top School, and HOTS categories */
+        get: operations["astroquiz-list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astro-quiz/papers/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open or resume an AstroQuiz paper attempt */
+        get: operations["astroquiz-open"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astro-quiz/papers/{code}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get ink-friendly A4 printable payload for an AstroQuiz paper */
+        get: operations["astroquiz-print"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astro-quiz/papers/{code}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save in-progress AstroQuiz answers and elapsed timer */
+        post: operations["astroquiz-save"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/astro-quiz/papers/{code}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit full AstroQuiz paper to reveal solutions and claim Weekly Supply Pod */
+        post: operations["astroquiz-submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/live-feed": {
         parameters: {
             query?: never;
@@ -225,6 +480,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/parent/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas) */
+        get: operations["parent-overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/bundle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Parent & Child profile cards and family settings */
+        get: operations["profile-get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the authenticated parent's linked children */
+        get: operations["profile-children"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits */
+        patch: operations["profile-update-settings"];
+        trace?: never;
+    };
     "/api/v1/reports/high-score": {
         parameters: {
             query?: never;
@@ -399,6 +722,202 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        "Academy-do-learn-checkRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-do-learn-checkRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            lessonCode: string;
+            /** Format: int64 */
+            questionIndex: number;
+        };
+        "Academy-do-learn-checkResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-do-learn-checkResponse.json
+             */
+            readonly $schema?: string;
+            lesson: components["schemas"]["LessonDetail"];
+            result: components["schemas"]["GradeResult"];
+        };
+        "Academy-do-learn-saveRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-do-learn-saveRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            lessonCode: string;
+            /** Format: int64 */
+            questionIndex: number;
+        };
+        "Academy-scroll-retryRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-scroll-retryRequest.json
+             */
+            readonly $schema?: string;
+            lessonCode: string;
+        };
+        "Academy-self-checkRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-self-checkRequest.json
+             */
+            readonly $schema?: string;
+            checked: boolean;
+            itemKey: string;
+            lessonCode: string;
+        };
+        "Academy-topicsResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Academy-topicsResponse.json
+             */
+            readonly $schema?: string;
+            topics: components["schemas"]["TopicSummary"][] | null;
+        };
+        AssignmentDetail: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AssignmentDetail.json
+             */
+            readonly $schema?: string;
+            questions: components["schemas"]["AssignmentQuestionView"][] | null;
+            summary: components["schemas"]["AssignmentSummary"];
+        };
+        AssignmentQuestionView: {
+            /** Format: int64 */
+            index: number;
+            isCorrect?: boolean;
+            question: components["schemas"]["RenderedQuestion"];
+            submittedAnswer?: {
+                [key: string]: string;
+            };
+            workedSolution?: components["schemas"]["WorkedSolution"];
+        };
+        AssignmentSummary: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/AssignmentSummary.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            academicYear: number;
+            assignedByName: string;
+            assignedByRole: string;
+            /** Format: int64 */
+            completedCount: number;
+            dueDate: string;
+            id: string;
+            /** Format: int64 */
+            questionCount: number;
+            /** Format: int64 */
+            rewardAc: number;
+            /** Format: int64 */
+            score: number;
+            status: string;
+            title: string;
+        };
+        "Assignments-create-customRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Assignments-create-customRequest.json
+             */
+            readonly $schema?: string;
+            dueDate?: string;
+            requestId?: string;
+            studentId: string;
+            templateCodes: string[] | null;
+            title: string;
+        };
+        "Assignments-listResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Assignments-listResponse.json
+             */
+            readonly $schema?: string;
+            assignments: components["schemas"]["AssignmentSummary"][] | null;
+        };
+        "Assignments-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Assignments-submitRequest.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            questionIndex: number;
+        };
+        "Assignments-submitResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Assignments-submitResponse.json
+             */
+            readonly $schema?: string;
+            assignment: components["schemas"]["AssignmentDetail"];
+            result: components["schemas"]["GradeResult"];
+        };
+        "Astroquiz-listResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Astroquiz-listResponse.json
+             */
+            readonly $schema?: string;
+            papers: components["schemas"]["PaperSummary"][] | null;
+            supplyPodClaimedThisWeek: boolean;
+        };
+        "Astroquiz-saveRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Astroquiz-saveRequest.json
+             */
+            readonly $schema?: string;
+            drafts: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            /** Format: int64 */
+            elapsedSec: number;
+        };
+        "Astroquiz-submitRequest": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Astroquiz-submitRequest.json
+             */
+            readonly $schema?: string;
+            drafts: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            /** Format: int64 */
+            elapsedSec: number;
+        };
         AuthOutputBody: {
             /**
              * Format: uri
@@ -411,6 +930,17 @@ export interface components {
         CalendarEntry: {
             date: string;
             status: string;
+        };
+        ChildProfile: {
+            avatarItemId: string;
+            birthday: string;
+            firstName: string;
+            gender: string;
+            /** Format: int64 */
+            grade: number;
+            nextPromotionDate: string;
+            schoolName: string;
+            studentId: string;
         };
         CurriculumSummary: {
             code: string;
@@ -512,6 +1042,17 @@ export interface components {
             };
             type: string;
         };
+        DoLearnQuestion: {
+            draftAnswer?: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            index: number;
+            lastWrong: boolean;
+            question: components["schemas"]["RenderedQuestion"];
+            solved: boolean;
+            workedSolution?: components["schemas"]["WorkedSolution"];
+        };
         ErrorDetail: {
             /** @description Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id' */
             location?: string;
@@ -559,6 +1100,19 @@ export interface components {
              */
             type: string;
         };
+        FamilySettings: {
+            billingEnabled: boolean;
+            /** Format: int64 */
+            brainGalaxyDailyCapMin: number;
+            brainGalaxyWindowEnd: string;
+            brainGalaxyWindowStart: string;
+            dailyOrbitCurricula: string[] | null;
+            language: string;
+            otpEnabled: boolean;
+            starDuelCurricula: string[] | null;
+            subscriptionPlanName: string;
+            subscriptionValidUntil: string;
+        };
         GradeResult: {
             correctAnswers: {
                 [key: string]: string;
@@ -596,6 +1150,41 @@ export interface components {
             label?: string;
             prefix?: string;
             suffix?: string;
+        };
+        LessonDetail: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/LessonDetail.json
+             */
+            readonly $schema?: string;
+            ageBand: string;
+            code: string;
+            /** Format: int64 */
+            completionPct: number;
+            conceptCaptionsUrl?: string;
+            conceptVideoTitle: string;
+            conceptVideoUrl?: string;
+            conceptYoutubeId?: string;
+            doAndLearn: components["schemas"]["DoLearnQuestion"][] | null;
+            scrollEarned: boolean;
+            selfCheck: components["schemas"]["SelfCheckItem"][] | null;
+            skillCode: string;
+            storyCaptionsUrl?: string;
+            storyVideoTitle: string;
+            storyVideoUrl?: string;
+            storyYoutubeId?: string;
+            title: string;
+            topicCode: string;
+        };
+        LessonSummary: {
+            ageBand: string;
+            code: string;
+            /** Format: int64 */
+            completionPct: number;
+            scrollEarned: boolean;
+            skillCode: string;
+            title: string;
         };
         LiveFeedItem: {
             avatarId: string;
@@ -672,6 +1261,82 @@ export interface components {
             readonly $schema?: string;
             verified: boolean;
         };
+        PaperAttemptView: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PaperAttemptView.json
+             */
+            readonly $schema?: string;
+            category: string;
+            /** Format: int64 */
+            elapsedSec: number;
+            /** Format: int64 */
+            grade: number;
+            paperCode: string;
+            questions: components["schemas"]["PaperQuestion"][] | null;
+            /** Format: int64 */
+            score: number;
+            status: string;
+            supplyPodAwarded: boolean;
+            supplyPodClaimedThisWeek: boolean;
+            supplyPodPendingPaper?: string;
+            supplyPodRetryable: boolean;
+            title: string;
+            /** Format: int64 */
+            totalQuestions: number;
+        };
+        PaperQuestion: {
+            draftAnswer?: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            index: number;
+            isCorrect?: boolean;
+            question: components["schemas"]["RenderedQuestion"];
+            workedSolution?: components["schemas"]["WorkedSolution"];
+        };
+        PaperSummary: {
+            /** Format: int64 */
+            bestScore: number;
+            category: string;
+            code: string;
+            /** Format: int64 */
+            grade: number;
+            /** Format: int64 */
+            questionCount: number;
+            status: string;
+            title: string;
+            weeklyDeadline: string;
+        };
+        ParentChildOverview: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ParentChildOverview.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            beginningCount: number;
+            child: components["schemas"]["ChildProfile"];
+            /** Format: int64 */
+            competentCount: number;
+            /** Format: int64 */
+            cryoShields: number;
+            focusSkills: components["schemas"]["SkillView"][] | null;
+            /** Format: int64 */
+            incompleteCount: number;
+            /** Format: int64 */
+            masteryCount: number;
+            /** Format: int64 */
+            streakDays: number;
+            strengthSkills: components["schemas"]["SkillView"][] | null;
+        };
+        ParentProfile: {
+            maskedEmail: string;
+            maskedPhone: string;
+            name: string;
+        };
         PracticeSession: {
             /**
              * Format: uri
@@ -709,6 +1374,24 @@ export interface components {
             /** Format: int64 */
             totalSp: number;
         };
+        PrintablePaper: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PrintablePaper.json
+             */
+            readonly $schema?: string;
+            answerKeyAvailable: boolean;
+            answerKeys?: {
+                [key: string]: string;
+            }[] | null;
+            category: string;
+            /** Format: int64 */
+            grade: number;
+            paperCode: string;
+            questions: components["schemas"]["RenderedQuestion"][] | null;
+            title: string;
+        };
         ProficiencySummary: {
             /**
              * Format: uri
@@ -725,6 +1408,26 @@ export interface components {
             /** Format: int64 */
             masteryCount: number;
             skills: components["schemas"]["SkillView"][] | null;
+        };
+        "Profile-childrenResponse": {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/Profile-childrenResponse.json
+             */
+            readonly $schema?: string;
+            children: components["schemas"]["ChildProfile"][] | null;
+        };
+        ProfileBundle: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ProfileBundle.json
+             */
+            readonly $schema?: string;
+            child: components["schemas"]["ChildProfile"];
+            parent: components["schemas"]["ParentProfile"];
+            settings: components["schemas"]["FamilySettings"];
         };
         RenderedQuestion: {
             curriculumCode: string;
@@ -759,6 +1462,11 @@ export interface components {
             sundayMeteor: number;
             /** Format: int64 */
             totalToday: number;
+        };
+        SelfCheckItem: {
+            checked: boolean;
+            key: string;
+            label: string;
         };
         SessionView: {
             /**
@@ -877,6 +1585,18 @@ export interface components {
             enabled: boolean;
             timeLocal?: string;
         };
+        TopicSummary: {
+            ageBand: string;
+            code: string;
+            /** Format: int64 */
+            grade: number;
+            lessons: components["schemas"]["LessonSummary"][] | null;
+            /** Format: int64 */
+            scrollsEarned: number;
+            title: string;
+            /** Format: int64 */
+            totalScrolls: number;
+        };
         "Training-curriculaResponse": {
             /**
              * Format: uri
@@ -937,6 +1657,24 @@ export interface components {
             result: components["schemas"]["GradeResult"];
             session: components["schemas"]["PracticeSession"];
         };
+        UpdateSettingsInput: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/UpdateSettingsInput.json
+             */
+            readonly $schema?: string;
+            /** Format: int64 */
+            brainGalaxyDailyCapMin?: number;
+            brainGalaxyWindowEnd?: string;
+            brainGalaxyWindowStart?: string;
+            childId?: string;
+            dailyOrbitCurricula?: string[] | null;
+            language?: string;
+            otpCode?: string;
+            otpEnabled?: boolean;
+            starDuelCurricula?: string[] | null;
+        };
         WorkedSolution: {
             correctAnswers: {
                 [key: string]: string;
@@ -952,6 +1690,584 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    "academy-do-learn-check": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Academy-do-learn-checkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Academy-do-learn-checkResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-do-learn-save": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Academy-do-learn-saveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-lesson-detail": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-scroll-retry": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Academy-scroll-retryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-self-check": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Academy-self-checkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "academy-topics": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Academy-topicsResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assignments-list": {
+        parameters: {
+            query?: {
+                locale?: string;
+                status?: string;
+                assignedBy?: string;
+                year?: number;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Assignments-listResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assignments-create-custom": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Assignments-create-customRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentSummary"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assignments-detail": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentDetail"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "assignments-submit": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Assignments-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Assignments-submitResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "astroquiz-list": {
+        parameters: {
+            query?: {
+                locale?: string;
+                grade?: number;
+                category?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Astroquiz-listResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "astroquiz-open": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperAttemptView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "astroquiz-print": {
+        parameters: {
+            query?: {
+                locale?: string;
+                includeKey?: boolean;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrintablePaper"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "astroquiz-save": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Astroquiz-saveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperAttemptView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "astroquiz-submit": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Astroquiz-submitRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaperAttemptView"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "auth-live-feed": {
         parameters: {
             query?: never;
@@ -1419,6 +2735,154 @@ export interface operations {
             };
         };
     };
+    "parent-overview": {
+        parameters: {
+            query?: {
+                locale?: string;
+                /** @description Linked child the overview is for; defaults to the parent's first child */
+                childId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParentChildOverview"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "profile-get": {
+        parameters: {
+            query?: {
+                locale?: string;
+                /** @description Linked child the bundle is for; defaults to the parent's first child */
+                childId?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileBundle"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "profile-children": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile-childrenResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
+    "profile-update-settings": {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: {
+                pl_access?: string;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileBundle"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ErrorModel"];
+                };
+            };
+        };
+    };
     "reports-high-score": {
         parameters: {
             query?: {
@@ -1750,6 +3214,7 @@ export interface operations {
                 locale?: string;
                 curriculum?: string;
                 grade?: number;
+                studentId?: string;
             };
             header?: {
                 Authorization?: string;
