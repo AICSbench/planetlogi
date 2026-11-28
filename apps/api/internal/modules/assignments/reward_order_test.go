@@ -473,6 +473,58 @@ func TestSubmitQuestionConflictsWhenAliasQuestionsDiffer(t *testing.T) {
 	}
 }
 
+func TestConcurrentSubmissionDetectsChangedCommittedAnswer(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	base := newAssignmentMemoryStore()
+	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	t.Cleanup(store.releaseNow)
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+	created, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20", "g1_sub_within_20"}, "req-same-id-race")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := b.GetDetail(ctx, stuUUID, created.ID, "en"); err != nil {
+		t.Fatal(err)
+	}
+	detail, err := a.GetDetail(ctx, stuUUID, created.ID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(detail.Questions[0].Question.TemplateCode, detail.Questions[0].Question.Seed, "en")
+
+	store.mu.Lock()
+	store.armed = true
+	store.mu.Unlock()
+	result := make(chan error, 1)
+	go func() {
+		_, _, err := a.SubmitQuestion(ctx, stuUUID, created.ID, 1, prob.Solution.CorrectAnswers, "en")
+		result <- err
+	}()
+	select {
+	case <-store.entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("first submission did not reach persistence")
+	}
+	if _, _, err := b.SubmitQuestion(ctx, stuUUID, created.ID, 1, map[string]string{"answer": "0"}, "en"); err != nil {
+		t.Fatal(err)
+	}
+	store.releaseNow()
+	select {
+	case err := <-result:
+		if !errors.Is(err, ErrSubmissionConflict) {
+			t.Fatalf("expected a conflict when the committed answer changed, got %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("first submission stalled after release")
+	}
+}
+
 func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
 	current := assignmentState{Records: map[string]assignmentRecordDTO{
 		"durable-id": {

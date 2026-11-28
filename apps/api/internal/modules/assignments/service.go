@@ -756,6 +756,48 @@ func (s *Service) GetDetail(ctx context.Context, studentID, assignmentID, locale
 	return renderDetail(rec, locale), nil
 }
 
+// refreshAssignment reloads the durable assignment (and any request-ID alias)
+// without running reward reconciliation, so a response can compare the answer
+// that actually committed.
+func (s *Service) refreshAssignment(ctx context.Context, studentID, assignmentID, requestID string) error {
+	if s.store == nil || !isUUID(studentID) {
+		return nil
+	}
+	var st assignmentState
+	if _, err := s.store.Load(ctx, studentID, "assignments", &st); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	local := s.records[assignmentID]
+	durableID := assignmentID
+	dto, found := st.Records[durableID]
+	if !found && requestID != "" {
+		for id, candidate := range st.Records {
+			if candidate.StudentID == studentID && candidate.RequestID == requestID {
+				durableID = id
+				dto = candidate
+				found = true
+				break
+			}
+		}
+	}
+	if !found {
+		return nil
+	}
+	merged := dto
+	if local != nil {
+		merged = mergeAssignmentRecord(dto, toRecordDTO(local))
+	}
+	rec := merged.toRecord()
+	rec.persisted = true
+	s.records[durableID] = rec
+	if local != nil && local.id != durableID {
+		delete(s.records, local.id)
+	}
+	return nil
+}
+
 func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID string, qIndex int, answers map[string]string, locale string) (mathengine.GradeResult, AssignmentDetail, error) {
 	if err := reqguard.ValidateAnswers(answers); err != nil {
 		return mathengine.GradeResult{}, AssignmentDetail{}, err
@@ -771,7 +813,6 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	var assignmentRequestID string
 	var localItems []itemSpecDTO
 	var gradedAnswers map[string]string
-	var originalAssignmentID string
 	var submissionDiscarded bool
 	var needsReward bool
 	detail, err := func() (AssignmentDetail, error) {
@@ -781,7 +822,6 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		}
 		assignmentRequestID = rec.requestID
 		localItems = toRecordDTO(rec).Items
-		originalAssignmentID = rec.id
 		if qIndex < 1 || qIndex > len(rec.items) {
 			return AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 		}
@@ -840,9 +880,8 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 				if rec.studentID == studentID && rec.requestID == assignmentRequestID {
 					assignmentID = id
 					detail = renderDetail(rec, locale)
-					submissionDiscarded = id != originalAssignmentID &&
-						(!sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
-							!sameAnswerMap(rec.submitted[qIndex], gradedAnswers))
+					submissionDiscarded = !sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
+						!sameAnswerMap(rec.submitted[qIndex], gradedAnswers)
 					break
 				}
 			}
@@ -902,6 +941,12 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	// Persist submitted answers even when the reward failed so a retry can
 	// award it without re-answering the questions.
 	if err := s.persistStudent(ctx, studentID); err != nil {
+		return res, detail, err
+	}
+	// Refresh from the durable document so the response compares against the
+	// answer that actually won any concurrent merge, without crediting a
+	// pending reward as a side effect.
+	if err := s.refreshAssignment(ctx, studentID, assignmentID, assignmentRequestID); err != nil {
 		return res, detail, err
 	}
 	resolveAliases()
