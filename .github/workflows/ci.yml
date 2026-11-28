@@ -21,6 +21,15 @@ jobs:
           cache-dependency-path: apps/api/go.sum
       - name: Go Vet
         run: go vet ./...
+      # Prebuilt release binaries may be built with an older Go than go.mod requires and then
+      # refuse to load this module, so build golangci-lint with the Go 1.27 toolchain above.
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+          install-mode: goinstall
+          working-directory: apps/api
+          args: ./...
       - name: Go Test (Race)
         run: go test -race ./...
       - name: Build Binaries

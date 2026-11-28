@@ -8,6 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 type pgExecutor interface {
@@ -25,7 +27,7 @@ func (s *Service) dbPG() pgExecutor {
 // The per-student lock covers initialization and every session/prefs mutation,
 // including when the rows do not exist yet. The service mutex guards s.tx.
 func (s *Service) beginStudentPG(ctx context.Context, studentID string) error {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil
 	}
 	tx, err := s.pool.Begin(ctx)
@@ -74,26 +76,6 @@ type pgSessionPayload struct {
 	CompletionBonusAward bool            `json:"completionBonusAward"`
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
 	if s.subjectID != "" {
 		return s.subjectID, nil
@@ -108,7 +90,7 @@ func (s *Service) subjectIDPG(ctx context.Context) (string, error) {
 }
 
 func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPrefs, error) {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil, nil
 	}
 	var grade int
@@ -142,7 +124,7 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 }
 
 func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentPrefs) error {
-	if s.pool == nil || !isUUID(studentID) || p == nil {
+	if s.pool == nil || !reqguard.IsUUID(studentID) || p == nil {
 		return nil
 	}
 	curriculaRaw, err := json.Marshal(p.activeCurricula)
@@ -163,7 +145,7 @@ func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentP
 }
 
 func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string) (*internalSession, error) {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil, nil
 	}
 	subjID, err := s.subjectIDPG(ctx)
@@ -220,7 +202,7 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 }
 
 func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *internalSession) error {
-	if s.pool == nil || !isUUID(studentID) || sess == nil {
+	if s.pool == nil || !reqguard.IsUUID(studentID) || sess == nil {
 		return nil
 	}
 	subjID, err := s.subjectIDPG(ctx)

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -77,7 +78,7 @@ func NewServiceWithPG(pool *pgxpool.Pool) *Service {
 }
 
 func (s *Service) isPG(studentID string) bool {
-	return s.pool != nil && isUUID(studentID)
+	return s.pool != nil && reqguard.IsUUID(studentID)
 }
 
 // getOrCreateMemoryLocked requires s.mu and only serves in-memory students.

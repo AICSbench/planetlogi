@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 type pgPracticePayload struct {
@@ -15,28 +16,8 @@ type pgPracticePayload struct {
 	Answered map[int]bool `json:"answered"`
 }
 
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) (map[string]*skillStat, error) {
-	if s.pool != nil && isUUID(studentID) {
+	if s.pool != nil && reqguard.IsUUID(studentID) {
 		stMap := make(map[string]*skillStat)
 		rows, err := s.pool.Query(ctx, `
 			SELECT skill_code, recent_results, best_session_score, best_stars
@@ -169,7 +150,7 @@ func (s *Service) loadSessionPG(ctx context.Context, tx pgx.Tx, sessionID string
 }
 
 func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade int) error {
-	if s.pool == nil || sess == nil || !isUUID(sess.studentID) {
+	if s.pool == nil || sess == nil || !reqguard.IsUUID(sess.studentID) {
 		return nil
 	}
 	raw, err := json.Marshal(pgPracticePayload{

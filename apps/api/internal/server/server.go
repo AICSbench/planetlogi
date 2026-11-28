@@ -45,7 +45,10 @@ func New(deps Dependencies) *App {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+	// No RealIP-style middleware: r.RemoteAddr stays the TCP peer, so clients cannot spoof it
+	// with X-Forwarded-For / X-Real-IP / True-Client-IP. Nothing keys on the client IP today
+	// (login & OTP limits are per account). If that changes, only trust forwarded headers from
+	// configured load-balancer CIDRs.
 	r.Use(middleware.Recoverer)
 	r.Use(requestTimeoutMiddleware(30 * time.Second))
 	r.Use(cors.Handler(cors.Options{

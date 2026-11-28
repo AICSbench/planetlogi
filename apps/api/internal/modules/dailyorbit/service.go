@@ -18,6 +18,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -197,7 +198,7 @@ func stageForIndex(idx int) (name, shape string, sp int) {
 }
 
 func (s *Service) getPrefsLocked(ctx context.Context, studentID string, grade int) (*studentPrefs, error) {
-	if s.pool != nil && isUUID(studentID) {
+	if s.pool != nil && reqguard.IsUUID(studentID) {
 		pgPrefs, err := s.loadPrefsPG(ctx, studentID)
 		if err != nil {
 			return nil, err
@@ -292,7 +293,7 @@ func filterTemplatesByTierAndCurricula(pool []mathengine.TemplateMeta, tier Tier
 
 func (s *Service) getOrCreateSessionLocked(ctx context.Context, studentID string, prefs *studentPrefs, localDate string) (*internalSession, error) {
 	key := studentID + ":" + localDate
-	if s.pool != nil && isUUID(studentID) {
+	if s.pool != nil && reqguard.IsUUID(studentID) {
 		pgSess, err := s.loadSessionPG(ctx, studentID, localDate)
 		if err != nil {
 			return nil, err

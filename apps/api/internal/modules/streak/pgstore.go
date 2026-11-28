@@ -8,32 +8,14 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 type pgExecutor interface {
 	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
 	QueryRow(context.Context, string, ...any) pgx.Row
 	Query(context.Context, string, ...any) (pgx.Rows, error)
-}
-
-func isUUID(s string) bool {
-	if len(s) != 36 {
-		return false
-	}
-	for i := 0; i < 36; i++ {
-		c := s[i]
-		switch i {
-		case 8, 13, 18, 23:
-			if c != '-' {
-				return false
-			}
-		default:
-			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-				return false
-			}
-		}
-	}
-	return true
 }
 
 func (s *Service) subjectIDPG(ctx context.Context, db pgExecutor) (string, error) {
@@ -58,7 +40,7 @@ func (s *Service) subjectIDPG(ctx context.Context, db pgExecutor) (string, error
 }
 
 func (s *Service) loadRecordPG(ctx context.Context, db pgExecutor, studentID string) (*record, error) {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil, nil
 	}
 	subjID, err := s.subjectIDPG(ctx, db)
@@ -156,7 +138,7 @@ func (s *Service) loadRecordPG(ctx context.Context, db pgExecutor, studentID str
 }
 
 func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *record, changedDate string) error {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil
 	}
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
@@ -165,7 +147,7 @@ func (s *Service) saveRecordPG(ctx context.Context, studentID string, rec *recor
 }
 
 func (s *Service) writeRecordPG(ctx context.Context, db pgExecutor, studentID string, rec *record, changedDate string) error {
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		return nil
 	}
 	subjID, err := s.subjectIDPG(ctx, db)

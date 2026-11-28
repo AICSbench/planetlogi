@@ -92,3 +92,27 @@ func TestHealthzAndReadyz(t *testing.T) {
 		}
 	})
 }
+
+// Forwarded headers are client-controlled unless a trusted proxy sets them, so the router must
+// not rewrite RemoteAddr from them (GHSA-3fxj-6jh8-hvhx).
+func TestForwardedHeadersDoNotRewriteRemoteAddr(t *testing.T) {
+	const peer = "203.0.113.7:51234"
+	var seen string
+	app := New(Dependencies{
+		Config: config.Load(),
+		Registrars: []ModuleRegistrar{func(r chi.Router, _ huma.API) {
+			r.Get("/test/remote-addr", func(_ http.ResponseWriter, req *http.Request) {
+				seen = req.RemoteAddr
+			})
+		}},
+	})
+	req := httptest.NewRequest(http.MethodGet, "/test/remote-addr", nil)
+	req.RemoteAddr = peer
+	req.Header.Set("X-Forwarded-For", "198.51.100.1")
+	req.Header.Set("X-Real-IP", "198.51.100.2")
+	req.Header.Set("True-Client-IP", "198.51.100.3")
+	app.Router.ServeHTTP(httptest.NewRecorder(), req)
+	if seen != peer {
+		t.Fatalf("RemoteAddr rewritten from forwarded headers: got %q, want %q", seen, peer)
+	}
+}

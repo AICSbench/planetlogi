@@ -19,6 +19,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 type ProficiencyTier string
@@ -338,7 +339,7 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 	if err := s.saveSessionPG(context.Background(), sess, target.grade); err != nil {
 		return PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
 	}
-	if s.pool == nil || !isUUID(studentID) {
+	if s.pool == nil || !reqguard.IsUUID(studentID) {
 		s.sessions[sessID] = sess
 	}
 
@@ -356,13 +357,13 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 
 	sess := s.sessions[sessionID]
 	var tx pgx.Tx
-	if s.pool != nil && isUUID(studentID) {
+	if s.pool != nil && reqguard.IsUUID(studentID) {
 		var err error
 		tx, err = s.pool.Begin(ctx)
 		if err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, err
 		}
-		defer tx.Rollback(context.Background())
+		defer func() { _ = tx.Rollback(context.Background()) }()
 		sess, err = s.loadSessionPG(ctx, tx, sessionID)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("practice session not found")
@@ -467,7 +468,7 @@ func (s *Service) RecordSkillAttemptTx(ctx context.Context, tx pgx.Tx, studentID
 }
 
 func (s *Service) recordSkillAttemptLocked(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool, sessionScore int) error {
-	if s.pool != nil && isUUID(studentID) {
+	if s.pool != nil && reqguard.IsUUID(studentID) {
 		return s.recordSkillAttemptPG(ctx, studentID, attemptID, skillCode, isCorrect, sessionScore)
 	}
 	key := [2]string{studentID, attemptID}
