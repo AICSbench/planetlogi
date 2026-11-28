@@ -444,12 +444,18 @@ func TestRefreshAssignmentKeepsUnsavedProgressUnpersisted(t *testing.T) {
 	rec.submittedAt[1] = 1
 	rec.correct[1] = true
 	rec.completed = true
-	rec.revision++
+	rec.revision = 7
 	rec.persisted = false
 	svc.mu.Unlock()
 
 	if err := svc.refreshAssignment(ctx, studentID, created.ID, "req-refresh"); err != nil {
 		t.Fatal(err)
+	}
+	svc.mu.Lock()
+	refreshed := svc.records[created.ID]
+	svc.mu.Unlock()
+	if refreshed.revision != 7 {
+		t.Fatalf("refresh reset the local revision to %d", refreshed.revision)
 	}
 
 	// The next read must persist the completing answer before crediting its
@@ -460,5 +466,69 @@ func TestRefreshAssignmentKeepsUnsavedProgressUnpersisted(t *testing.T) {
 	}
 	if len(ledger.applied) != 0 {
 		t.Fatalf("reward credited before the completing answer was durable: %+v", ledger.applied)
+	}
+}
+
+func TestRefreshAssignmentUsesCanonicalLocalRecord(t *testing.T) {
+	const studentID = "77777777-7777-7777-7777-777777777777"
+	const durableID = "asgn-durable"
+	store := newAssignmentMemoryStore()
+	svc := NewServiceWithDeps(nil, store, nil)
+	svc.LinkParentChild("par-1", studentID)
+	ctx := context.Background()
+
+	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "Alias refresh", "2026-12-01", []string{"g1_add_within_20"}, "req-alias-refresh")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Another instance stored the request under a different durable ID.
+	var st assignmentState
+	if _, err := store.Load(ctx, studentID, "assignments", &st); err != nil {
+		t.Fatal(err)
+	}
+	dto := st.Records[created.ID]
+	dto.ID = durableID
+	delete(st.Records, created.ID)
+	st.Records[durableID] = dto
+	if err := store.Save(ctx, studentID, "assignments", st); err != nil {
+		t.Fatal(err)
+	}
+
+	// The canonical local record holds a newer answer whose save failed.
+	svc.mu.Lock()
+	local := svc.records[created.ID]
+	local.id = durableID
+	local.submitted[1] = map[string]string{"answer": "9"}
+	local.submittedAt[1] = 1
+	local.correct[1] = true
+	local.completed = true
+	local.revision = 7
+	local.persisted = false
+	svc.records[durableID] = local
+	delete(svc.records, created.ID)
+	svc.mu.Unlock()
+
+	if err := svc.refreshAssignment(ctx, studentID, created.ID, "req-alias-refresh"); err != nil {
+		t.Fatal(err)
+	}
+	svc.mu.Lock()
+	refreshed := svc.records[durableID]
+	_, aliasStillPresent := svc.records[created.ID]
+	svc.mu.Unlock()
+	if aliasStillPresent {
+		t.Fatal("refresh kept the replaced local ID")
+	}
+	if refreshed == nil {
+		t.Fatal("refresh dropped the canonical local record")
+	}
+	if !sameAnswerMap(refreshed.submitted[1], map[string]string{"answer": "9"}) {
+		t.Fatalf("refresh discarded unsaved progress: %+v", refreshed.submitted)
+	}
+	if refreshed.persisted {
+		t.Fatal("refresh marked the canonical record persisted")
+	}
+	if refreshed.revision != 7 {
+		t.Fatalf("refresh reset the canonical revision to %d", refreshed.revision)
 	}
 }

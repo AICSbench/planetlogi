@@ -785,11 +785,19 @@ func (s *Service) refreshAssignment(ctx context.Context, studentID, assignmentID
 	if !found {
 		return nil
 	}
+	// Persistence may have folded this local ID into the durable one; keep the
+	// progress and durability state of the canonical local record.
+	if local == nil && durableID != assignmentID {
+		local = s.records[durableID]
+	}
 	merged := dto
 	if local != nil {
 		merged = mergeAssignmentRecord(dto, toRecordDTO(local))
 	}
 	rec := merged.toRecord()
+	if local != nil && local.revision > 0 {
+		rec.revision = local.revision
+	}
 	// Keep the local durability state: a concurrent submission may have merged
 	// progress that this refresh did not save, and crediting its reward before
 	// that answer is durable is forbidden.

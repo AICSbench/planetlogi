@@ -25,7 +25,11 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const [builderError, setBuilderError] = useState<string | null>(null);
   const requestIdRef = useRef<string | null>(null);
   const requestSignatureRef = useRef<string | null>(null);
-  const [actionError, setActionError] = useState<{ assignmentId: string; message: string } | null>(null);
+  const [actionError, setActionError] = useState<{
+    assignmentId: string;
+    message: string;
+    conflict: boolean;
+  } | null>(null);
 
   // Active assignment solver state
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -117,6 +121,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
           setActionError({
             assignmentId: vars.assignmentId,
             message: t("portals:assignments.assignmentChanged"),
+            conflict: true,
           });
         }
         void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
@@ -125,6 +130,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       setActionError({
         assignmentId: vars.assignmentId,
         message: t("portals:assignments.submitError"),
+        conflict: false,
       });
     },
   });
@@ -200,6 +206,11 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
 
   return (
     <div className="space-y-6">
+      {actionError?.conflict ? (
+        <p role="alert" className="text-sm font-bold text-red-300">
+          {actionError.message}
+        </p>
+      ) : null}
       <GalaxyCard className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
