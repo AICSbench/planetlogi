@@ -23,6 +23,18 @@
     "scoreBox": "Nilai",
     "workingSpace": "Tulis cara pengerjaanmu:",
     "toggleAnswerKey": "Sertakan Kunci Jawaban",
-    "printNow": "Cetak / Simpan PDF"
+    "printNow": "Cetak / Simpan PDF",
+    "answerKey": "Kunci Jawaban",
+    "loadError": "Lembar kerja ini tidak dapat dimuat."
+  },
+  "supplyPodBadge": "🎁 +5 AC Kapsul Hadiah!",
+  "actionError": "Progres belum tersimpan. Silakan coba lagi.",
+  "submitError": "Kertas belum terkirim. Silakan coba lagi.",
+  "loadError": "Gagal memuat Kuis Astro. Periksa koneksi lalu coba lagi.",
+  "questionShort": "{{count}} Soal",
+  "statuses": {
+    "NOT_STARTED": "Belum dimulai",
+    "IN_PROGRESS": "Sedang dikerjakan",
+    "SUBMITTED": "Sudah dikirim"
   }
 }

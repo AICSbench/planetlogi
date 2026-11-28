@@ -21,6 +21,7 @@ export interface QuestionPlayerProps {
   onSkip?: () => Promise<void> | void;
   onNext?: () => void;
   onSaveDraft?: (answers: Record<string, string>) => void;
+  onDraftChange?: (answers: Record<string, string>) => void;
   extraHeaderActions?: React.ReactNode;
 }
 
@@ -41,6 +42,7 @@ function QuestionPlayerInner({
   onSkip,
   onNext,
   onSaveDraft,
+  onDraftChange,
   extraHeaderActions,
 }: QuestionPlayerProps) {
   const { t } = useTranslation("player");
@@ -66,7 +68,9 @@ function QuestionPlayerInner({
   }
 
   function handleFieldChange(key: string, val: string) {
-    setDraftAnswers((prev) => ({ ...(prev ?? submittedAnswer ?? {}), [key]: val }));
+    const next = { ...answers, [key]: val };
+    setDraftAnswers(next);
+    onDraftChange?.(next);
   }
 
   async function handleFormSubmit(e: React.FormEvent) {

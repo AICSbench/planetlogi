@@ -235,6 +235,10 @@ export interface AcademyLessonDetail {
   skillCode: string;
   storyVideoTitle: string;
   conceptVideoTitle: string;
+  storyVideoUrl?: string;
+  conceptVideoUrl?: string;
+  storyCaptionsUrl?: string;
+  conceptCaptionsUrl?: string;
   completionPct: number;
   scrollEarned: boolean;
   doAndLearn: Array<{
@@ -621,6 +625,11 @@ export function createApiClient(baseUrl: string) {
     // Profile & Parent Portal
     getProfileBundle() {
       return request<ProfileBundle>("/api/v1/profile/bundle");
+    },
+    requestParentOTP() {
+      return request<{ sent: boolean; devCode?: string }>("/api/v1/auth/otp/request", {
+        method: "POST",
+      });
     },
     updateProfileSettings(payload: {
       otpEnabled?: boolean;

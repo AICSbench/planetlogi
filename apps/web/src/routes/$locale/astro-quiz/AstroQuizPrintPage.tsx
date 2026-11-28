@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Printer } from "lucide-react";
+import type { InputPart } from "@planetlogi/api-client";
 import type { Locale } from "@planetlogi/i18n";
 import { DiagramRenderer } from "../../../components/question-player/DiagramRenderer";
 import { apiClient } from "../../../store/authStore";
@@ -22,6 +23,13 @@ export function AstroQuizPrintPage({
   });
 
   const paper = printQuery.data;
+  if (printQuery.isError) {
+    return (
+      <p role="alert" className="p-8 text-center text-sm font-bold text-red-300">
+        {t("astro-quiz:print.loadError")}
+      </p>
+    );
+  }
   if (!paper) {
     return <p className="p-8 text-center text-slate-300">{t("common:common.loading")}</p>;
   }
@@ -87,25 +95,54 @@ export function AstroQuizPrintPage({
                 <span className="mr-2 font-extrabold">{idx + 1}.</span>
                 {q.stem}
               </p>
+              {q.options && q.options.length > 0 ? (
+                <ul className="grid grid-cols-1 gap-1 pl-6 text-sm sm:grid-cols-2">
+                  {q.options.map((opt) => (
+                    <li key={opt.key}>
+                      <strong>{opt.key}.</strong> {opt.label}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               {q.diagram ? <DiagramRenderer diagram={q.diagram} /> : null}
               <div className="pt-2">
                 <p className="text-xs text-slate-500">{t("astro-quiz:print.workingSpace")}</p>
                 <div className="mt-2 h-20 border-b border-dashed border-slate-400" />
               </div>
-              <p className="text-right text-sm font-bold">Answer: ___________________</p>
+              <div className="space-y-1">
+                {((q.parts && q.parts.length > 0 ? q.parts : [{ key: "answer" }]) as InputPart[]).map(
+                  (part) => (
+                    <p key={part.key} className="text-right text-sm font-bold">
+                      {part.label ?? part.key}: ___________________
+                    </p>
+                  )
+                )}
+              </div>
             </li>
           ))}
         </ol>
 
         {showKey ? (
           <section className="break-before-page border-t-2 border-black pt-4 space-y-2">
-            <h2 className="text-lg font-extrabold">Answer Key ({paper.paperCode})</h2>
+            <h2 className="text-lg font-extrabold">
+              {t("astro-quiz:print.answerKey")} ({paper.paperCode})
+            </h2>
             <ol className="grid grid-cols-2 gap-2 text-sm">
-              {paper.answerKeys.map((ans, idx) => (
-                <li key={idx}>
-                  <strong>{idx + 1}.</strong> {Object.values(ans).join(", ")}
-                </li>
-              ))}
+              {paper.answerKeys.map((ans, idx) => {
+                const parts: InputPart[] =
+                  paper.questions[idx]?.parts && paper.questions[idx]!.parts!.length > 0
+                    ? paper.questions[idx]!.parts!
+                    : [{ key: "answer" }];
+                return (
+                  <li key={idx}>
+                    <strong>{idx + 1}.</strong>{" "}
+                    {parts
+                      .filter((part) => ans[part.key] !== undefined)
+                      .map((part) => `${part.label ?? part.key}: ${ans[part.key]}`)
+                      .join(" · ")}
+                  </li>
+                );
+              })}
             </ol>
           </section>
         ) : null}

@@ -2,12 +2,18 @@ package profile
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
@@ -15,7 +21,11 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 )
 
-var ErrOTPRequired = errors.New("parent OTP verification is required to update protected settings")
+var (
+	ErrOTPRequired     = errors.New("parent OTP verification is required to update protected settings")
+	ErrNoLinkedChild   = errors.New("no linked child found for this parent")
+	ErrProfileNotFound = errors.New("student profile not found")
+)
 
 type ParentProfile struct {
 	Name        string `json:"name"`
@@ -35,16 +45,16 @@ type ChildProfile struct {
 }
 
 type FamilySettings struct {
-	OTPEnabled               bool     `json:"otpEnabled"`
-	Language                 string   `json:"language"`
-	DailyOrbitCurricula      []string `json:"dailyOrbitCurricula"`
-	StarDuelCurricula        []string `json:"starDuelCurricula"`
-	BrainGalaxyDailyCapMin   int      `json:"brainGalaxyDailyCapMin"`
-	BrainGalaxyWindowStart   string   `json:"brainGalaxyWindowStart"`
-	BrainGalaxyWindowEnd     string   `json:"brainGalaxyWindowEnd"`
-	SubscriptionPlanName     string   `json:"subscriptionPlanName"`
-	SubscriptionValidUntil   string   `json:"subscriptionValidUntil"`
-	BillingEnabled           bool     `json:"billingEnabled"`
+	OTPEnabled             bool     `json:"otpEnabled"`
+	Language               string   `json:"language"`
+	DailyOrbitCurricula    []string `json:"dailyOrbitCurricula"`
+	StarDuelCurricula      []string `json:"starDuelCurricula"`
+	BrainGalaxyDailyCapMin int      `json:"brainGalaxyDailyCapMin"`
+	BrainGalaxyWindowStart string   `json:"brainGalaxyWindowStart"`
+	BrainGalaxyWindowEnd   string   `json:"brainGalaxyWindowEnd"`
+	SubscriptionPlanName   string   `json:"subscriptionPlanName"`
+	SubscriptionValidUntil string   `json:"subscriptionValidUntil"`
+	BillingEnabled         bool     `json:"billingEnabled"`
 }
 
 type ProfileBundle struct {
@@ -54,20 +64,21 @@ type ProfileBundle struct {
 }
 
 type ParentChildOverview struct {
-	Child             ChildProfile         `json:"child"`
-	StreakDays        int                  `json:"streakDays"`
-	CryoShields       int                  `json:"cryoShields"`
-	MasteryCount      int                  `json:"masteryCount"`
-	CompetentCount    int                  `json:"competentCount"`
-	BeginningCount    int                  `json:"beginningCount"`
-	IncompleteCount   int                  `json:"incompleteCount"`
-	FocusSkills       []training.SkillView `json:"focusSkills"`
-	StrengthSkills    []training.SkillView `json:"strengthSkills"`
+	Child           ChildProfile         `json:"child"`
+	StreakDays      int                  `json:"streakDays"`
+	CryoShields     int                  `json:"cryoShields"`
+	MasteryCount    int                  `json:"masteryCount"`
+	CompetentCount  int                  `json:"competentCount"`
+	BeginningCount  int                  `json:"beginningCount"`
+	IncompleteCount int                  `json:"incompleteCount"`
+	FocusSkills     []training.SkillView `json:"focusSkills"`
+	StrengthSkills  []training.SkillView `json:"strengthSkills"`
 }
 
 type Service struct {
 	mu          sync.Mutex
 	profiles    map[string]*ProfileBundle
+	pool        *pgxpool.Pool
 	reportsH    *reports.Handler
 	streakSvc   *streak.Service
 	authSvc     *auth.Service
@@ -82,6 +93,135 @@ func NewService(reportsH *reports.Handler, streakSvc *streak.Service, authSvc *a
 		authSvc:     authSvc,
 		billingFlag: billingEnabled,
 	}
+}
+
+func NewServiceWithPG(pool *pgxpool.Pool, reportsH *reports.Handler, streakSvc *streak.Service, authSvc *auth.Service, billingEnabled bool) *Service {
+	svc := NewService(reportsH, streakSvc, authSvc, billingEnabled)
+	svc.pool = pool
+	return svc
+}
+
+func isUUID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+	for i := 0; i < 36; i++ {
+		c := s[i]
+		switch i {
+		case 8, 13, 18, 23:
+			if c != '-' {
+				return false
+			}
+		default:
+			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (s *Service) resolveChildID(ctx context.Context, actor auth.Principal) (string, error) {
+	if actor.Role != auth.RoleParent {
+		return actor.ID, nil
+	}
+	if s.pool != nil && isUUID(actor.ID) {
+		var child string
+		err := s.pool.QueryRow(ctx, `
+			SELECT id::text FROM student_profiles
+			WHERE parent_account_id = $1::uuid
+			ORDER BY created_at, id
+			LIMIT 1
+		`, actor.ID).Scan(&child)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", ErrNoLinkedChild
+		}
+		return child, err
+	}
+	return "demo-pilot1", nil
+}
+
+func maskEmail(email string) string {
+	at := strings.IndexByte(email, '@')
+	if at <= 0 {
+		return ""
+	}
+	return email[:1] + "***" + email[at:]
+}
+
+func maskPhone(phone string) string {
+	if len(phone) <= 4 {
+		return "****"
+	}
+	return phone[:len(phone)-4] + "-****-" + phone[len(phone)-2:]
+}
+
+func clockMinutes(raw string) string {
+	if len(raw) >= 5 {
+		return raw[:5]
+	}
+	return raw
+}
+
+func (s *Service) loadBundlePG(ctx context.Context, childID string) (ProfileBundle, error) {
+	var b ProfileBundle
+	var dob, promo *time.Time
+	var gender *string
+	var school, winStart, winEnd string
+	var dailyRaw, duelRaw []byte
+	var capSec int
+	var parentID, email, phone string
+	var otp bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT sp.first_name, sp.grade, sp.birthday, sp.gender, sp.avatar_item_id,
+		       sp.next_promotion_date, sp.preferred_locale,
+		       sp.active_daily_curricula_by_subject, sp.active_duel_curricula_by_subject,
+		       sp.brain_galaxy_daily_cap_sec, sp.brain_galaxy_window_start::text,
+		       sp.brain_galaxy_window_end::text, COALESCE(sc.name, ''),
+		       sp.parent_account_id::text, ua.display_name, COALESCE(ua.email, ''),
+		       COALESCE(ua.phone, ''), ua.otp_enabled
+		FROM student_profiles sp
+		JOIN user_accounts ua ON ua.id = sp.parent_account_id
+		LEFT JOIN schools sc ON sc.id = sp.school_id
+		WHERE sp.id = $1::uuid
+	`, childID).Scan(
+		&b.Child.FirstName, &b.Child.Grade, &dob, &gender, &b.Child.AvatarItemID,
+		&promo, &b.Settings.Language, &dailyRaw, &duelRaw, &capSec, &winStart, &winEnd,
+		&school, &parentID, &b.Parent.Name, &email, &phone, &otp,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ProfileBundle{}, ErrProfileNotFound
+	}
+	if err != nil {
+		return ProfileBundle{}, err
+	}
+	b.Child.StudentID = childID
+	b.Child.SchoolName = school
+	if dob != nil {
+		b.Child.Birthday = dob.Format("2006-01-02")
+	}
+	if gender != nil {
+		b.Child.Gender = *gender
+	}
+	if promo != nil {
+		b.Child.NextPromotionDate = promo.Format("2 Jan 2006")
+	}
+	b.Parent.MaskedEmail = maskEmail(email)
+	b.Parent.MaskedPhone = maskPhone(phone)
+	var daily, duel map[string][]string
+	_ = json.Unmarshal(dailyRaw, &daily)
+	_ = json.Unmarshal(duelRaw, &duel)
+	b.Settings.DailyOrbitCurricula = daily["math"]
+	b.Settings.StarDuelCurricula = duel["math"]
+	b.Settings.BrainGalaxyDailyCapMin = capSec / 60
+	b.Settings.BrainGalaxyWindowStart = clockMinutes(winStart)
+	b.Settings.BrainGalaxyWindowEnd = clockMinutes(winEnd)
+	b.Settings.OTPEnabled = otp
+	b.Settings.SubscriptionPlanName = "PlanetLogi Galaxy All-Access (Feature-First)"
+	b.Settings.SubscriptionValidUntil = "Open Beta"
+	b.Settings.BillingEnabled = s.billingFlag
+	_ = parentID
+	return b, nil
 }
 
 func (s *Service) getOrCreateLocked(studentID string) *ProfileBundle {
@@ -121,10 +261,17 @@ func (s *Service) getOrCreateLocked(studentID string) *ProfileBundle {
 	return b
 }
 
-func (s *Service) GetBundle(studentID string) ProfileBundle {
+func (s *Service) GetBundle(ctx context.Context, actor auth.Principal) (ProfileBundle, error) {
+	childID, err := s.resolveChildID(ctx, actor)
+	if err != nil {
+		return ProfileBundle{}, err
+	}
+	if s.pool != nil && isUUID(childID) {
+		return s.loadBundlePG(ctx, childID)
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return *s.getOrCreateLocked(studentID)
+	return *s.getOrCreateLocked(childID), nil
 }
 
 type UpdateSettingsInput struct {
@@ -138,10 +285,22 @@ type UpdateSettingsInput struct {
 	BrainGalaxyWindowEnd   string   `json:"brainGalaxyWindowEnd,omitempty"`
 }
 
-func (s *Service) UpdateSettings(ctx context.Context, studentID string, actor auth.Principal, in UpdateSettingsInput) (ProfileBundle, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	b := s.getOrCreateLocked(studentID)
+func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in UpdateSettingsInput) (ProfileBundle, error) {
+	childID, err := s.resolveChildID(ctx, actor)
+	if err != nil {
+		return ProfileBundle{}, err
+	}
+	var b ProfileBundle
+	if s.pool != nil && isUUID(childID) {
+		b, err = s.loadBundlePG(ctx, childID)
+	} else {
+		s.mu.Lock()
+		b = *s.getOrCreateLocked(childID)
+		s.mu.Unlock()
+	}
+	if err != nil {
+		return ProfileBundle{}, err
+	}
 
 	// Enforce Parent OTP gate when OTP security is enabled
 	if b.Settings.OTPEnabled {
@@ -183,13 +342,47 @@ func (s *Service) UpdateSettings(ctx context.Context, studentID string, actor au
 	if in.BrainGalaxyWindowEnd != "" {
 		b.Settings.BrainGalaxyWindowEnd = in.BrainGalaxyWindowEnd
 	}
-	return *b, nil
+	if s.pool != nil && isUUID(childID) {
+		var parentID string
+		if err := s.pool.QueryRow(ctx, `SELECT parent_account_id::text FROM student_profiles WHERE id = $1::uuid`, childID).Scan(&parentID); err != nil {
+			return ProfileBundle{}, err
+		}
+		daily, _ := json.Marshal(map[string][]string{"math": b.Settings.DailyOrbitCurricula})
+		duel, _ := json.Marshal(map[string][]string{"math": b.Settings.StarDuelCurricula})
+		if _, err := s.pool.Exec(ctx, `
+			UPDATE student_profiles
+			SET preferred_locale = $2, active_daily_curricula_by_subject = $3::jsonb,
+			    active_duel_curricula_by_subject = $4::jsonb,
+			    brain_galaxy_daily_cap_sec = $5,
+			    brain_galaxy_window_start = $6::time, brain_galaxy_window_end = $7::time,
+			    updated_at = NOW()
+			WHERE id = $1::uuid
+		`, childID, b.Settings.Language, daily, duel, b.Settings.BrainGalaxyDailyCapMin*60,
+			b.Settings.BrainGalaxyWindowStart, b.Settings.BrainGalaxyWindowEnd); err != nil {
+			return ProfileBundle{}, fmt.Errorf("persist family settings: %w", err)
+		}
+		if in.OTPEnabled != nil && isUUID(parentID) {
+			if _, err := s.pool.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
+				return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)
+			}
+		}
+	} else {
+		s.mu.Lock()
+		*s.getOrCreateLocked(childID) = b
+		s.mu.Unlock()
+	}
+	return b, nil
 }
 
-func (s *Service) GetParentOverview(studentID, locale string) (ParentChildOverview, error) {
-	s.mu.Lock()
-	bundle := *s.getOrCreateLocked(studentID)
-	s.mu.Unlock()
+func (s *Service) GetParentOverview(ctx context.Context, actor auth.Principal, locale string) (ParentChildOverview, error) {
+	childID, err := s.resolveChildID(ctx, actor)
+	if err != nil {
+		return ParentChildOverview{}, err
+	}
+	bundle, err := s.GetBundle(ctx, actor)
+	if err != nil {
+		return ParentChildOverview{}, err
+	}
 
 	ov := ParentChildOverview{
 		Child:          bundle.Child,
@@ -199,7 +392,7 @@ func (s *Service) GetParentOverview(studentID, locale string) (ParentChildOvervi
 		StrengthSkills: []training.SkillView{},
 	}
 	if s.streakSvc != nil {
-		st, err := s.streakSvc.GetStatus(studentID, "Asia/Jakarta")
+		st, err := s.streakSvc.GetStatus(childID, "Asia/Jakarta")
 		if err != nil {
 			return ParentChildOverview{}, err
 		}
@@ -207,7 +400,7 @@ func (s *Service) GetParentOverview(studentID, locale string) (ParentChildOvervi
 		ov.CryoShields = st.CryoShields
 	}
 	if s.reportsH != nil {
-		prof, err := s.reportsH.BuildProficiency(studentID, "ALL", bundle.Child.Grade, locale)
+		prof, err := s.reportsH.BuildProficiency(childID, "ALL", bundle.Child.Grade, locale)
 		if err != nil {
 			return ParentChildOverview{}, err
 		}
@@ -235,29 +428,30 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authIn struct {
+type AuthIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolvePrincipal(ctx context.Context, in authIn) (string, auth.Principal, string) {
+func (h *Handler) resolvePrincipal(ctx context.Context, in AuthIn) (auth.Principal, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, *p, locale
-			}
+	if h.authSvc == nil {
+		return auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi Santoso"}, locale, nil
+	}
+	tok := in.CookieAccess
+	if tok == "" && len(in.Authorization) > 7 {
+		tok = in.Authorization[7:]
+	}
+	if tok != "" {
+		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
+			return *p, locale, nil
 		}
 	}
-	return "demo-pilot1", auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi Santoso"}, locale
+	return auth.Principal{}, locale, auth.ErrInvalidCredentials
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -267,9 +461,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/profile/bundle",
 		Summary:     "Get Parent & Child profile cards and family settings",
 		Tags:        []string{"Profile"},
-	}, func(ctx context.Context, in *authIn) (*struct{ Body ProfileBundle }, error) {
-		sid, _, _ := h.resolvePrincipal(ctx, *in)
-		return &struct{ Body ProfileBundle }{Body: h.svc.GetBundle(sid)}, nil
+	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ProfileBundle }, error) {
+		actor, _, err := h.resolvePrincipal(ctx, *in)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		bundle, err := h.svc.GetBundle(ctx, actor)
+		if err != nil {
+			return nil, huma.Error404NotFound(err.Error())
+		}
+		return &struct{ Body ProfileBundle }{Body: bundle}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -279,11 +480,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits",
 		Tags:        []string{"Profile"},
 	}, func(ctx context.Context, in *struct {
-		authIn
+		AuthIn
 		Body UpdateSettingsInput
 	}) (*struct{ Body ProfileBundle }, error) {
-		sid, actor, _ := h.resolvePrincipal(ctx, in.authIn)
-		updated, err := h.svc.UpdateSettings(ctx, sid, actor, in.Body)
+		actor, _, err := h.resolvePrincipal(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		updated, err := h.svc.UpdateSettings(ctx, actor, in.Body)
 		if err != nil {
 			if errors.Is(err, ErrOTPRequired) {
 				return nil, huma.Error403Forbidden(err.Error())
@@ -299,9 +503,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/parent/overview",
 		Summary:     "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
 		Tags:        []string{"Parent"},
-	}, func(ctx context.Context, in *authIn) (*struct{ Body ParentChildOverview }, error) {
-		sid, _, locale := h.resolvePrincipal(ctx, *in)
-		ov, err := h.svc.GetParentOverview(sid, locale)
+	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ParentChildOverview }, error) {
+		actor, locale, err := h.resolvePrincipal(ctx, *in)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		ov, err := h.svc.GetParentOverview(ctx, actor, locale)
 		if err != nil {
 			return nil, huma.Error500InternalServerError(err.Error())
 		}

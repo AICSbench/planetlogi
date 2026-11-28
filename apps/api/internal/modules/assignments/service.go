@@ -5,15 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 )
 
 var (
@@ -74,14 +78,17 @@ type assignmentRecord struct {
 	submitted      map[int]map[string]string
 	correct        map[int]bool
 	completed      bool
+	rewarded       bool
 }
 
 type Service struct {
-	mu           sync.Mutex
-	ledger       economy.Ledger
-	records      map[string]*assignmentRecord
-	parentLinks  map[string][]string // parentID -> []studentID
-	nextID       int
+	mu          sync.Mutex
+	ledger      economy.Ledger
+	pool        *pgxpool.Pool
+	store       state.Store
+	loaded      map[string]bool
+	records     map[string]*assignmentRecord
+	parentLinks map[string][]string // parentID -> []studentID
 }
 
 func NewService(ledger economy.Ledger) *Service {
@@ -91,10 +98,118 @@ func NewService(ledger economy.Ledger) *Service {
 		parentLinks: map[string][]string{
 			"demo-parent": {"demo-pilot1"},
 		},
-		nextID: 100,
+		loaded: make(map[string]bool),
 	}
 	svc.seedDefaults("demo-pilot1")
 	return svc
+}
+
+func NewServiceWithDeps(pool *pgxpool.Pool, store state.Store, ledger economy.Ledger) *Service {
+	svc := NewService(ledger)
+	svc.pool = pool
+	svc.store = store
+	return svc
+}
+
+type assignmentState struct {
+	Records map[string]assignmentRecordDTO `json:"records"`
+}
+
+type assignmentRecordDTO struct {
+	ID             string                    `json:"id"`
+	StudentID      string                    `json:"studentId"`
+	Title          string                    `json:"title"`
+	AssignedByRole AssignedByRole            `json:"assignedByRole"`
+	AssignedByName string                    `json:"assignedByName"`
+	AcademicYear   int                       `json:"academicYear"`
+	DueDate        string                    `json:"dueDate"`
+	RewardAC       int                       `json:"rewardAc"`
+	Items          []itemSpecDTO             `json:"items"`
+	Submitted      map[int]map[string]string `json:"submitted"`
+	Correct        map[int]bool              `json:"correct"`
+	Completed      bool                      `json:"completed"`
+	Rewarded       bool                      `json:"rewarded"`
+}
+
+type itemSpecDTO struct {
+	TemplateCode string `json:"templateCode"`
+	Seed         int64  `json:"seed"`
+}
+
+func toRecordDTO(r *assignmentRecord) assignmentRecordDTO {
+	items := make([]itemSpecDTO, len(r.items))
+	for i, item := range r.items {
+		items[i] = itemSpecDTO{TemplateCode: item.templateCode, Seed: item.seed}
+	}
+	return assignmentRecordDTO{
+		ID: r.id, StudentID: r.studentID, Title: r.title,
+		AssignedByRole: r.assignedByRole, AssignedByName: r.assignedByName,
+		AcademicYear: r.academicYear, DueDate: r.dueDate, RewardAC: r.rewardAC,
+		Items: items, Submitted: r.submitted, Correct: r.correct,
+		Completed: r.completed, Rewarded: r.rewarded,
+	}
+}
+
+func (d assignmentRecordDTO) toRecord() *assignmentRecord {
+	items := make([]itemSpec, len(d.Items))
+	for i, item := range d.Items {
+		items[i] = itemSpec{templateCode: item.TemplateCode, seed: item.Seed}
+	}
+	submitted := d.Submitted
+	if submitted == nil {
+		submitted = make(map[int]map[string]string)
+	}
+	correct := d.Correct
+	if correct == nil {
+		correct = make(map[int]bool)
+	}
+	return &assignmentRecord{
+		id: d.ID, studentID: d.StudentID, title: d.Title,
+		assignedByRole: d.AssignedByRole, assignedByName: d.AssignedByName,
+		academicYear: d.AcademicYear, dueDate: d.DueDate, rewardAC: d.RewardAC,
+		items: items, submitted: submitted, correct: correct,
+		completed: d.Completed, rewarded: d.Rewarded,
+	}
+}
+
+// ensureStudentLoaded reads the student's assignments once; the mutex is never
+// held while the store performs a query.
+func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) error {
+	if s.store == nil || !isUUID(studentID) {
+		return nil
+	}
+	s.mu.Lock()
+	if s.loaded[studentID] {
+		s.mu.Unlock()
+		return nil
+	}
+	s.mu.Unlock()
+	var st assignmentState
+	if _, err := s.store.Load(ctx, studentID, "assignments", &st); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	for _, dto := range st.Records {
+		s.records[dto.ID] = dto.toRecord()
+	}
+	s.loaded[studentID] = true
+	s.mu.Unlock()
+	return nil
+}
+
+func (s *Service) persistStudent(ctx context.Context, studentID string) error {
+	if s.store == nil || !isUUID(studentID) {
+		return nil
+	}
+	s.mu.Lock()
+	st := assignmentState{Records: make(map[string]assignmentRecordDTO)}
+	for id, rec := range s.records {
+		if rec.studentID == studentID {
+			st.Records[id] = toRecordDTO(rec)
+		}
+	}
+	s.mu.Unlock()
+	return s.store.Save(ctx, studentID, "assignments", st)
 }
 
 func (s *Service) seedDefaults(studentID string) {
@@ -124,25 +239,58 @@ func (s *Service) LinkParentChild(parentID, studentID string) {
 	s.parentLinks[parentID] = append(s.parentLinks[parentID], studentID)
 }
 
-func (s *Service) isLinkedLocked(parentID, studentID string) bool {
+func isUUID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+	for i := 0; i < 36; i++ {
+		c := s[i]
+		switch i {
+		case 8, 13, 18, 23:
+			if c != '-' {
+				return false
+			}
+		default:
+			if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (s *Service) isLinked(ctx context.Context, parentID, studentID string) (bool, error) {
+	if s.pool != nil && isUUID(parentID) && isUUID(studentID) {
+		var ok bool
+		err := s.pool.QueryRow(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM student_profiles
+				WHERE id = $1::uuid AND parent_account_id = $2::uuid
+			)
+		`, studentID, parentID).Scan(&ok)
+		return ok, err
+	}
 	if parentID == "demo-parent" && studentID == "demo-pilot1" {
-		return true
+		return true, nil
 	}
 	for _, cid := range s.parentLinks[parentID] {
 		if cid == studentID {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
-func (s *Service) ListForStudent(studentID, statusFilter, assignedByFilter string, year int) []AssignmentSummary {
+func (s *Service) ListForStudent(ctx context.Context, studentID, statusFilter, assignedByFilter string, year int) ([]AssignmentSummary, error) {
+	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
+		return nil, err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	out := make([]AssignmentSummary, 0)
 	for _, r := range s.records {
-		if r.studentID != studentID && studentID != "demo-pilot1" {
+		if r.studentID != studentID {
 			continue
 		}
 		st := "INCOMPLETE"
@@ -160,87 +308,167 @@ func (s *Service) ListForStudent(studentID, statusFilter, assignedByFilter strin
 		}
 		out = append(out, toSummary(r))
 	}
-	return out
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].DueDate != out[j].DueDate {
+			return out[i].DueDate < out[j].DueDate
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out, nil
 }
 
-func (s *Service) CreateParentCustomAssignment(parentID, parentName, studentID, title, dueDate string, templateCodes []string) (AssignmentSummary, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if !s.isLinkedLocked(parentID, studentID) {
+func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string) (AssignmentSummary, error) {
+	linked, err := s.isLinked(ctx, parentID, studentID)
+	if err != nil {
+		return AssignmentSummary{}, err
+	}
+	if !linked {
 		return AssignmentSummary{}, ErrNotLinkedChild
 	}
-	if len(templateCodes) == 0 {
-		return AssignmentSummary{}, fmt.Errorf("at least one question template is required")
+	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
+		return AssignmentSummary{}, err
 	}
-	s.nextID++
-	id := fmt.Sprintf("asgn-%d", s.nextID)
-	items := make([]itemSpec, 0, len(templateCodes))
-	for i, code := range templateCodes {
-		if _, ok := mathengine.GenerateByCode(code, int64(1000+i), "en"); !ok {
-			return AssignmentSummary{}, fmt.Errorf("unknown question template %q", code)
+	s.mu.Lock()
+	summary, err := func() (AssignmentSummary, error) {
+		if len(templateCodes) == 0 {
+			return AssignmentSummary{}, fmt.Errorf("at least one question template is required")
 		}
-		items = append(items, itemSpec{templateCode: code, seed: int64(s.nextID*100 + i + 1)})
+		// UUIDs stay unique across restarts and replicas, so reward idempotency
+		// keys never collide with a previous assignment.
+		id := "asgn-" + uuid.NewString()
+		items := make([]itemSpec, 0, len(templateCodes))
+		for i, code := range templateCodes {
+			if _, ok := mathengine.GenerateByCode(code, int64(1000+i), "en"); !ok {
+				return AssignmentSummary{}, fmt.Errorf("unknown question template %q", code)
+			}
+			items = append(items, itemSpec{templateCode: code, seed: time.Now().UnixNano() + int64(i*7919)})
+		}
+		if dueDate == "" {
+			dueDate = time.Now().UTC().AddDate(0, 0, 7).Format("2006-01-02")
+		} else if _, err := time.Parse("2006-01-02", dueDate); err != nil {
+			return AssignmentSummary{}, fmt.Errorf("dueDate must use YYYY-MM-DD")
+		}
+		rec := &assignmentRecord{
+			id:             id,
+			studentID:      studentID,
+			title:          title,
+			assignedByRole: AssignedByParent,
+			assignedByName: parentName,
+			academicYear:   time.Now().UTC().Year(),
+			dueDate:        dueDate,
+			rewardAC:       5,
+			items:          items,
+			submitted:      make(map[int]map[string]string),
+			correct:        make(map[int]bool),
+		}
+		s.records[id] = rec
+		return toSummary(rec), nil
+	}()
+	s.mu.Unlock()
+	if err != nil {
+		return AssignmentSummary{}, err
 	}
-	if dueDate == "" {
-		dueDate = time.Now().UTC().AddDate(0, 0, 7).Format("2006-01-02")
+	if err := s.persistStudent(ctx, studentID); err != nil {
+		return AssignmentSummary{}, err
 	}
-	rec := &assignmentRecord{
-		id:             id,
-		studentID:      studentID,
-		title:          title,
-		assignedByRole: AssignedByParent,
-		assignedByName: parentName,
-		academicYear:   time.Now().UTC().Year(),
-		dueDate:        dueDate,
-		rewardAC:       5,
-		items:          items,
-		submitted:      make(map[int]map[string]string),
-		correct:        make(map[int]bool),
-	}
-	s.records[id] = rec
-	return toSummary(rec), nil
+	return summary, nil
 }
 
-func (s *Service) GetDetail(assignmentID, locale string) (AssignmentDetail, error) {
+func (s *Service) GetDetail(ctx context.Context, studentID, assignmentID, locale string) (AssignmentDetail, error) {
+	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
+		return AssignmentDetail{}, err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	rec, ok := s.records[assignmentID]
-	if !ok {
+	if !ok || rec.studentID != studentID {
 		return AssignmentDetail{}, ErrAssignmentNotFound
 	}
 	return renderDetail(rec, locale), nil
 }
 
 func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID string, qIndex int, answers map[string]string, locale string) (mathengine.GradeResult, AssignmentDetail, error) {
+	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
+		return mathengine.GradeResult{}, AssignmentDetail{}, err
+	}
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	rec, ok := s.records[assignmentID]
-	if !ok {
-		return mathengine.GradeResult{}, AssignmentDetail{}, ErrAssignmentNotFound
+	var res mathengine.GradeResult
+	var rewardAC int
+	var rewardID string
+	var needsReward bool
+	detail, err := func() (AssignmentDetail, error) {
+		rec, ok := s.records[assignmentID]
+		if !ok || rec.studentID != studentID {
+			return AssignmentDetail{}, ErrAssignmentNotFound
+		}
+		if qIndex < 1 || qIndex > len(rec.items) {
+			return AssignmentDetail{}, fmt.Errorf("invalid question index")
+		}
+		if _, done := rec.submitted[qIndex]; done {
+			// A completed assignment with an uncredited reward may be retried
+			// idempotently; the stored answers are never overwritten.
+			if rec.completed && !rec.rewarded && s.ledger != nil {
+				needsReward = true
+				rewardAC = rec.rewardAC
+				rewardID = rec.id
+				return renderDetail(rec, locale), nil
+			}
+			return AssignmentDetail{}, fmt.Errorf("question %d has already been submitted", qIndex)
+		}
+		item := rec.items[qIndex-1]
+		prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
+		res = mathengine.Grade(prob, answers)
+		rec.submitted[qIndex] = answers
+		rec.correct[qIndex] = res.IsCorrect
+		rec.completed = len(rec.submitted) == len(rec.items)
+		if rec.completed {
+			if !rec.rewarded && s.ledger != nil {
+				needsReward = true
+				rewardAC = rec.rewardAC
+				rewardID = rec.id
+			} else if s.ledger == nil {
+				rec.rewarded = true
+			}
+		}
+		return renderDetail(rec, locale), nil
+	}()
+	s.mu.Unlock()
+	if err != nil {
+		return res, detail, err
 	}
-	if qIndex < 1 || qIndex > len(rec.items) {
-		return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("invalid question index")
-	}
-	item := rec.items[qIndex-1]
-	prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
-	res := mathengine.Grade(prob, answers)
-	rec.submitted[qIndex] = answers
-	rec.correct[qIndex] = res.IsCorrect
 
-	if len(rec.submitted) == len(rec.items) && !rec.completed {
-		rec.completed = true
-		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencyAC,
-				Delta:          int64(rec.rewardAC),
-				SourceType:     "ASSIGNMENT_COMPLETE",
-				SourceID:       rec.id,
-				IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rec.id, studentID),
-			})
+	var rewardErr error
+	if needsReward {
+		// The ledger can block on its own transaction; never hold the service
+		// mutex across it. The idempotency key makes a retry safe.
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			StudentID:      studentID,
+			Currency:       economy.CurrencyAC,
+			Delta:          int64(rewardAC),
+			SourceType:     "ASSIGNMENT_COMPLETE",
+			SourceID:       rewardID,
+			IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rewardID, studentID),
+		}); err != nil {
+			rewardErr = fmt.Errorf("award assignment reward: %w", err)
+		} else {
+			s.mu.Lock()
+			if rec, ok := s.records[rewardID]; ok {
+				rec.rewarded = true
+				detail = renderDetail(rec, locale)
+			}
+			s.mu.Unlock()
 		}
 	}
-	return res, renderDetail(rec, locale), nil
+
+	// Persist submitted answers even when the reward failed so a retry can
+	// award it without re-answering the questions.
+	if err := s.persistStudent(ctx, studentID); err != nil {
+		return res, detail, err
+	}
+	if rewardErr != nil {
+		return res, detail, rewardErr
+	}
+	return res, detail, nil
 }
 
 func toSummary(r *assignmentRecord) AssignmentSummary {
@@ -299,29 +527,30 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authIn struct {
+type AuthIn struct {
 	CookieAccess  string `cookie:"pl_access"`
 	Authorization string `header:"Authorization"`
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolveUser(ctx context.Context, in authIn) (string, string, auth.Role, string) {
+func (h *Handler) resolveUser(ctx context.Context, in AuthIn) (string, string, auth.Role, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, p.DisplayName, p.Role, locale
-			}
+	if h.authSvc == nil {
+		return "demo-pilot1", "Budi Santoso", auth.RoleParent, locale, nil
+	}
+	tok := in.CookieAccess
+	if tok == "" && len(in.Authorization) > 7 {
+		tok = in.Authorization[7:]
+	}
+	if tok != "" {
+		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
+			return p.ID, p.DisplayName, p.Role, locale, nil
 		}
 	}
-	return "demo-pilot1", "Budi Santoso", auth.RoleParent, locale
+	return "", "", "", locale, auth.ErrInvalidCredentials
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -332,7 +561,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "List student assignments with status, year, and assigned-by filters",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
+		AuthIn
 		Status     string `query:"status" default:"ALL"`
 		AssignedBy string `query:"assignedBy" default:"ALL"`
 		Year       int    `query:"year" default:"0"`
@@ -341,13 +570,20 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Assignments []AssignmentSummary `json:"assignments"`
 		}
 	}, error) {
-		id, _, _, _ := h.resolveUser(ctx, in.authIn)
+		id, _, _, _, err := h.resolveUser(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		out := &struct {
 			Body struct {
 				Assignments []AssignmentSummary `json:"assignments"`
 			}
 		}{}
-		out.Body.Assignments = h.svc.ListForStudent(id, in.Status, in.AssignedBy, in.Year)
+		assignments, err := h.svc.ListForStudent(ctx, id, in.Status, in.AssignedBy, in.Year)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("assignments unavailable")
+		}
+		out.Body.Assignments = assignments
 		return out, nil
 	})
 
@@ -358,21 +594,22 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Parent Personalised Assignment Builder — create targeted homework for a linked child",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
+		AuthIn
 		Body struct {
-			StudentID     string   `json:"studentId" default:"demo-pilot1"`
+			StudentID     string   `json:"studentId" minLength:"1"`
 			Title         string   `json:"title" minLength:"1"`
 			DueDate       string   `json:"dueDate,omitempty"`
 			TemplateCodes []string `json:"templateCodes" minItems:"1"`
 		}
 	}) (*struct{ Body AssignmentSummary }, error) {
-		uid, name, role, _ := h.resolveUser(ctx, in.authIn)
-		parentID := uid
-		if role == auth.RoleStudent {
-			// In demo mode without separate parent login, allow builder preview only when explicitly linked
-			parentID = "demo-parent"
+		uid, name, role, _, err := h.resolveUser(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
 		}
-		summary, err := h.svc.CreateParentCustomAssignment(parentID, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes)
+		if role != auth.RoleParent {
+			return nil, huma.Error403Forbidden("parent access required")
+		}
+		summary, err := h.svc.CreateParentCustomAssignment(ctx, uid, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes)
 		if err != nil {
 			if errors.Is(err, ErrNotLinkedChild) {
 				return nil, huma.Error403Forbidden(err.Error())
@@ -389,11 +626,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Open an assignment and inspect its questions",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
+		AuthIn
 		ID string `path:"id"`
 	}) (*struct{ Body AssignmentDetail }, error) {
-		_, _, _, locale := h.resolveUser(ctx, in.authIn)
-		detail, err := h.svc.GetDetail(in.ID, locale)
+		uid, _, _, locale, err := h.resolveUser(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		detail, err := h.svc.GetDetail(ctx, uid, in.ID, locale)
 		if err != nil {
 			return nil, huma.Error404NotFound(err.Error())
 		}
@@ -407,7 +647,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Submit an assignment question answer and award AC upon full completion",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
+		AuthIn
 		ID   string `path:"id"`
 		Body struct {
 			QuestionIndex int               `json:"questionIndex" minimum:"1"`
@@ -419,9 +659,15 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Assignment AssignmentDetail       `json:"assignment"`
 		}
 	}, error) {
-		uid, _, _, locale := h.resolveUser(ctx, in.authIn)
+		uid, _, _, locale, err := h.resolveUser(ctx, in.AuthIn)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
 		res, detail, err := h.svc.SubmitQuestion(ctx, uid, in.ID, in.Body.QuestionIndex, in.Body.Answers, locale)
 		if err != nil {
+			if errors.Is(err, ErrAssignmentNotFound) {
+				return nil, huma.Error404NotFound(err.Error())
+			}
 			return nil, huma.Error400BadRequest(err.Error())
 		}
 		out := &struct {

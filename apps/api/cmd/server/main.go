@@ -24,6 +24,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 	"github.com/AICSbench/planetlogi/apps/api/internal/server"
 )
 
@@ -65,10 +66,11 @@ func main() {
 	trainingSvc := training.NewServiceWithPG(pool, ledger)
 	dailyOrbitSvc.SetAttemptRecorder(trainingSvc)
 	reportsH := reports.NewHandler(trainingSvc, authSvc)
-	academySvc := academy.NewService(ledger)
-	quizSvc := astroquiz.NewService(ledger)
-	assignSvc := assignments.NewService(ledger)
-	profileSvc := profile.NewService(reportsH, streakSvc, authSvc, cfg.BillingEnabled)
+	stateStore := state.NewPGStore(pool)
+	academySvc := academy.NewServiceWithStore(stateStore, ledger)
+	quizSvc := astroquiz.NewServiceWithStore(stateStore, ledger)
+	assignSvc := assignments.NewServiceWithDeps(pool, stateStore, ledger)
+	profileSvc := profile.NewServiceWithPG(pool, reportsH, streakSvc, authSvc, cfg.BillingEnabled)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,

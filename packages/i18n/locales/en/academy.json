@@ -13,5 +13,7 @@
   },
   "videoPlaceholder": "Bilingual lesson video player (EN & ID audio/captions ready)",
   "scrollEarnedBanner": "Star Scroll Earned for this lesson!",
-  "extraPractice": "Practice More in Galaxy Training →"
+  "extraPractice": "Practice More in Galaxy Training →",
+  "loadError": "Couldn't load this lesson. Check your connection and try again.",
+  "actionError": "Your answer wasn't saved. Please try again."
 }

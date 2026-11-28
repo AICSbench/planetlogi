@@ -6,7 +6,7 @@ import { GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
 import { apiClient } from "../../../store/authStore";
 
 export function ParentPortalPage({ locale }: { locale: Locale }) {
-  const { t } = useTranslation(["portals", "common"]);
+  const { t } = useTranslation(["portals", "common", "dashboard"]);
 
   const overviewQuery = useQuery({
     queryKey: ["parent-overview", locale],
@@ -27,6 +27,19 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
         </Link>
       </GalaxyCard>
 
+      {overviewQuery.isError ? (
+        <GalaxyCard className="space-y-3 text-center">
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {t("portals:parentPortal.loadError")}
+          </p>
+          <GalaxyButton variant="secondary" onClick={() => void overviewQuery.refetch()}>
+            {t("common:common.retry")}
+          </GalaxyButton>
+        </GalaxyCard>
+      ) : overviewQuery.isPending ? (
+        <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+      ) : null}
+
       {ov ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -36,7 +49,7 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
             </GalaxyCard>
             <GalaxyCard className="text-center">
               <p className="text-2xl font-extrabold text-cyan-300">❄️ {ov.cryoShields}/3</p>
-              <p className="text-xs text-slate-300">Cryo Shields</p>
+              <p className="text-xs text-slate-300">{t("dashboard:wallet.cryoShields")}</p>
             </GalaxyCard>
             <GalaxyCard className="text-center">
               <p className="text-2xl font-extrabold text-emerald-300">{ov.masteryCount}</p>
@@ -55,7 +68,7 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
               </h2>
               {ov.strengthSkills.length === 0 ? (
                 <p className="text-xs text-slate-400">
-                  Complete 10 questions on any skill to unlock Mastery highlights.
+                  {t("portals:parentPortal.noStrengths")}
                 </p>
               ) : (
                 ov.strengthSkills.map((sk) => (

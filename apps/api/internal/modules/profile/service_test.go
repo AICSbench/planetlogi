@@ -26,7 +26,7 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 	// Enable OTP and test Brain Galaxy cap clamped to max 25 min
 	enable := true
 	overCap := 60
-	updated, err := svc.UpdateSettings(context.Background(), "stu-1", parent, UpdateSettingsInput{
+	updated, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{
 		OTPEnabled:             &enable,
 		Language:               "id",
 		BrainGalaxyDailyCapMin: &overCap,
@@ -39,7 +39,7 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 	}
 
 	// Subsequent update WITHOUT OTP MUST fail with ErrOTPRequired
-	if _, err := svc.UpdateSettings(context.Background(), "stu-1", parent, UpdateSettingsInput{Language: "en"}); err != ErrOTPRequired {
+	if _, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{Language: "en"}); err != ErrOTPRequired {
 		t.Fatalf("expected ErrOTPRequired, got %v", err)
 	}
 
@@ -48,7 +48,7 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	afterOTP, err := svc.UpdateSettings(context.Background(), "stu-1", parent, UpdateSettingsInput{
+	afterOTP, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{
 		OTPCode:  code,
 		Language: "en",
 	})

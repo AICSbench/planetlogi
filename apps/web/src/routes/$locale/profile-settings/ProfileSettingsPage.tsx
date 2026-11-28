@@ -21,16 +21,34 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   const [otpDraft, setOtpDraft] = useState<boolean | null>(null);
   const [langDraft, setLangDraft] = useState<"en" | "id" | null>(null);
   const [brainCapDraft, setBrainCapDraft] = useState<number | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpNotice, setOtpNotice] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [savedToast, setSavedToast] = useState(false);
 
   const otpEnabled = otpDraft ?? bundle?.settings.otpEnabled ?? false;
   const lang = langDraft ?? bundle?.settings.language ?? locale;
   const brainCap = brainCapDraft ?? bundle?.settings.brainGalaxyDailyCapMin ?? 25;
+  const otpRequired = bundle?.settings.otpEnabled ?? false;
+
+  const otpMutation = useMutation({
+    mutationFn: () => apiClient.requestParentOTP(),
+    onSuccess: (res) => {
+      setOtpNotice(
+        res.devCode
+          ? t("portals:profile.otpDevHint", { code: res.devCode })
+          : t("portals:profile.otpCodeSent")
+      );
+      setSaveError(null);
+    },
+    onError: () => setSaveError(t("portals:profile.otpSendError")),
+  });
 
   const updateMutation = useMutation({
     mutationFn: () =>
       apiClient.updateProfileSettings({
         otpEnabled,
+        otpCode: otpCode.trim() || undefined,
         language: lang,
         brainGalaxyDailyCapMin: brainCap,
       }),
@@ -39,8 +57,15 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
       setOtpDraft(null);
       setLangDraft(null);
       setBrainCapDraft(null);
+      setOtpCode("");
+      setOtpNotice(null);
+      setSaveError(null);
       await setAppLocale(updated.settings.language);
       setSavedToast(true);
+    },
+    onError: () => {
+      setSavedToast(false);
+      setSaveError(t("portals:profile.saveError"));
     },
   });
 
@@ -52,6 +77,19 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
           <GalaxyButton variant="gold">{t("portals:profile.openParentPortal")} →</GalaxyButton>
         </Link>
       </div>
+
+      {bundleQuery.isError ? (
+        <GalaxyCard className="space-y-3 text-center">
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {t("portals:profile.loadError")}
+          </p>
+          <GalaxyButton variant="secondary" onClick={() => void bundleQuery.refetch()}>
+            {t("common:common.retry")}
+          </GalaxyButton>
+        </GalaxyCard>
+      ) : bundleQuery.isPending ? (
+        <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+      ) : null}
 
       {bundle ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -102,6 +140,34 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
           </div>
         </label>
 
+        {otpRequired ? (
+          <div className="space-y-2 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3">
+            <label className="block text-xs font-bold text-slate-200">
+              {t("portals:profile.otpCodeLabel")}
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                placeholder={t("portals:profile.otpCodePlaceholder")}
+                className="min-h-11 w-40 rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-sm tracking-widest text-white"
+              />
+              <GalaxyButton
+                variant="secondary"
+                disabled={otpMutation.isPending}
+                onClick={() => otpMutation.mutate()}
+              >
+                {t("portals:profile.otpSendCode")}
+              </GalaxyButton>
+            </div>
+            {otpNotice ? <p className="text-xs font-bold text-cyan-200">{otpNotice}</p> : null}
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-bold text-slate-200">
@@ -120,7 +186,9 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
           <div>
             <label className="block text-xs font-bold text-slate-200">
               {t("portals:profile.brainCapLabel")}:{" "}
-              <strong className="text-cyan-200">{brainCap} min</strong>
+              <strong className="text-cyan-200">
+                {t("portals:profile.minutesShort", { count: brainCap })}
+              </strong>
             </label>
             <input
               type="range"
@@ -136,8 +204,16 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
         {savedToast ? (
           <p className="text-sm font-bold text-emerald-300">✓ {t("portals:profile.savedToast")}</p>
         ) : null}
+        {saveError ? (
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {saveError}
+          </p>
+        ) : null}
 
-        <GalaxyButton onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+        <GalaxyButton
+          onClick={() => updateMutation.mutate()}
+          disabled={!bundle || updateMutation.isPending || (otpRequired && otpCode.length !== 6)}
+        >
           {t("portals:profile.saveSettings")}
         </GalaxyButton>
       </GalaxyCard>

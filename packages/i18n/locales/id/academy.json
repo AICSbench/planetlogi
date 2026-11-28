@@ -13,5 +13,7 @@
   },
   "videoPlaceholder": "Pemutar video pelajaran bilingual (siap audio & subtitle EN/ID)",
   "scrollEarnedBanner": "Gulungan Bintang diraih untuk pelajaran ini!",
-  "extraPractice": "Latihan Tambahan di Latihan Galaksi →"
+  "extraPractice": "Latihan Tambahan di Latihan Galaksi →",
+  "loadError": "Gagal memuat pelajaran ini. Periksa koneksi lalu coba lagi.",
+  "actionError": "Jawabanmu belum tersimpan. Silakan coba lagi."
 }

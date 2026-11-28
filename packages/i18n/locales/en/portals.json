@@ -14,7 +14,24 @@
     "dueDateLabel": "Due Date",
     "assignNow": "Assign to Child",
     "createdSuccess": "Custom assignment sent to your child!",
-    "dueLabel": "Due {{date}}"
+    "dueLabel": "Due {{date}}",
+    "assignedByFilter": "Assigned by filter",
+    "assignedBySystem": "PlanetLogi",
+    "assignedByParent": "Parents",
+    "assignedByTeacher": "Teachers",
+    "back": "Back",
+    "open": "Open",
+    "statuses": {
+      "INCOMPLETE": "Incomplete",
+      "COMPLETE": "Complete"
+    },
+    "questionShort": "{{count}} Qs",
+    "defaultTitle": "Parent Custom Practice",
+    "loadError": "Couldn't load assignments. Please try again.",
+    "createError": "The assignment couldn't be created. Check the linked child and try again.",
+    "submitError": "Your answer wasn't submitted. Please try again.",
+    "assigningTo": "Assigning to {{name}} (Grade {{grade}})",
+    "childLoadError": "No linked child found. Open the Parent Portal to link a child first."
   },
   "profile": {
     "title": "Profile & Family Settings",
@@ -30,14 +47,25 @@
     "savedToast": "Family settings saved!",
     "subscriptionCard": "My Subscription",
     "featureFirstNotice": "All PlanetLogi features are 100% unlocked during Open Beta (Feature-First).",
-    "openParentPortal": "Open Parent Portal"
+    "openParentPortal": "Open Parent Portal",
+    "otpCodeLabel": "6-digit OTP code",
+    "otpCodePlaceholder": "000000",
+    "otpSendCode": "Send code",
+    "otpCodeSent": "OTP code sent.",
+    "otpDevHint": "Development OTP: {{code}}",
+    "otpSendError": "Couldn't send the OTP code. Try again.",
+    "saveError": "Settings weren't saved. Verify the OTP code and try again.",
+    "loadError": "Couldn't load family settings.",
+    "minutesShort": "{{count}} min"
   },
   "parentPortal": {
     "title": "Parent Mission Control",
     "subtitle": "Track weekly habits, spot focus areas, and assign tailored practice in under 2 minutes.",
     "topStrengths": "Top Strengths (Mastery)",
     "focusAreas": "Focus Areas to Practice",
-    "quickAssignFocus": "Assign Practice on Focus Areas"
+    "quickAssignFocus": "Assign Practice on Focus Areas",
+    "noStrengths": "Complete 10 questions on any skill to unlock Mastery highlights.",
+    "loadError": "Couldn't load the parent overview. Please try again."
   },
   "help": {
     "title": "PlanetLogi Help Center",

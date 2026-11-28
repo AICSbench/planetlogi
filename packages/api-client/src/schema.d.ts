@@ -798,7 +798,6 @@ export interface components {
              */
             readonly $schema?: string;
             dueDate?: string;
-            /** @default demo-pilot1 */
             studentId: string;
             templateCodes: string[] | null;
             title: string;
@@ -1119,12 +1118,16 @@ export interface components {
             code: string;
             /** Format: int64 */
             completionPct: number;
+            conceptCaptionsUrl?: string;
             conceptVideoTitle: string;
+            conceptVideoUrl?: string;
             doAndLearn: components["schemas"]["DoLearnQuestion"][] | null;
             scrollEarned: boolean;
             selfCheck: components["schemas"]["SelfCheckItem"][] | null;
             skillCode: string;
+            storyCaptionsUrl?: string;
             storyVideoTitle: string;
+            storyVideoUrl?: string;
             title: string;
             topicCode: string;
         };
@@ -1630,10 +1633,16 @@ export type $defs = Record<string, never>;
 export interface operations {
     "academy-do-learn-check": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1663,10 +1672,16 @@ export interface operations {
     };
     "academy-do-learn-save": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1696,12 +1711,18 @@ export interface operations {
     };
     "academy-lesson-detail": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1727,10 +1748,16 @@ export interface operations {
     };
     "academy-self-check": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1761,11 +1788,16 @@ export interface operations {
     "academy-topics": {
         parameters: {
             query?: {
+                locale?: string;
                 grade?: number;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1792,13 +1824,18 @@ export interface operations {
     "assignments-list": {
         parameters: {
             query?: {
+                locale?: string;
                 status?: string;
                 assignedBy?: string;
                 year?: number;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1824,10 +1861,16 @@ export interface operations {
     };
     "assignments-create-custom": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1857,12 +1900,18 @@ export interface operations {
     };
     "assignments-detail": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 id: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1888,12 +1937,18 @@ export interface operations {
     };
     "assignments-submit": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 id: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1924,12 +1979,17 @@ export interface operations {
     "astroquiz-list": {
         parameters: {
             query?: {
+                locale?: string;
                 grade?: number;
                 category?: string;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1955,12 +2015,18 @@ export interface operations {
     };
     "astroquiz-open": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1988,12 +2054,17 @@ export interface operations {
         parameters: {
             query?: {
                 locale?: string;
+                includeKey?: boolean;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -2019,12 +2090,18 @@ export interface operations {
     };
     "astroquiz-save": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -2054,12 +2131,18 @@ export interface operations {
     };
     "astroquiz-submit": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -2626,10 +2709,16 @@ export interface operations {
     };
     "profile-update-settings": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -19,12 +19,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["astro-quiz", "common"]);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const [grade, setGrade] = useState<number>(user?.grade ?? 1);
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
+  const grade = selectedGrade ?? user?.grade ?? 1;
   const [category, setCategory] = useState("ALL");
   const [activePaperCode, setActivePaperCode] = useState<string | null>(null);
   const [qIdx, setQIdx] = useState(1);
-  const [elapsedSec, setElapsedSec] = useState(0);
-  const [drafts, setDrafts] = useState<Record<number, Record<string, string>>>({});
+  const [sessionSec, setSessionSec] = useState(0);
+  const [draftEdits, setDraftEdits] = useState<Record<number, Record<string, string>>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const papersQuery = useQuery({
     queryKey: ["astro-quiz-papers", grade, category, locale],
@@ -39,27 +41,68 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
 
   const attempt = attemptQuery.data;
 
+  // Saved answers come from the attempt; local edits win until the next save.
+  const drafts = useMemo(() => {
+    const merged: Record<number, Record<string, string>> = {};
+    for (const pq of attempt?.questions ?? []) {
+      if (pq.draftAnswer) merged[pq.index] = pq.draftAnswer;
+    }
+    return { ...merged, ...draftEdits };
+  }, [attempt, draftEdits]);
+
+  // Stored elapsed time plus the seconds spent in this session.
+  const elapsedSec = (attempt?.elapsedSec ?? 0) + sessionSec;
+
   // Live elapsed timer while paper is IN_PROGRESS
   useEffect(() => {
     if (!activePaperCode || attempt?.status === "SUBMITTED") return;
-    const id = window.setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    const id = window.setInterval(() => setSessionSec((s) => s + 1), 1000);
     return () => window.clearInterval(id);
   }, [activePaperCode, attempt?.status]);
 
+  type PaperPayload = { elapsedSec: number; drafts: Record<number, Record<string, string>> };
+
   const saveMutation = useMutation({
-    mutationFn: () => apiClient.saveAstroQuizPaper(activePaperCode!, elapsedSec, drafts, locale),
+    mutationFn: (payload: PaperPayload) =>
+      apiClient.saveAstroQuizPaper(activePaperCode!, payload.elapsedSec, payload.drafts, locale),
     onSuccess: (updated) => {
       queryClient.setQueryData(["astro-quiz-attempt", activePaperCode, locale], updated);
+      setSessionSec(0);
+      setActionError(null);
     },
+    onError: () => setActionError(t("astro-quiz:actionError")),
   });
 
   const submitMutation = useMutation({
-    mutationFn: () => apiClient.submitAstroQuizPaper(activePaperCode!, elapsedSec, drafts, locale),
+    mutationFn: (payload: PaperPayload) =>
+      apiClient.submitAstroQuizPaper(activePaperCode!, payload.elapsedSec, payload.drafts, locale),
     onSuccess: (updated) => {
       queryClient.setQueryData(["astro-quiz-attempt", activePaperCode, locale], updated);
       void queryClient.invalidateQueries({ queryKey: ["astro-quiz-papers"] });
+      setSessionSec(0);
+      setActionError(null);
     },
+    onError: () => setActionError(t("astro-quiz:submitError")),
   });
+
+  if (activePaperCode && attemptQuery.isError) {
+    return (
+      <GalaxyCard className="space-y-3 text-center">
+        <p role="alert" className="text-sm font-bold text-red-300">
+          {t("astro-quiz:loadError")}
+        </p>
+        <GalaxyButton variant="secondary" onClick={() => setActivePaperCode(null)}>
+          {t("astro-quiz:backToPapers")}
+        </GalaxyButton>
+      </GalaxyCard>
+    );
+  }
+
+  if (activePaperCode && !attempt) {
+    return (
+      <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+    );
+  }
 
   if (activePaperCode && attempt) {
     const activeQ = attempt.questions[qIdx - 1] ?? attempt.questions[0]!;
@@ -91,13 +134,17 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
 
             {!submitted ? (
               <>
-                <GalaxyButton variant="secondary" onClick={() => saveMutation.mutate()}>
+                <GalaxyButton
+                  variant="secondary"
+                  onClick={() => saveMutation.mutate({ elapsedSec, drafts })}
+                  disabled={saveMutation.isPending || submitMutation.isPending}
+                >
                   {t("astro-quiz:savePaper")}
                 </GalaxyButton>
                 <GalaxyButton
                   variant="gold"
-                  onClick={() => submitMutation.mutate()}
-                  disabled={submitMutation.isPending}
+                  onClick={() => submitMutation.mutate({ elapsedSec, drafts })}
+                  disabled={submitMutation.isPending || saveMutation.isPending}
                 >
                   {t("astro-quiz:submitPaper")}
                 </GalaxyButton>
@@ -110,6 +157,12 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           </div>
         </GalaxyCard>
 
+        {actionError ? (
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {actionError}
+          </p>
+        ) : null}
+
         {submitted ? (
           <GalaxyCard className="border-emerald-400/50 bg-emerald-500/15 flex flex-wrap items-center justify-between gap-2">
             <p className="text-base font-extrabold text-emerald-200">
@@ -121,7 +174,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
             </p>
             {attempt.supplyPodAwarded ? (
               <span className="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">
-                🎁 +5 AC Supply Pod!
+                {t("astro-quiz:supplyPodBadge")}
               </span>
             ) : null}
           </GalaxyCard>
@@ -163,11 +216,16 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           isCorrect={submitted ? (activeQ.isCorrect ?? false) : null}
           submittedAnswer={drafts[activeQ.index] ?? activeQ.draftAnswer}
           workedSolution={submitted ? (activeQ.workedSolution ?? null) : null}
+          onDraftChange={(answers) => {
+            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+          }}
           onSaveDraft={(answers) => {
-            setDrafts((prev) => ({ ...prev, [activeQ.index]: answers }));
+            const next = { ...drafts, [activeQ.index]: answers };
+            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+            saveMutation.mutate({ elapsedSec, drafts: next });
           }}
           onSubmit={(answers) => {
-            setDrafts((prev) => ({ ...prev, [activeQ.index]: answers }));
+            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
             if (activeQ.index < attempt.questions.length) {
               setQIdx(activeQ.index + 1);
             }
@@ -204,7 +262,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <button
                 key={g}
                 type="button"
-                onClick={() => setGrade(g)}
+                onClick={() => setSelectedGrade(g)}
                 className={`min-h-10 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
                   grade === g ? "bg-[#6366F1] text-white" : "bg-[#1E2A55] text-slate-200"
                 }`}
@@ -231,6 +289,19 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
         </div>
       </GalaxyCard>
 
+      {papersQuery.isError ? (
+        <GalaxyCard className="space-y-3 text-center">
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {t("astro-quiz:loadError")}
+          </p>
+          <GalaxyButton variant="secondary" onClick={() => void papersQuery.refetch()}>
+            {t("common:common.retry")}
+          </GalaxyButton>
+        </GalaxyCard>
+      ) : papersQuery.isPending ? (
+        <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {(papersQuery.data?.papers ?? []).map((paper) => (
           <GalaxyCard key={paper.code} className="flex flex-col justify-between gap-4">
@@ -243,7 +314,8 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               </div>
               <h2 className="text-base font-extrabold text-white">{paper.title}</h2>
               <p className="text-xs text-slate-300">
-                {paper.questionCount} Qs • {paper.status}
+                {t("astro-quiz:questionShort", { count: paper.questionCount })} •{" "}
+                {t(`astro-quiz:statuses.${paper.status}`)}
                 {paper.status === "SUBMITTED" ? ` (${paper.bestScore}/${paper.questionCount})` : ""}
               </p>
             </div>
@@ -254,8 +326,9 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
                 onClick={() => {
                   setActivePaperCode(paper.code);
                   setQIdx(1);
-                  setElapsedSec(0);
-                  setDrafts({});
+                  setSessionSec(0);
+                  setDraftEdits({});
+                  setActionError(null);
                 }}
               >
                 {t("astro-quiz:openPaper")}

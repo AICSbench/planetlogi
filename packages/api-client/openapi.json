@@ -294,7 +294,7 @@
             "type": "string"
           },
           "studentId": {
-            "default": "demo-pilot1",
+            "minLength": 1,
             "type": "string"
           },
           "templateCodes": {
@@ -1207,7 +1207,13 @@
             "format": "int64",
             "type": "integer"
           },
+          "conceptCaptionsUrl": {
+            "type": "string"
+          },
           "conceptVideoTitle": {
+            "type": "string"
+          },
+          "conceptVideoUrl": {
             "type": "string"
           },
           "doAndLearn": {
@@ -1234,7 +1240,13 @@
           "skillCode": {
             "type": "string"
           },
+          "storyCaptionsUrl": {
+            "type": "string"
+          },
           "storyVideoTitle": {
+            "type": "string"
+          },
+          "storyVideoUrl": {
             "type": "string"
           },
           "title": {
@@ -2788,6 +2800,31 @@
     "/api/v1/academy/do-learn/check": {
       "post": {
         "operationId": "academy-do-learn-check",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2829,6 +2866,31 @@
     "/api/v1/academy/do-learn/save": {
       "post": {
         "operationId": "academy-do-learn-save",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2872,6 +2934,29 @@
         "operationId": "academy-lesson-detail",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
@@ -2911,6 +2996,31 @@
     "/api/v1/academy/self-check": {
       "patch": {
         "operationId": "academy-self-check",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2954,6 +3064,29 @@
         "operationId": "academy-topics",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "explode": false,
             "in": "query",
             "name": "grade",
@@ -2996,6 +3129,29 @@
       "get": {
         "operationId": "assignments-list",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "explode": false,
             "in": "query",
@@ -3056,6 +3212,31 @@
     "/api/v1/assignments/custom": {
       "post": {
         "operationId": "assignments-create-custom",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3099,6 +3280,29 @@
         "operationId": "assignments-detail",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "id",
             "required": true,
@@ -3139,6 +3343,29 @@
       "post": {
         "operationId": "assignments-submit",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "id",
@@ -3190,6 +3417,29 @@
       "get": {
         "operationId": "astroquiz-list",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "explode": false,
             "in": "query",
@@ -3243,6 +3493,29 @@
         "operationId": "astroquiz-open",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
@@ -3284,9 +3557,15 @@
         "operationId": "astroquiz-print",
         "parameters": [
           {
-            "in": "path",
-            "name": "code",
-            "required": true,
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
             "schema": {
               "type": "string"
             }
@@ -3298,6 +3577,23 @@
             "schema": {
               "default": "en",
               "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "includeKey",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],
@@ -3333,6 +3629,29 @@
       "post": {
         "operationId": "astroquiz-save",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "code",
@@ -3384,6 +3703,29 @@
       "post": {
         "operationId": "astroquiz-submit",
         "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "code",
@@ -4392,6 +4734,31 @@
     "/api/v1/profile/settings": {
       "patch": {
         "operationId": "profile-update-settings",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

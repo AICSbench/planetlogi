@@ -23,6 +23,18 @@
     "scoreBox": "Score",
     "workingSpace": "Show your working:",
     "toggleAnswerKey": "Include Answer Key",
-    "printNow": "Print / Save as PDF"
+    "printNow": "Print / Save as PDF",
+    "answerKey": "Answer Key",
+    "loadError": "This worksheet could not be loaded."
+  },
+  "supplyPodBadge": "🎁 +5 AC Supply Pod!",
+  "actionError": "Progress wasn't saved. Please try again.",
+  "submitError": "The paper wasn't submitted. Please try again.",
+  "loadError": "Couldn't load AstroQuiz. Check your connection and try again.",
+  "questionShort": "{{count}} Qs",
+  "statuses": {
+    "NOT_STARTED": "Not started",
+    "IN_PROGRESS": "In progress",
+    "SUBMITTED": "Submitted"
   }
 }

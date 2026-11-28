@@ -14,7 +14,24 @@
     "dueDateLabel": "Batas Waktu",
     "assignNow": "Kirim Tugas ke Anak",
     "createdSuccess": "Tugas personalisasi berhasil dikirim ke anak!",
-    "dueLabel": "Tenggat {{date}}"
+    "dueLabel": "Tenggat {{date}}",
+    "assignedByFilter": "Filter pemberi tugas",
+    "assignedBySystem": "PlanetLogi",
+    "assignedByParent": "Orang Tua",
+    "assignedByTeacher": "Guru",
+    "back": "Kembali",
+    "open": "Buka",
+    "statuses": {
+      "INCOMPLETE": "Belum Selesai",
+      "COMPLETE": "Selesai"
+    },
+    "questionShort": "{{count}} Soal",
+    "defaultTitle": "Latihan Khusus Orang Tua",
+    "loadError": "Gagal memuat tugas. Silakan coba lagi.",
+    "createError": "Tugas gagal dibuat. Periksa anak yang terhubung lalu coba lagi.",
+    "submitError": "Jawabanmu belum terkirim. Silakan coba lagi.",
+    "assigningTo": "Dikirim ke {{name}} (Kelas {{grade}})",
+    "childLoadError": "Belum ada anak terhubung. Buka Portal Orang Tua untuk menautkan anak."
   },
   "profile": {
     "title": "Profil & Pengaturan Keluarga",
@@ -30,14 +47,25 @@
     "savedToast": "Pengaturan keluarga tersimpan!",
     "subscriptionCard": "Langganan Saya",
     "featureFirstNotice": "Seluruh fitur PlanetLogi terbuka 100% selama Open Beta (Feature-First).",
-    "openParentPortal": "Buka Portal Orang Tua"
+    "openParentPortal": "Buka Portal Orang Tua",
+    "otpCodeLabel": "Kode OTP 6 digit",
+    "otpCodePlaceholder": "000000",
+    "otpSendCode": "Kirim kode",
+    "otpCodeSent": "Kode OTP terkirim.",
+    "otpDevHint": "OTP pengembangan: {{code}}",
+    "otpSendError": "Gagal mengirim kode OTP. Coba lagi.",
+    "saveError": "Pengaturan gagal disimpan. Periksa kode OTP lalu coba lagi.",
+    "loadError": "Gagal memuat pengaturan keluarga.",
+    "minutesShort": "{{count}} menit"
   },
   "parentPortal": {
     "title": "Pusat Pantau Orang Tua",
     "subtitle": "Pantau kebiasaan belajar mingguan, kenali area fokus, dan kirim latihan khusus dalam 2 menit.",
     "topStrengths": "Keunggulan Utama (Mahir)",
     "focusAreas": "Area Fokus untuk Dilatih",
-    "quickAssignFocus": "Buat Tugas pada Area Fokus"
+    "quickAssignFocus": "Buat Tugas pada Area Fokus",
+    "noStrengths": "Selesaikan 10 soal pada materi mana pun untuk membuka sorotan Mahir.",
+    "loadError": "Gagal memuat ringkasan orang tua. Silakan coba lagi."
   },
   "help": {
     "title": "Pusat Bantuan PlanetLogi",

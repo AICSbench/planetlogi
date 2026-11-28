@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { ApiError, createApiClient, type Principal } from "@planetlogi/api-client";
+import { queryClient } from "./queryClient";
 
 const API_BASE =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8080";
@@ -24,7 +25,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   hydrated: false,
   setUser: (user) => {
+    const previous = get().user;
     sessionGeneration += 1;
+    if (previous && previous.id !== user?.id) {
+      queryClient.clear();
+    }
     set({ user, hydrated: true });
   },
   hydrate: async () => {
@@ -64,6 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Clear local session even if offline
     }
     if (gen === sessionGeneration) {
+      queryClient.clear();
       set({ user: null, hydrated: true });
     }
   },

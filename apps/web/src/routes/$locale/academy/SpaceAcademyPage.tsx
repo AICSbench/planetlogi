@@ -8,13 +8,68 @@ import { CurrencyPill, GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
 import { apiClient, useAuthStore } from "../../../store/authStore";
 
+type LessonMutationVars = {
+  lessonCode: string;
+  locale: string;
+  questionIndex: number;
+  answers: Record<string, string>;
+};
+
+function LessonVideo({
+  title,
+  url,
+  captionsUrl,
+  locale,
+  placeholder,
+}: {
+  title: string;
+  url?: string;
+  captionsUrl?: string;
+  locale: string;
+  placeholder: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-bold text-white">{title}</p>
+      {url ? (
+        <video
+          controls
+          preload="metadata"
+          className="aspect-video w-full rounded-xl border border-indigo-400/20 bg-black"
+          aria-label={title}
+        >
+          <source src={url} />
+          {captionsUrl ? (
+            <track
+              kind="captions"
+              src={captionsUrl}
+              srcLang={locale}
+              label={locale === "id" ? "Bahasa Indonesia" : "English"}
+              default
+            />
+          ) : null}
+        </video>
+      ) : (
+        <div className="flex items-center gap-3 rounded-xl border border-indigo-400/20 bg-[#0B1026] p-4">
+          <PlayCircle className="h-10 w-10 shrink-0 text-[#22D3EE]" aria-hidden="true" />
+          <p className="text-xs text-slate-400">{placeholder}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SpaceAcademyPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["academy", "common"]);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const [grade, setGrade] = useState<number>(user?.grade ?? 1);
+  // Derive the grade until the learner explicitly picks one, because auth
+  // hydration can finish after this page's first render.
+  const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
+  const grade = selectedGrade ?? user?.grade ?? 1;
   const [activeLessonCode, setActiveLessonCode] = useState<string | null>(null);
   const [qIdx, setQIdx] = useState(1);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const topicsQuery = useQuery({
     queryKey: ["academy-topics", grade, locale],
@@ -28,30 +83,55 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (vars: { questionIndex: number; answers: Record<string, string> }) =>
-      apiClient.saveAcademyDraft(activeLessonCode!, vars.questionIndex, vars.answers, locale),
-    onSuccess: (lesson) => {
-      queryClient.setQueryData(["academy-lesson", activeLessonCode, locale], lesson);
+    mutationFn: (vars: LessonMutationVars) =>
+      apiClient.saveAcademyDraft(vars.lessonCode, vars.questionIndex, vars.answers, vars.locale),
+    onSuccess: (lesson, vars) => {
+      queryClient.setQueryData(["academy-lesson", vars.lessonCode, vars.locale], lesson);
+      setActionError(null);
     },
+    onError: () => setActionError(t("academy:actionError")),
   });
 
   const checkMutation = useMutation({
-    mutationFn: (vars: { questionIndex: number; answers: Record<string, string> }) =>
-      apiClient.checkAcademyAnswer(activeLessonCode!, vars.questionIndex, vars.answers, locale),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["academy-lesson", activeLessonCode, locale], data.lesson);
+    mutationFn: (vars: LessonMutationVars) =>
+      apiClient.checkAcademyAnswer(vars.lessonCode, vars.questionIndex, vars.answers, vars.locale),
+    onSuccess: (data, vars) => {
+      queryClient.setQueryData(["academy-lesson", vars.lessonCode, vars.locale], data.lesson);
       void queryClient.invalidateQueries({ queryKey: ["academy-topics"] });
+      setActionError(null);
     },
+    onError: () => setActionError(t("academy:actionError")),
   });
 
   const selfCheckMutation = useMutation({
-    mutationFn: (vars: { itemKey: string; checked: boolean }) =>
-      apiClient.toggleAcademySelfCheck(activeLessonCode!, vars.itemKey, vars.checked, locale),
-    onSuccess: (lesson) => {
-      queryClient.setQueryData(["academy-lesson", activeLessonCode, locale], lesson);
+    mutationFn: (vars: { lessonCode: string; locale: string; itemKey: string; checked: boolean }) =>
+      apiClient.toggleAcademySelfCheck(vars.lessonCode, vars.itemKey, vars.checked, vars.locale),
+    onSuccess: (lesson, vars) => {
+      queryClient.setQueryData(["academy-lesson", vars.lessonCode, vars.locale], lesson);
       void queryClient.invalidateQueries({ queryKey: ["academy-topics"] });
+      setActionError(null);
     },
+    onError: () => setActionError(t("academy:actionError")),
   });
+
+  if (activeLessonCode && lessonQuery.isError) {
+    return (
+      <GalaxyCard className="space-y-3 text-center">
+        <p role="alert" className="text-sm font-bold text-red-300">
+          {t("academy:loadError")}
+        </p>
+        <GalaxyButton variant="secondary" onClick={() => setActiveLessonCode(null)}>
+          {t("academy:backToTopics")}
+        </GalaxyButton>
+      </GalaxyCard>
+    );
+  }
+
+  if (activeLessonCode && !lessonQuery.data) {
+    return (
+      <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+    );
+  }
 
   // Active Lesson 4-Stage Timeline View
   if (activeLessonCode && lessonQuery.data) {
@@ -83,26 +163,26 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             <p className="text-xs font-bold uppercase text-amber-300">
               {t("academy:stages.storyLaunch")}
             </p>
-            <div className="flex items-center gap-3 rounded-xl bg-[#0B1026] p-4 border border-indigo-400/20">
-              <PlayCircle className="h-10 w-10 shrink-0 text-[#FBBF24]" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-bold text-white">{lesson.storyVideoTitle}</p>
-                <p className="text-xs text-slate-400">{t("academy:videoPlaceholder")}</p>
-              </div>
-            </div>
+            <LessonVideo
+              title={lesson.storyVideoTitle}
+              url={lesson.storyVideoUrl}
+              captionsUrl={lesson.storyCaptionsUrl}
+              locale={locale}
+              placeholder={t("academy:videoPlaceholder")}
+            />
           </GalaxyCard>
 
           <GalaxyCard className="space-y-2.5">
             <p className="text-xs font-bold uppercase text-cyan-300">
               {t("academy:stages.watchLearn")}
             </p>
-            <div className="flex items-center gap-3 rounded-xl bg-[#0B1026] p-4 border border-indigo-400/20">
-              <PlayCircle className="h-10 w-10 shrink-0 text-[#22D3EE]" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-bold text-white">{lesson.conceptVideoTitle}</p>
-                <p className="text-xs text-slate-400">{t("academy:videoPlaceholder")}</p>
-              </div>
-            </div>
+            <LessonVideo
+              title={lesson.conceptVideoTitle}
+              url={lesson.conceptVideoUrl}
+              captionsUrl={lesson.conceptCaptionsUrl}
+              locale={locale}
+              placeholder={t("academy:videoPlaceholder")}
+            />
           </GalaxyCard>
         </div>
 
@@ -148,13 +228,29 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             workedSolution={activeQ.workedSolution ?? null}
             submitting={checkMutation.isPending}
             onSaveDraft={(answers) => {
-              saveMutation.mutate({ questionIndex: activeQ.index, answers });
+              saveMutation.mutate({
+                lessonCode: lesson.code,
+                locale,
+                questionIndex: activeQ.index,
+                answers,
+              });
             }}
             onSubmit={async (answers) => {
-              await checkMutation.mutateAsync({ questionIndex: activeQ.index, answers });
+              await checkMutation.mutateAsync({
+                lessonCode: lesson.code,
+                locale,
+                questionIndex: activeQ.index,
+                answers,
+              });
             }}
             onNext={activeQ.index < 4 ? () => setQIdx(activeQ.index + 1) : undefined}
           />
+
+          {actionError ? (
+            <p role="alert" className="text-sm font-bold text-red-300">
+              {actionError}
+            </p>
+          ) : null}
         </GalaxyCard>
 
         {/* Stage 4: Mission Self-Check */}
@@ -179,7 +275,12 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
                   type="checkbox"
                   checked={item.checked}
                   onChange={(e) =>
-                    selfCheckMutation.mutate({ itemKey: item.key, checked: e.target.checked })
+                    selfCheckMutation.mutate({
+                      lessonCode: lesson.code,
+                      locale,
+                      itemKey: item.key,
+                      checked: e.target.checked,
+                    })
                   }
                 />
                 <span>{item.label}</span>
@@ -205,7 +306,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             <button
               key={g}
               type="button"
-              onClick={() => setGrade(g)}
+              onClick={() => setSelectedGrade(g)}
               className={`min-h-10 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
                 grade === g ? "bg-[#6366F1] text-white" : "bg-[#1E2A55] text-slate-200 hover:bg-[#2A3A73]"
               }`}
@@ -215,6 +316,19 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
           ))}
         </div>
       </GalaxyCard>
+
+      {topicsQuery.isError ? (
+        <GalaxyCard className="space-y-3 text-center">
+          <p role="alert" className="text-sm font-bold text-red-300">
+            {t("academy:loadError")}
+          </p>
+          <GalaxyButton variant="secondary" onClick={() => void topicsQuery.refetch()}>
+            {t("common:common.retry")}
+          </GalaxyButton>
+        </GalaxyCard>
+      ) : topicsQuery.isPending ? (
+        <GalaxyCard className="text-center text-slate-300">{t("common:common.loading")}</GalaxyCard>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {(topicsQuery.data?.topics ?? []).map((topic) => (
@@ -254,6 +368,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
                     onClick={() => {
                       setActiveLessonCode(l.code);
                       setQIdx(1);
+                      setActionError(null);
                     }}
                   >
                     {t("academy:openLesson")}
