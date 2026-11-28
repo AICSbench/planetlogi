@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR6-CI-TEST-CONTENTION** — Reduce package contention in the PostgreSQL race suite without relaxing leaderboard timing assertions. *(Owner: agent-pr6-fixer | Done: 2026-11-28T16:20Z)*
+  - **Depends On**: `PR6-CI-PG-ISOLATION`
+  - **Spec**: `docs/08-technical-architecture-and-database.md` §5
+  - **Acceptance Criteria**: Go race tests, including PostgreSQL tests and the existing 50 ms assertion, run without simultaneous package-level test binaries.
+  - **Handoff**: CI uses `go test -race -p 1 ./...`; the full uncached suite passed locally against seeded disposable PostgreSQL. The 50 ms timing test remains load-sensitive; serializing packages reduces contention but cannot guarantee a timing threshold on shared runners.
+
 - [x] **PR6-CI-PG-ISOLATION** — Run PostgreSQL tests in CI and isolate the showcase singleton test. *(Owner: agent-pr6-fixer | Done: 2026-11-28T16:15Z)*
   - **Depends On**: `P0-01`, `P3-BE-03`
   - **Spec**: `docs/08-technical-architecture-and-database.md` §5; `docs/02-features-student-portal.md` §12.2
