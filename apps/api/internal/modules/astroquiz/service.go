@@ -3,7 +3,9 @@ package astroquiz
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -21,8 +23,40 @@ import (
 
 const WeeklySupplyPodRewardAC = 5
 
-// maxElapsedSec bounds the client-reported paper timer (24h).
+// maxElapsedSec bounds the server-measured paper timer (24h).
 const maxElapsedSec = 24 * 60 * 60
+
+const (
+	paperQuestionCount = 10
+	// maxTickGapSec caps how much wall-clock time between two server ticks (open/save/submit)
+	// counts toward the paper timer, so a tab left open overnight does not add hours.
+	maxTickGapSec = 15 * 60
+	// DefaultTimezone is used when the caller has no configured timezone.
+	DefaultTimezone = "Asia/Jakarta"
+)
+
+var (
+	ErrPaperNotFound = errors.New("paper not found")
+	// ErrAnswerKeyLocked means the caller may not see this paper's answer key yet.
+	ErrAnswerKeyLocked = errors.New("answer key is available only after submission")
+)
+
+type tzKey struct{}
+
+// WithTimezone attaches the caller's configured IANA timezone to ctx. The weekly Supply Pod
+// window and deadline follow it (AGENTS.md guardrail #5).
+func WithTimezone(ctx context.Context, tz string) context.Context {
+	return context.WithValue(ctx, tzKey{}, tz)
+}
+
+func locationFrom(ctx context.Context) *time.Location {
+	if tz, _ := ctx.Value(tzKey{}).(string); tz != "" {
+		if loc, err := time.LoadLocation(tz); err == nil {
+			return loc
+		}
+	}
+	return time.UTC
+}
 
 type Category string
 
@@ -66,12 +100,14 @@ type PaperAttemptView struct {
 }
 
 type PrintablePaper struct {
-	PaperCode  string                        `json:"paperCode"`
-	Title      string                        `json:"title"`
-	Grade      int                           `json:"grade"`
-	Category   Category                      `json:"category"`
-	Questions  []mathengine.RenderedQuestion `json:"questions"`
-	AnswerKeys []map[string]string           `json:"answerKeys"`
+	PaperCode string                        `json:"paperCode"`
+	Title     string                        `json:"title"`
+	Grade     int                           `json:"grade"`
+	Category  Category                      `json:"category"`
+	Questions []mathengine.RenderedQuestion `json:"questions"`
+	// AnswerKeyAvailable tells the client whether requesting includeKey=true will succeed.
+	AnswerKeyAvailable bool                `json:"answerKeyAvailable"`
+	AnswerKeys         []map[string]string `json:"answerKeys,omitempty"`
 }
 
 type paperDef struct {
@@ -84,7 +120,8 @@ type paperDef struct {
 
 type attemptState struct {
 	status           string
-	elapsedSec       int
+	elapsedSec       int       // server-measured, see tickLocked
+	lastTick         time.Time // last open/save/submit while IN_PROGRESS
 	drafts           map[int]map[string]string
 	score            int
 	supplyPodAwarded bool
@@ -128,6 +165,7 @@ type quizState struct {
 type attemptStateDTO struct {
 	Status           string                    `json:"status"`
 	ElapsedSec       int                       `json:"elapsedSec"`
+	LastTick         time.Time                 `json:"lastTick,omitempty"`
 	Drafts           map[int]map[string]string `json:"drafts"`
 	Score            int                       `json:"score"`
 	SupplyPodAwarded bool                      `json:"supplyPodAwarded"`
@@ -145,7 +183,7 @@ func (st *attemptState) toDTO() attemptStateDTO {
 		drafts[idx] = copied
 	}
 	return attemptStateDTO{
-		Status: st.status, ElapsedSec: st.elapsedSec, Drafts: drafts,
+		Status: st.status, ElapsedSec: st.elapsedSec, LastTick: st.lastTick, Drafts: drafts,
 		Score: st.score, SupplyPodAwarded: st.supplyPodAwarded, RewardClaimed: st.rewardClaimed,
 		ClaimWeek: st.claimWeek,
 	}
@@ -153,7 +191,7 @@ func (st *attemptState) toDTO() attemptStateDTO {
 
 func (d attemptStateDTO) toState() *attemptState {
 	st := &attemptState{
-		status: d.Status, elapsedSec: d.ElapsedSec, drafts: d.Drafts,
+		status: d.Status, elapsedSec: d.ElapsedSec, lastTick: d.LastTick, drafts: d.Drafts,
 		score: d.Score, supplyPodAwarded: d.SupplyPodAwarded, rewardClaimed: d.RewardClaimed,
 		claimWeek: d.ClaimWeek,
 	}
@@ -302,13 +340,13 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	return s.store.Save(ctx, studentID, "astroquiz", st)
 }
 
-func (s *Service) currentWeekKey() string {
-	yr, wk := s.nowClock().UTC().ISOWeek()
+func (s *Service) currentWeekKey(ctx context.Context) string {
+	yr, wk := s.nowClock().In(locationFrom(ctx)).ISOWeek()
 	return fmt.Sprintf("%04d-W%02d", yr, wk)
 }
 
-func (s *Service) weeklyDeadlineStr() string {
-	now := s.nowClock().UTC()
+func (s *Service) weeklyDeadlineStr(ctx context.Context) string {
+	now := s.nowClock().In(locationFrom(ctx))
 	daysUntilSun := (7 - int(now.Weekday())) % 7
 	return now.AddDate(0, 0, daysUntilSun).Format("02 Jan 2006")
 }
@@ -354,9 +392,9 @@ func (s *Service) ListPapers(ctx context.Context, studentID string, grade int, c
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	wkKey := studentID + ":" + s.currentWeekKey()
+	wkKey := studentID + ":" + s.currentWeekKey(ctx)
 	claimed := s.weeklySupplyPod[wkKey]
-	deadline := s.weeklyDeadlineStr()
+	deadline := s.weeklyDeadlineStr(ctx)
 
 	out := make([]PaperSummary, 0)
 	for _, p := range s.papers {
@@ -396,10 +434,14 @@ func (s *Service) OpenPaper(ctx context.Context, studentID, paperCode, locale st
 	p, ok := s.findPaper(paperCode)
 	if !ok {
 		s.mu.Unlock()
-		return PaperAttemptView{}, fmt.Errorf("paper %q not found", paperCode)
+		return PaperAttemptView{}, fmt.Errorf("%w: %q", ErrPaperNotFound, paperCode)
 	}
 	st := s.getOrCreateAttemptLocked(studentID, paperCode)
-	view := s.renderAttemptLocked(studentID, p, st, locale)
+	if st.status == "IN_PROGRESS" {
+		// Opening/resuming starts a new timing window; time away is not counted.
+		st.lastTick = s.nowClock()
+	}
+	view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 	s.mu.Unlock()
 	if err := s.persistStudent(ctx, studentID); err != nil {
 		return PaperAttemptView{}, err
@@ -408,9 +450,7 @@ func (s *Service) OpenPaper(ctx context.Context, studentID, paperCode, locale st
 }
 
 func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale string, elapsedSec int, drafts map[int]map[string]string) (PaperAttemptView, error) {
-	if elapsedSec < 0 || elapsedSec > maxElapsedSec {
-		return PaperAttemptView{}, fmt.Errorf("elapsedSec must be 0..%d", maxElapsedSec)
-	}
+	_ = elapsedSec // display-only on the client; the server measures elapsed time
 	if err := reqguard.ValidateDrafts(drafts); err != nil {
 		return PaperAttemptView{}, err
 	}
@@ -421,17 +461,17 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 	p, ok := s.findPaper(paperCode)
 	if !ok {
 		s.mu.Unlock()
-		return PaperAttemptView{}, fmt.Errorf("paper %q not found", paperCode)
+		return PaperAttemptView{}, fmt.Errorf("%w: %q", ErrPaperNotFound, paperCode)
 	}
 	st := s.getOrCreateAttemptLocked(studentID, paperCode)
 	if st.status == "SUBMITTED" {
-		view := s.renderAttemptLocked(studentID, p, st, locale)
+		view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 		s.mu.Unlock()
 		return view, nil
 	}
-	st.elapsedSec = elapsedSec
+	s.tickLocked(st)
 	mergeDrafts(st.drafts, drafts)
-	view := s.renderAttemptLocked(studentID, p, st, locale)
+	view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 	s.mu.Unlock()
 	if err := s.persistStudent(ctx, studentID); err != nil {
 		return PaperAttemptView{}, err
@@ -442,9 +482,7 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 // SubmitPaper grades all 10 questions at once, reveals worked solutions, and awards
 // 1 Weekly Supply Pod (+5 AC) max once per ISO week.
 func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale string, elapsedSec int, drafts map[int]map[string]string) (PaperAttemptView, error) {
-	if elapsedSec < 0 || elapsedSec > maxElapsedSec {
-		return PaperAttemptView{}, fmt.Errorf("elapsedSec must be 0..%d", maxElapsedSec)
-	}
+	_ = elapsedSec // display-only on the client; the server measures elapsed time
 	if err := reqguard.ValidateDrafts(drafts); err != nil {
 		return PaperAttemptView{}, err
 	}
@@ -458,12 +496,12 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 	view, err := func() (PaperAttemptView, error) {
 		p, ok := s.findPaper(paperCode)
 		if !ok {
-			return PaperAttemptView{}, fmt.Errorf("paper %q not found", paperCode)
+			return PaperAttemptView{}, fmt.Errorf("%w: %q", ErrPaperNotFound, paperCode)
 		}
 		paper = p
 		st := s.getOrCreateAttemptLocked(studentID, paperCode)
 		if st.status != "SUBMITTED" {
-			st.elapsedSec = elapsedSec
+			s.tickLocked(st)
 			mergeDrafts(st.drafts, drafts)
 			score := 0
 			for i := 0; i < 10; i++ {
@@ -481,7 +519,7 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 			// Freeze the claim week on the attempt before any ledger call, so
 			// a retry in a later ISO week reuses the original reward key.
 			if st.claimWeek == "" {
-				st.claimWeek = s.currentWeekKey()
+				st.claimWeek = s.currentWeekKey(ctx)
 			}
 			wkKey := studentID + ":" + st.claimWeek
 			if !s.weeklySupplyPod[wkKey] {
@@ -496,7 +534,7 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 				st.rewardClaimed = true
 			}
 		}
-		return s.renderAttemptLocked(studentID, p, st, locale), nil
+		return s.renderAttemptLocked(ctx, studentID, p, st, locale), nil
 	}()
 	s.mu.Unlock()
 	if err != nil {
@@ -525,7 +563,7 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 		s.weeklySupplyPod[studentID+":"+claimWeek] = true
 		st.rewardClaimed = true
 		st.supplyPodAwarded = true
-		view = s.renderAttemptLocked(studentID, paper, st, locale)
+		view = s.renderAttemptLocked(ctx, studentID, paper, st, locale)
 		s.mu.Unlock()
 	}
 
@@ -535,27 +573,32 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 	return view, nil
 }
 
-func (s *Service) GetPrintablePaper(ctx context.Context, studentID, paperCode, locale string, includeKey bool) (PrintablePaper, error) {
+// GetPrintablePaper returns the A4 worksheet. Answer keys are included only when requested and
+// allowed: adults (adult=true, for marking printed worksheets) always, a student only after
+// submitting this paper.
+func (s *Service) GetPrintablePaper(ctx context.Context, studentID, paperCode, locale string, includeKey, adult bool) (PrintablePaper, error) {
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return PrintablePaper{}, err
 	}
 	p, ok := s.findPaper(paperCode)
 	if !ok {
-		return PrintablePaper{}, fmt.Errorf("paper %q not found", paperCode)
+		return PrintablePaper{}, fmt.Errorf("%w: %q", ErrPaperNotFound, paperCode)
 	}
-	if includeKey {
+	available := adult
+	if !available {
 		s.mu.Lock()
-		status := ""
-		if st := s.attempts[studentID][paperCode]; st != nil {
-			status = st.status
-		}
+		st := s.attempts[studentID][paperCode]
+		available = st != nil && st.status == "SUBMITTED"
 		s.mu.Unlock()
-		if status != "SUBMITTED" {
-			return PrintablePaper{}, fmt.Errorf("answer key is available only after submission")
-		}
 	}
-	qs := make([]mathengine.RenderedQuestion, 10)
-	keys := make([]map[string]string, 10)
+	if includeKey && !available {
+		return PrintablePaper{}, ErrAnswerKeyLocked
+	}
+	qs := make([]mathengine.RenderedQuestion, paperQuestionCount)
+	var keys []map[string]string
+	if includeKey {
+		keys = make([]map[string]string, paperQuestionCount)
+	}
 	for i := 0; i < 10; i++ {
 		idx := i + 1
 		tmpl := p.templates[i%len(p.templates)]
@@ -566,12 +609,13 @@ func (s *Service) GetPrintablePaper(ctx context.Context, studentID, paperCode, l
 		}
 	}
 	return PrintablePaper{
-		PaperCode:  p.code,
-		Title:      p.title.For(locale),
-		Grade:      p.grade,
-		Category:   p.category,
-		Questions:  qs,
-		AnswerKeys: keys,
+		PaperCode:          p.code,
+		Title:              p.title.For(locale),
+		Grade:              p.grade,
+		Category:           p.category,
+		Questions:          qs,
+		AnswerKeys:         keys,
+		AnswerKeyAvailable: available,
 	}, nil
 }
 
@@ -590,7 +634,26 @@ func (s *Service) getOrCreateAttemptLocked(studentID, paperCode string) *attempt
 	return st
 }
 
-func (s *Service) renderAttemptLocked(studentID string, p paperDef, st *attemptState, locale string) PaperAttemptView {
+// tickLocked adds the server-measured time since the previous tick (capped per gap and in
+// total) to the attempt. The client-reported elapsedSec is never trusted.
+func (s *Service) tickLocked(st *attemptState) {
+	now := s.nowClock()
+	if st.status == "IN_PROGRESS" && !st.lastTick.IsZero() {
+		gap := int(now.Sub(st.lastTick).Seconds())
+		if gap > maxTickGapSec {
+			gap = maxTickGapSec
+		}
+		if gap > 0 {
+			st.elapsedSec += gap
+		}
+		if st.elapsedSec > maxElapsedSec {
+			st.elapsedSec = maxElapsedSec
+		}
+	}
+	st.lastTick = now
+}
+
+func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p paperDef, st *attemptState, locale string) PaperAttemptView {
 	qs := make([]PaperQuestion, 10)
 	for i := 0; i < 10; i++ {
 		idx := i + 1
@@ -621,7 +684,7 @@ func (s *Service) renderAttemptLocked(studentID string, p paperDef, st *attemptS
 		Score:              st.score,
 		TotalQuestions:     10,
 		SupplyPodAwarded:   st.supplyPodAwarded,
-		SupplyPodClaimedWk: s.weeklySupplyPod[studentID+":"+s.currentWeekKey()],
+		SupplyPodClaimedWk: s.weeklySupplyPod[studentID+":"+s.currentWeekKey(ctx)],
 		Questions:          qs,
 	}
 }
@@ -669,21 +732,54 @@ type AuthIn struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in AuthIn) (string, string, error) {
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+// resolve returns the caller, a ctx carrying their timezone, and the locale. Attempt-changing
+// calls (open/save/submit) require a student account.
+func (h *Handler) resolve(ctx context.Context, in AuthIn, mutating bool) (auth.Principal, context.Context, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
 	}
 	if h.authSvc == nil {
-		return "demo-pilot1", locale, nil
+		p := auth.Principal{ID: "demo-pilot1", Role: auth.RoleStudent, Timezone: DefaultTimezone}
+		return p, WithTimezone(ctx, p.Timezone), locale, nil
 	}
 	tok := reqguard.Token(in.CookieAccess, in.Authorization)
-	if tok != "" {
-		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-			return p.ID, locale, nil
-		}
+	if tok == "" {
+		return auth.Principal{}, ctx, locale, auth.ErrInvalidCredentials
 	}
-	return "", locale, auth.ErrInvalidCredentials
+	p, err := h.authSvc.ResolvePrincipal(ctx, tok)
+	if err != nil {
+		return auth.Principal{}, ctx, locale, auth.ErrInvalidCredentials
+	}
+	if mutating && p.Role != auth.RoleStudent {
+		return auth.Principal{}, ctx, locale, auth.ErrForbidden
+	}
+	tz := p.Timezone
+	if tz == "" {
+		tz = DefaultTimezone
+	}
+	return *p, WithTimezone(ctx, tz), locale, nil
+}
+
+// toHTTPError maps service errors to responses without echoing internal (e.g. database) errors.
+func toHTTPError(ctx context.Context, err error) error {
+	switch {
+	case errors.Is(err, auth.ErrInvalidCredentials):
+		return huma.Error401Unauthorized("authentication required")
+	case errors.Is(err, auth.ErrForbidden):
+		return huma.Error403Forbidden("student account required")
+	case errors.Is(err, ErrAnswerKeyLocked):
+		return huma.Error403Forbidden(err.Error())
+	case errors.Is(err, ErrPaperNotFound):
+		return huma.Error404NotFound(err.Error())
+	case errors.Is(err, reqguard.ErrInvalidAnswers):
+		return huma.Error400BadRequest(err.Error())
+	default:
+		slog.ErrorContext(ctx, "astroquiz request failed", "err", err)
+		return huma.Error500InternalServerError("internal error")
+	}
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -693,6 +789,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/astro-quiz/papers",
 		Summary:     "List AstroQuiz papers across Essential, Top School, and HOTS categories",
 		Tags:        []string{"AstroQuiz"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Grade    int    `query:"grade" default:"1"`
@@ -703,13 +800,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			SupplyPodClaimedThisWeek bool           `json:"supplyPodClaimedThisWeek"`
 		}
 	}, error) {
-		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		p, ctx, locale, err := h.resolve(ctx, in.AuthIn, false)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("authentication required")
+			return nil, toHTTPError(ctx, err)
 		}
+		id := p.ID
 		papers, claimed, err := h.svc.ListPapers(ctx, id, in.Grade, in.Category, locale)
 		if err != nil {
-			return nil, huma.Error503ServiceUnavailable("astro quiz unavailable")
+			return nil, toHTTPError(ctx, err)
 		}
 		out := &struct {
 			Body struct {
@@ -728,17 +826,19 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/astro-quiz/papers/{code}",
 		Summary:     "Open or resume an AstroQuiz paper attempt",
 		Tags:        []string{"AstroQuiz"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Code string `path:"code"`
 	}) (*struct{ Body PaperAttemptView }, error) {
-		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		p, ctx, locale, err := h.resolve(ctx, in.AuthIn, true)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("authentication required")
+			return nil, toHTTPError(ctx, err)
 		}
+		id := p.ID
 		view, err := h.svc.OpenPaper(ctx, id, in.Code, locale)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body PaperAttemptView }{Body: view}, nil
 	})
@@ -749,6 +849,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/astro-quiz/papers/{code}/save",
 		Summary:     "Save in-progress AstroQuiz answers and elapsed timer",
 		Tags:        []string{"AstroQuiz"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Code string `path:"code"`
@@ -757,13 +858,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Drafts     map[int]map[string]string `json:"drafts"`
 		}
 	}) (*struct{ Body PaperAttemptView }, error) {
-		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		p, ctx, locale, err := h.resolve(ctx, in.AuthIn, true)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("authentication required")
+			return nil, toHTTPError(ctx, err)
 		}
+		id := p.ID
 		view, err := h.svc.SavePaper(ctx, id, in.Code, locale, in.Body.ElapsedSec, in.Body.Drafts)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body PaperAttemptView }{Body: view}, nil
 	})
@@ -774,6 +876,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/astro-quiz/papers/{code}/submit",
 		Summary:     "Submit full AstroQuiz paper to reveal solutions and claim Weekly Supply Pod",
 		Tags:        []string{"AstroQuiz"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Code string `path:"code"`
@@ -782,13 +885,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Drafts     map[int]map[string]string `json:"drafts"`
 		}
 	}) (*struct{ Body PaperAttemptView }, error) {
-		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		p, ctx, locale, err := h.resolve(ctx, in.AuthIn, true)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("authentication required")
+			return nil, toHTTPError(ctx, err)
 		}
+		id := p.ID
 		view, err := h.svc.SubmitPaper(ctx, id, in.Code, locale, in.Body.ElapsedSec, in.Body.Drafts)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body PaperAttemptView }{Body: view}, nil
 	})
@@ -799,18 +903,21 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/astro-quiz/papers/{code}/print",
 		Summary:     "Get ink-friendly A4 printable payload for an AstroQuiz paper",
 		Tags:        []string{"AstroQuiz"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Code       string `path:"code"`
 		IncludeKey bool   `query:"includeKey" default:"false"`
 	}) (*struct{ Body PrintablePaper }, error) {
-		id, locale, err := h.resolveStudent(ctx, in.AuthIn)
+		p, ctx, locale, err := h.resolve(ctx, in.AuthIn, false)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("authentication required")
+			return nil, toHTTPError(ctx, err)
 		}
-		view, err := h.svc.GetPrintablePaper(ctx, id, in.Code, locale, in.IncludeKey)
+		id := p.ID
+		view, err := h.svc.GetPrintablePaper(ctx, id, in.Code, locale, in.IncludeKey,
+			auth.HasAllowedRole(p.Role, auth.RoleParent, auth.RoleTeacher, auth.RoleSchoolAdmin, auth.RoleAdmin, auth.RoleContentEditor))
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body PrintablePaper }{Body: view}, nil
 	})

@@ -351,15 +351,19 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 		return ProfileBundle{}, err
 	}
 
-	// Enforce Parent OTP gate when OTP security is enabled
-	// Fail closed: without an OTP verifier no code can be accepted.
-	if b.Settings.OTPEnabled {
+	// OTP gate. Turning OTP on also needs a verified code: it proves the parent can actually
+	// receive codes, so enabling it can never lock them out of their own settings (e.g. when no
+	// delivery provider is configured). Fail closed without a verifier.
+	enablingOTP := in.OTPEnabled != nil && *in.OTPEnabled && !b.Settings.OTPEnabled
+	otpVerified := false
+	if b.Settings.OTPEnabled || enablingOTP {
 		if in.OTPCode == "" || s.authSvc == nil {
 			return ProfileBundle{}, ErrOTPRequired
 		}
 		if err := s.authSvc.VerifyParentOTP(ctx, actor, in.OTPCode); err != nil {
 			return ProfileBundle{}, ErrOTPRequired
 		}
+		otpVerified = true
 	}
 
 	if in.OTPEnabled != nil {
@@ -391,6 +395,31 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 		b.Settings.BrainGalaxyWindowEnd = in.BrainGalaxyWindowEnd
 	}
 	if s.pool != nil && isUUID(childID) {
+		// One transaction that re-reads the OTP flag under row locks: a request authorized while
+		// OTP was off cannot commit after another request turned it on, and the child settings
+		// and the parent's OTP flag change together or not at all.
+		tx, err := s.pool.Begin(ctx)
+		if err != nil {
+			return ProfileBundle{}, err
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+		var parentID string
+		var otpNow bool
+		if err := tx.QueryRow(ctx, `
+			SELECT sp.parent_account_id::text, ua.otp_enabled
+			FROM student_profiles sp
+			JOIN user_accounts ua ON ua.id = sp.parent_account_id
+			WHERE sp.id = $1::uuid
+			FOR UPDATE OF sp, ua
+		`, childID).Scan(&parentID, &otpNow); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ProfileBundle{}, ErrProfileNotFound
+			}
+			return ProfileBundle{}, err
+		}
+		if otpNow && !otpVerified {
+			return ProfileBundle{}, ErrOTPRequired
+		}
 		sets := make([]string, 0, 6)
 		args := []any{childID}
 		next := 2
@@ -428,20 +457,17 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 		}
 		if len(sets) > 0 {
 			query := "UPDATE student_profiles SET " + strings.Join(sets, ", ") + ", updated_at = NOW() WHERE id = $1::uuid"
-			if _, err := s.pool.Exec(ctx, query, args...); err != nil {
+			if _, err := tx.Exec(ctx, query, args...); err != nil {
 				return ProfileBundle{}, fmt.Errorf("persist family settings: %w", err)
 			}
 		}
-		if in.OTPEnabled != nil {
-			var parentID string
-			if err := s.pool.QueryRow(ctx, `SELECT parent_account_id::text FROM student_profiles WHERE id = $1::uuid`, childID).Scan(&parentID); err != nil {
-				return ProfileBundle{}, err
+		if in.OTPEnabled != nil && isUUID(parentID) {
+			if _, err := tx.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
+				return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)
 			}
-			if isUUID(parentID) {
-				if _, err := s.pool.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
-					return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)
-				}
-			}
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return ProfileBundle{}, err
 		}
 		return s.loadBundlePG(ctx, childID)
 	}
@@ -548,7 +574,11 @@ func (s *Service) GetParentOverview(ctx context.Context, actor auth.Principal, l
 		StrengthSkills: []training.SkillView{},
 	}
 	if s.streakSvc != nil {
-		st, err := s.streakSvc.GetStatus(childID, "Asia/Jakarta")
+		tz := actor.Timezone
+		if tz == "" {
+			tz = "Asia/Jakarta"
+		}
+		st, err := s.streakSvc.GetStatus(childID, tz)
 		if err != nil {
 			return ParentChildOverview{}, err
 		}
@@ -607,6 +637,18 @@ func (h *Handler) resolvePrincipal(ctx context.Context, in AuthIn) (auth.Princip
 	return auth.Principal{}, locale, auth.ErrInvalidCredentials
 }
 
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+// lookupError returns 404 for known "nothing linked/found" outcomes and a generic 500 otherwise,
+// so database errors are logged instead of being echoed to the client.
+func lookupError(ctx context.Context, err error) error {
+	if errors.Is(err, ErrNoLinkedChild) || errors.Is(err, ErrProfileNotFound) {
+		return huma.Error404NotFound(err.Error())
+	}
+	slog.ErrorContext(ctx, "profile lookup failed", "err", err)
+	return huma.Error500InternalServerError("internal error")
+}
+
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 	huma.Register(api, huma.Operation{
 		OperationID: "profile-get",
@@ -614,6 +656,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/profile/bundle",
 		Summary:     "Get Parent & Child profile cards and family settings",
 		Tags:        []string{"Profile"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ProfileBundle }, error) {
 		actor, _, err := h.resolvePrincipal(ctx, *in)
 		if err != nil {
@@ -621,7 +664,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		bundle, err := h.svc.GetBundle(ctx, actor)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, lookupError(ctx, err)
 		}
 		return &struct{ Body ProfileBundle }{Body: bundle}, nil
 	})
@@ -632,6 +675,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/profile/children",
 		Summary:     "List the authenticated parent's linked children",
 		Tags:        []string{"Profile"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *AuthIn) (*struct {
 		Body struct {
 			Children []ChildProfile `json:"children"`
@@ -643,7 +687,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		children, err := h.svc.ListChildren(ctx, actor)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, lookupError(ctx, err)
 		}
 		out := &struct {
 			Body struct {
@@ -660,6 +704,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/profile/settings",
 		Summary:     "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits",
 		Tags:        []string{"Profile"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Body UpdateSettingsInput
@@ -695,6 +740,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/parent/overview",
 		Summary:     "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
 		Tags:        []string{"Parent"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *AuthIn) (*struct{ Body ParentChildOverview }, error) {
 		actor, locale, err := h.resolvePrincipal(ctx, *in)
 		if err != nil {

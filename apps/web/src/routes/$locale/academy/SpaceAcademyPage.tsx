@@ -16,14 +16,18 @@ type LessonMutationVars = {
   answers: Record<string, string>;
 };
 
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+
 function LessonVideo({
   title,
+  youtubeId,
   url,
   captionsUrl,
   locale,
   placeholder,
 }: {
   title: string;
+  youtubeId?: string;
   url?: string;
   captionsUrl?: string;
   locale: string;
@@ -32,7 +36,18 @@ function LessonVideo({
   return (
     <div className="space-y-2">
       <p className="text-sm font-bold text-white">{title}</p>
-      {url ? (
+      {youtubeId && YOUTUBE_ID.test(youtubeId) ? (
+        // Privacy-enhanced embed (no cookies until playback) with captions in the UI locale.
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&cc_load_policy=1&cc_lang_pref=${locale}&hl=${locale}`}
+          title={title}
+          className="aspect-video w-full rounded-xl border border-indigo-400/20 bg-black"
+          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          referrerPolicy="strict-origin-when-cross-origin"
+          loading="lazy"
+          allowFullScreen
+        />
+      ) : url ? (
         <video
           controls
           preload="metadata"
@@ -99,7 +114,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
       apiClient.checkAcademyAnswer(vars.lessonCode, vars.questionIndex, vars.answers, vars.locale),
     onSuccess: (data, vars) => {
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], data.lesson);
-      void queryClient.invalidateQueries({ queryKey: ["academy-topics"] });
+      void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
     },
     onError: () => setActionError(t("academy:actionError")),
@@ -115,7 +130,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
     }) => apiClient.toggleAcademySelfCheck(vars.lessonCode, vars.itemKey, vars.checked, vars.locale),
     onSuccess: (lesson, vars) => {
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], lesson);
-      void queryClient.invalidateQueries({ queryKey: ["academy-topics"] });
+      void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
     },
     onError: () => setActionError(t("academy:actionError")),
@@ -126,7 +141,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
       apiClient.retryAcademyScroll(vars.lessonCode, vars.locale),
     onSuccess: (lesson, vars) => {
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], lesson);
-      void queryClient.invalidateQueries({ queryKey: ["academy-topics"] });
+      void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
     },
     onError: () => setActionError(t("academy:actionError")),
@@ -183,6 +198,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             </p>
             <LessonVideo
               title={lesson.storyVideoTitle}
+              youtubeId={lesson.storyYoutubeId}
               url={lesson.storyVideoUrl}
               captionsUrl={lesson.storyCaptionsUrl}
               locale={locale}
@@ -196,6 +212,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             </p>
             <LessonVideo
               title={lesson.conceptVideoTitle}
+              youtubeId={lesson.conceptYoutubeId}
               url={lesson.conceptVideoUrl}
               captionsUrl={lesson.conceptCaptionsUrl}
               locale={locale}
@@ -214,7 +231,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
                   key={item.index}
                   type="button"
                   onClick={() => setQIdx(item.index)}
-                  className={`min-h-10 min-w-10 rounded-xl border text-xs font-bold cursor-pointer ${
+                  className={`min-h-11 min-w-11 rounded-xl border text-xs font-bold cursor-pointer ${
                     item.index === activeQ.index
                       ? "border-[#22D3EE] bg-[#6366F1] text-white"
                       : item.solved
@@ -258,15 +275,15 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             submittedAnswer={activeQ.draftAnswer}
             workedSolution={activeQ.workedSolution ?? null}
             submitting={checkMutation.isPending}
-            onSaveDraft={(answers) => {
-              saveMutation.mutate({
+            onSaveDraft={(answers) =>
+              saveMutation.mutateAsync({
                 sessionKey,
                 lessonCode: lesson.code,
                 locale,
                 questionIndex: activeQ.index,
                 answers,
-              });
-            }}
+              })
+            }
             onSubmit={async (answers) => {
               await checkMutation.mutateAsync({
                 sessionKey,
@@ -341,7 +358,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
               key={g}
               type="button"
               onClick={() => setSelectedGrade(g)}
-              className={`min-h-10 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
+              className={`min-h-11 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
                 grade === g ? "bg-[#6366F1] text-white" : "bg-[#1E2A55] text-slate-200 hover:bg-[#2A3A73]"
               }`}
             >

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sort"
 	"sync"
@@ -32,6 +33,9 @@ const (
 var (
 	ErrAssignmentNotFound = errors.New("assignment not found")
 	ErrNotLinkedChild     = errors.New("parent can only assign to linked children")
+	ErrInvalidInput       = errors.New("invalid input")
+	// ErrRewardUnavailable means the completion AC could not be credited; it can be retried.
+	ErrRewardUnavailable = errors.New("assignment reward could not be credited; please retry")
 )
 
 type AssignedByRole string
@@ -415,10 +419,10 @@ func (s *Service) ListForStudent(ctx context.Context, studentID, statusFilter, a
 
 func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string, requestID string) (AssignmentSummary, error) {
 	if title == "" || utf8.RuneCountInString(title) > MaxTitleLen {
-		return AssignmentSummary{}, fmt.Errorf("title must be 1..%d characters", MaxTitleLen)
+		return AssignmentSummary{}, fmt.Errorf("%w: title must be 1..%d characters", ErrInvalidInput, MaxTitleLen)
 	}
 	if len(templateCodes) == 0 || len(templateCodes) > MaxTemplates {
-		return AssignmentSummary{}, fmt.Errorf("between 1 and %d question templates are required", MaxTemplates)
+		return AssignmentSummary{}, fmt.Errorf("%w: between 1 and %d question templates are required", ErrInvalidInput, MaxTemplates)
 	}
 	linked, err := s.isLinked(ctx, parentID, studentID)
 	if err != nil {
@@ -433,7 +437,7 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 	s.mu.Lock()
 	summary, err := func() (AssignmentSummary, error) {
 		if len(templateCodes) == 0 {
-			return AssignmentSummary{}, fmt.Errorf("at least one question template is required")
+			return AssignmentSummary{}, fmt.Errorf("%w: at least one question template is required", ErrInvalidInput)
 		}
 		// A retried create request reuses its stable request ID, so an
 		// ambiguous save outcome cannot produce a duplicate assignment.
@@ -450,14 +454,14 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 		items := make([]itemSpec, 0, len(templateCodes))
 		for i, code := range templateCodes {
 			if _, ok := mathengine.GenerateByCode(code, int64(1000+i), "en"); !ok {
-				return AssignmentSummary{}, fmt.Errorf("unknown question template %q", code)
+				return AssignmentSummary{}, fmt.Errorf("%w: unknown question template %q", ErrInvalidInput, code)
 			}
 			items = append(items, itemSpec{templateCode: code, seed: time.Now().UnixNano() + int64(i*7919)})
 		}
 		if dueDate == "" {
 			dueDate = time.Now().UTC().AddDate(0, 0, 7).Format("2006-01-02")
 		} else if _, err := time.Parse("2006-01-02", dueDate); err != nil {
-			return AssignmentSummary{}, fmt.Errorf("dueDate must use YYYY-MM-DD")
+			return AssignmentSummary{}, fmt.Errorf("%w: dueDate must use YYYY-MM-DD", ErrInvalidInput)
 		}
 		rec := &assignmentRecord{
 			id:             id,
@@ -517,7 +521,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			return AssignmentDetail{}, ErrAssignmentNotFound
 		}
 		if qIndex < 1 || qIndex > len(rec.items) {
-			return AssignmentDetail{}, fmt.Errorf("invalid question index")
+			return AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 		}
 		if _, done := rec.submitted[qIndex]; done {
 			// Retry only flushes an unpersisted snapshot or an uncredited
@@ -530,7 +534,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 				}
 				return renderDetail(rec, locale), nil
 			}
-			return AssignmentDetail{}, fmt.Errorf("question %d has already been submitted", qIndex)
+			return AssignmentDetail{}, fmt.Errorf("%w: question %d has already been submitted", ErrInvalidInput, qIndex)
 		}
 		item := rec.items[qIndex-1]
 		prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
@@ -567,7 +571,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 			SourceID:       rewardID,
 			IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rewardID, studentID),
 		}); err != nil {
-			rewardErr = fmt.Errorf("award assignment reward: %w", err)
+			rewardErr = fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
 		} else {
 			s.mu.Lock()
 			if rec, ok := s.records[rewardID]; ok {
@@ -668,6 +672,26 @@ func (h *Handler) resolveUser(ctx context.Context, in AuthIn) (string, string, a
 	return "", "", "", locale, auth.ErrInvalidCredentials
 }
 
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+// toHTTPError maps service errors to responses without echoing internal (e.g. database) errors.
+func toHTTPError(ctx context.Context, err error) error {
+	switch {
+	case errors.Is(err, ErrNotLinkedChild):
+		return huma.Error403Forbidden(err.Error())
+	case errors.Is(err, ErrAssignmentNotFound):
+		return huma.Error404NotFound(err.Error())
+	case errors.Is(err, ErrInvalidInput), errors.Is(err, reqguard.ErrInvalidAnswers):
+		return huma.Error400BadRequest(err.Error())
+	case errors.Is(err, ErrRewardUnavailable):
+		slog.WarnContext(ctx, "assignment reward credit failed", "err", err)
+		return huma.Error503ServiceUnavailable(ErrRewardUnavailable.Error())
+	default:
+		slog.ErrorContext(ctx, "assignments request failed", "err", err)
+		return huma.Error500InternalServerError("internal error")
+	}
+}
+
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 	huma.Register(api, huma.Operation{
 		OperationID: "assignments-list",
@@ -675,6 +699,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments",
 		Summary:     "List student assignments with status, year, and assigned-by filters",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Status     string `query:"status" default:"ALL"`
@@ -696,7 +721,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}{}
 		assignments, err := h.svc.ListForStudent(ctx, id, in.Status, in.AssignedBy, in.Year)
 		if err != nil {
-			return nil, huma.Error503ServiceUnavailable("assignments unavailable")
+			return nil, toHTTPError(ctx, err)
 		}
 		out.Body.Assignments = assignments
 		return out, nil
@@ -708,6 +733,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments/custom",
 		Summary:     "Parent Personalised Assignment Builder — create targeted homework for a linked child",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Body struct {
@@ -727,10 +753,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		summary, err := h.svc.CreateParentCustomAssignment(ctx, uid, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes, in.Body.RequestID)
 		if err != nil {
-			if errors.Is(err, ErrNotLinkedChild) {
-				return nil, huma.Error403Forbidden(err.Error())
-			}
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body AssignmentSummary }{Body: summary}, nil
 	})
@@ -741,6 +764,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments/{id}",
 		Summary:     "Open an assignment and inspect its questions",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		ID string `path:"id"`
@@ -751,7 +775,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		detail, err := h.svc.GetDetail(ctx, uid, in.ID, locale)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		return &struct{ Body AssignmentDetail }{Body: detail}, nil
 	})
@@ -762,6 +786,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments/{id}/submit",
 		Summary:     "Submit an assignment question answer and award AC upon full completion",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		ID   string `path:"id"`
@@ -781,10 +806,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		res, detail, err := h.svc.SubmitQuestion(ctx, uid, in.ID, in.Body.QuestionIndex, in.Body.Answers, locale)
 		if err != nil {
-			if errors.Is(err, ErrAssignmentNotFound) {
-				return nil, huma.Error404NotFound(err.Error())
-			}
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(ctx, err)
 		}
 		out := &struct {
 			Body struct {

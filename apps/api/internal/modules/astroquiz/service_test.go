@@ -83,8 +83,9 @@ func TestAstroQuizHiddenSolutionsAndWeeklySupplyPodCap(t *testing.T) {
 	}
 
 	// Negative elapsed time and out-of-range draft keys are rejected/dropped.
-	if _, err := svc.SavePaper(context.Background(), "stu-1", "G1-ESS-01", "en", -1, nil); err == nil {
-		t.Fatal("expected negative elapsedSec to be rejected")
+	// The client-reported elapsedSec is ignored: the server measures the timer.
+	if saved, err := svc.SavePaper(context.Background(), "stu-1", "G1-ESS-01", "en", -1, nil); err != nil || saved.ElapsedSec < 0 {
+		t.Fatalf("client elapsedSec must be ignored: elapsed=%d err=%v", saved.ElapsedSec, err)
 	}
 	if _, err := svc.SavePaper(context.Background(), "stu-1", "G1-ESS-01", "en", 5, map[int]map[string]string{
 		0:  {"answer": "junk"},
@@ -327,7 +328,7 @@ func TestConcurrentPrintAndSubmit(t *testing.T) {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			_, _ = svc.GetPrintablePaper(context.Background(), "stu-1", "G1-ESS-01", "en", true)
+			_, _ = svc.GetPrintablePaper(context.Background(), "stu-1", "G1-ESS-01", "en", true, false)
 		}()
 		go func() {
 			defer wg.Done()

@@ -20,7 +20,8 @@ export interface QuestionPlayerProps {
   onSubmit: (answers: Record<string, string>) => Promise<void> | void;
   onSkip?: () => Promise<void> | void;
   onNext?: () => void;
-  onSaveDraft?: (answers: Record<string, string>) => void;
+  /** May return a promise; "Saved" is shown only after it resolves. */
+  onSaveDraft?: (answers: Record<string, string>) => void | Promise<unknown>;
   onDraftChange?: (answers: Record<string, string>) => void;
   extraHeaderActions?: React.ReactNode;
 }
@@ -251,9 +252,14 @@ function QuestionPlayerInner({
                 type="button"
                 variant="secondary"
                 disabled={submitting}
-                onClick={() => {
-                  onSaveDraft(answers);
-                  setSavedNotice(true);
+                onClick={async () => {
+                  setSavedNotice(false);
+                  try {
+                    await onSaveDraft(answers);
+                    setSavedNotice(true);
+                  } catch {
+                    // Keep "Save draft" available; the page shows the error.
+                  }
                 }}
               >
                 {savedNotice ? t("saved") : t("saveDraft")}

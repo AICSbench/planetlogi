@@ -3,16 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient, useAccountScope, useAuthStore } from "../../../store/authStore";
 
 export function ParentPortalPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common", "dashboard"]);
 
   // The overview API is parent-only; don't fire a request that can only 403 for students.
   const isParent = useAuthStore((s) => s.user?.role === "PARENT");
+  const account = useAccountScope();
 
   const overviewQuery = useQuery({
-    queryKey: ["parent-overview", locale],
+    queryKey: ["parent-overview", account, locale],
     queryFn: () => apiClient.getParentOverview(locale),
     enabled: isParent,
   });

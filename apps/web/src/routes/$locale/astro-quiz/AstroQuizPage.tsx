@@ -6,7 +6,7 @@ import { Clock, Gift, Printer } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient, useAccountScope, useAuthStore } from "../../../store/authStore";
 
 const MAX_ELAPSED_SEC = 24 * 60 * 60;
 
@@ -21,6 +21,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["astro-quiz", "common"]);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const account = useAccountScope();
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const grade = selectedGrade ?? user?.grade ?? 1;
   const [category, setCategory] = useState("ALL");
@@ -31,12 +32,12 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const papersQuery = useQuery({
-    queryKey: ["astro-quiz-papers", grade, category, locale],
+    queryKey: ["astro-quiz-papers", account, grade, category, locale],
     queryFn: () => apiClient.getAstroQuizPapers(grade, category, locale),
   });
 
   const attemptQuery = useQuery({
-    queryKey: ["astro-quiz-attempt", activePaperCode, locale],
+    queryKey: ["astro-quiz-attempt", account, activePaperCode, locale],
     queryFn: () => apiClient.openAstroQuizPaper(activePaperCode!, locale),
     enabled: Boolean(activePaperCode),
   });
@@ -52,8 +53,8 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     return { ...merged, ...draftEdits };
   }, [attempt, draftEdits]);
 
-  // Stored elapsed time plus the seconds spent in this session, capped at the
-  // server's 24-hour limit so Save/Submit never hit a 400 at the boundary.
+  // Server-measured elapsed time plus the seconds since the last server response, capped at the
+  // server's 24-hour limit (display only: the server ignores the client's elapsedSec).
   const elapsedSec = Math.min(MAX_ELAPSED_SEC, (attempt?.elapsedSec ?? 0) + sessionSec);
   const timerCapped = elapsedSec >= MAX_ELAPSED_SEC;
 
@@ -68,29 +69,56 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
     return () => window.clearInterval(id);
   }, [activePaperCode, attempt?.status, attempt?.elapsedSec]);
 
-  type PaperPayload = { elapsedSec: number; drafts: Record<number, Record<string, string>> };
+  // The request identity (account, paper, locale) and send time travel with the payload so a
+  // late response is written under the key it belongs to and seconds counted while the request
+  // was in flight are not lost from the display.
+  type PaperPayload = {
+    account: string;
+    paperCode: string;
+    locale: string;
+    sentAt: number;
+    elapsedSec: number;
+    drafts: Record<number, Record<string, string>>;
+  };
+  const payload = (d: Record<number, Record<string, string>>): PaperPayload => ({
+    account,
+    paperCode: activePaperCode!,
+    locale,
+    sentAt: Date.now(),
+    elapsedSec,
+    drafts: d,
+  });
+  const secondsSince = (sentAt: number) => Math.max(0, Math.floor((Date.now() - sentAt) / 1000));
 
   const saveMutation = useMutation({
-    mutationFn: (payload: PaperPayload) =>
-      apiClient.saveAstroQuizPaper(activePaperCode!, payload.elapsedSec, payload.drafts, locale),
-    onSuccess: (updated) => {
-      queryClient.setQueryData(["astro-quiz-attempt", activePaperCode, locale], updated);
-      setSessionSec(0);
-      setActionError(null);
+    mutationFn: (p: PaperPayload) =>
+      apiClient.saveAstroQuizPaper(p.paperCode, p.elapsedSec, p.drafts, p.locale),
+    onSuccess: (updated, p) => {
+      queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
+      if (p.account === account && p.paperCode === activePaperCode) {
+        setSessionSec(secondsSince(p.sentAt));
+        setActionError(null);
+      }
     },
-    onError: () => setActionError(t("astro-quiz:actionError")),
+    onError: (_err, p) => {
+      if (p.paperCode === activePaperCode) setActionError(t("astro-quiz:actionError"));
+    },
   });
 
   const submitMutation = useMutation({
-    mutationFn: (payload: PaperPayload) =>
-      apiClient.submitAstroQuizPaper(activePaperCode!, payload.elapsedSec, payload.drafts, locale),
-    onSuccess: (updated) => {
-      queryClient.setQueryData(["astro-quiz-attempt", activePaperCode, locale], updated);
-      void queryClient.invalidateQueries({ queryKey: ["astro-quiz-papers"] });
-      setSessionSec(0);
-      setActionError(null);
+    mutationFn: (p: PaperPayload) =>
+      apiClient.submitAstroQuizPaper(p.paperCode, p.elapsedSec, p.drafts, p.locale),
+    onSuccess: (updated, p) => {
+      queryClient.setQueryData(["astro-quiz-attempt", p.account, p.paperCode, p.locale], updated);
+      void queryClient.invalidateQueries({ queryKey: ["astro-quiz-papers", p.account] });
+      if (p.account === account && p.paperCode === activePaperCode) {
+        setSessionSec(0);
+        setActionError(null);
+      }
     },
-    onError: () => setActionError(t("astro-quiz:submitError")),
+    onError: (_err, p) => {
+      if (p.paperCode === activePaperCode) setActionError(t("astro-quiz:submitError"));
+    },
   });
 
   if (activePaperCode && attemptQuery.isError) {
@@ -125,7 +153,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 font-mono text-sm font-bold text-cyan-200">
+            <span className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 font-mono text-sm font-bold text-cyan-200">
               <Clock className="h-4 w-4" aria-hidden="true" />
               {formatTimer(submitted ? attempt.elapsedSec : elapsedSec)}
             </span>
@@ -144,14 +172,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               <>
                 <GalaxyButton
                   variant="secondary"
-                  onClick={() => saveMutation.mutate({ elapsedSec, drafts })}
+                  onClick={() => saveMutation.mutate(payload(drafts))}
                   disabled={saveMutation.isPending || submitMutation.isPending}
                 >
                   {t("astro-quiz:savePaper")}
                 </GalaxyButton>
                 <GalaxyButton
                   variant="gold"
-                  onClick={() => submitMutation.mutate({ elapsedSec, drafts })}
+                  onClick={() => submitMutation.mutate(payload(drafts))}
                   disabled={submitMutation.isPending || saveMutation.isPending}
                 >
                   {t("astro-quiz:submitPaper")}
@@ -211,7 +239,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
                 key={pq.index}
                 type="button"
                 onClick={() => setQIdx(pq.index)}
-                className={`min-h-10 min-w-10 rounded-xl border text-xs font-bold cursor-pointer ${tone} ${
+                className={`min-h-11 min-w-11 rounded-xl border text-xs font-bold cursor-pointer ${tone} ${
                   pq.index === activeQ.index ? "ring-2 ring-[#FBBF24]" : ""
                 }`}
               >
@@ -235,7 +263,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           onSaveDraft={(answers) => {
             const next = { ...drafts, [activeQ.index]: answers };
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
-            saveMutation.mutate({ elapsedSec, drafts: next });
+            return saveMutation.mutateAsync(payload(next));
           }}
           onSubmit={(answers) => {
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
@@ -276,7 +304,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
                 key={g}
                 type="button"
                 onClick={() => setSelectedGrade(g)}
-                className={`min-h-10 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
+                className={`min-h-11 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
                   grade === g ? "bg-[#6366F1] text-white" : "bg-[#1E2A55] text-slate-200"
                 }`}
               >
@@ -291,7 +319,7 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
                 key={cat}
                 type="button"
                 onClick={() => setCategory(cat)}
-                className={`min-h-10 rounded-xl px-3 text-xs font-bold cursor-pointer ${
+                className={`min-h-11 rounded-xl px-3 text-xs font-bold cursor-pointer ${
                   category === cat ? "bg-[#22D3EE] text-slate-950" : "bg-[#1E2A55] text-slate-200"
                 }`}
               >

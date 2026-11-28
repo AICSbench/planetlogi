@@ -1243,6 +1243,9 @@
           "conceptVideoUrl": {
             "type": "string"
           },
+          "conceptYoutubeId": {
+            "type": "string"
+          },
           "doAndLearn": {
             "items": {
               "$ref": "#/components/schemas/DoLearnQuestion"
@@ -1274,6 +1277,9 @@
             "type": "string"
           },
           "storyVideoUrl": {
+            "type": "string"
+          },
+          "storyYoutubeId": {
             "type": "string"
           },
           "title": {
@@ -1889,6 +1895,9 @@
             "readOnly": true,
             "type": "string"
           },
+          "answerKeyAvailable": {
+            "type": "boolean"
+          },
           "answerKeys": {
             "items": {
               "additionalProperties": {
@@ -1930,7 +1939,7 @@
           "grade",
           "category",
           "questions",
-          "answerKeys"
+          "answerKeyAvailable"
         ],
         "type": "object"
       },
@@ -2911,6 +2920,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Check a Do \u0026 Learn answer (supports Try Again \u0026 awards Star Scroll)",
         "tags": [
           "SpaceAcademy"
@@ -2977,6 +2994,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Save a draft answer inside Space Academy Do \u0026 Learn",
         "tags": [
           "SpaceAcademy"
@@ -3041,6 +3066,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get a Space Academy lesson timeline (Story, Watch, Do \u0026 Learn, Self-Check)",
         "tags": [
           "SpaceAcademy"
@@ -3107,6 +3140,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Retry a failed Star Scroll award for an already-solved lesson",
         "tags": [
           "SpaceAcademy"
@@ -3173,6 +3214,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Toggle a Space Academy Mission Self-Check learning objective",
         "tags": [
           "SpaceAcademy"
@@ -3239,6 +3288,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List Space Academy topics with Star Scroll progress",
         "tags": [
           "SpaceAcademy"
@@ -3323,6 +3380,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List student assignments with status, year, and assigned-by filters",
         "tags": [
           "Assignments"
@@ -3389,6 +3454,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Parent Personalised Assignment Builder — create targeted homework for a linked child",
         "tags": [
           "Assignments"
@@ -3453,6 +3526,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Open an assignment and inspect its questions",
         "tags": [
           "Assignments"
@@ -3527,6 +3608,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Submit an assignment question answer and award AC upon full completion",
         "tags": [
           "Assignments"
@@ -3602,6 +3691,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List AstroQuiz papers across Essential, Top School, and HOTS categories",
         "tags": [
           "AstroQuiz"
@@ -3666,6 +3763,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Open or resume an AstroQuiz paper attempt",
         "tags": [
           "AstroQuiz"
@@ -3739,6 +3844,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get ink-friendly A4 printable payload for an AstroQuiz paper",
         "tags": [
           "AstroQuiz"
@@ -3813,6 +3926,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Save in-progress AstroQuiz answers and elapsed timer",
         "tags": [
           "AstroQuiz"
@@ -3887,6 +4008,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Submit full AstroQuiz paper to reveal solutions and claim Weekly Supply Pod",
         "tags": [
           "AstroQuiz"
@@ -4789,6 +4918,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
         "tags": [
           "Parent"
@@ -4845,6 +4982,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get Parent \u0026 Child profile cards and family settings",
         "tags": [
           "Profile"
@@ -4901,6 +5046,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List the authenticated parent's linked children",
         "tags": [
           "Profile"
@@ -4967,6 +5120,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits",
         "tags": [
           "Profile"

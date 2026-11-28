@@ -32,7 +32,9 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   const otpEnabled = otpDraft ?? bundle?.settings.otpEnabled ?? false;
   const lang = langDraft ?? bundle?.settings.language ?? locale;
   const brainCap = brainCapDraft ?? bundle?.settings.brainGalaxyDailyCapMin ?? 25;
-  const otpRequired = bundle?.settings.otpEnabled ?? false;
+  // A code is needed while OTP is on, and also to turn it on (proves codes can be received,
+  // so enabling can never lock the parent out).
+  const otpRequired = (bundle?.settings.otpEnabled ?? false) || otpEnabled;
 
   const otpMutation = useMutation({
     mutationFn: () => apiClient.requestParentOTP(),
@@ -47,17 +49,22 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
     onError: () => setSaveError(t("portals:profile.otpSendError")),
   });
 
+  // Send only the fields the parent changed, so a save never rewrites settings another device
+  // changed meanwhile. The account travels with the request (not the hook closure, which
+  // TanStack Query refreshes on re-render) so a late response cannot land in another account.
   const updateMutation = useMutation({
-    mutationFn: () =>
-      apiClient.updateProfileSettings({
-        otpEnabled,
-        otpCode: otpCode.trim() || undefined,
-        language: lang,
-        brainGalaxyDailyCapMin: brainCap,
-      }),
-    onSuccess: async (updated) => {
-      if (useAuthStore.getState().user?.id !== userId) return;
-      queryClient.setQueryData(["profile-bundle", userId], updated);
+    mutationFn: (vars: { account: string }) =>
+      apiClient
+        .updateProfileSettings({
+          ...(otpDraft !== null ? { otpEnabled: otpDraft } : {}),
+          ...(langDraft !== null ? { language: langDraft } : {}),
+          ...(brainCapDraft !== null ? { brainGalaxyDailyCapMin: brainCapDraft } : {}),
+          otpCode: otpCode.trim() || undefined,
+        })
+        .then((updated) => ({ updated, account: vars.account })),
+    onSuccess: async ({ updated, account: requestAccount }) => {
+      queryClient.setQueryData(["profile-bundle", requestAccount], updated);
+      if (useAuthStore.getState().user?.id !== requestAccount) return;
       setOtpDraft(null);
       setLangDraft(null);
       setBrainCapDraft(null);
@@ -218,7 +225,7 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
         ) : null}
 
         <GalaxyButton
-          onClick={() => updateMutation.mutate()}
+          onClick={() => updateMutation.mutate({ account: userId })}
           disabled={
             !isParent || !bundle || updateMutation.isPending || (otpRequired && otpCode.length !== 6)
           }

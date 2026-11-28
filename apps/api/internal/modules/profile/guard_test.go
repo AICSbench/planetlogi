@@ -62,12 +62,10 @@ func TestSettingsValidationAndFailClosedOTP(t *testing.T) {
 		}
 	}
 
+	// Without an OTP verifier no code is accepted (previously any non-empty code passed),
+	// so OTP can neither be enabled nor bypassed.
 	enable := true
-	if _, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{OTPEnabled: &enable}); err != nil {
-		t.Fatal(err)
-	}
-	// Without an OTP verifier any code must be rejected (previously any non-empty code passed).
-	if _, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{OTPCode: "000000", Language: "id"}); !errors.Is(err, ErrOTPRequired) {
+	if _, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{OTPEnabled: &enable, OTPCode: "000000"}); !errors.Is(err, ErrOTPRequired) {
 		t.Fatalf("expected fail-closed ErrOTPRequired, got %v", err)
 	}
 }

@@ -58,7 +58,8 @@ func TestPhase2StateSurvivesRestart(t *testing.T) {
 	if _, err := quizSvc.SavePaper(ctx, studentID, "G1-ESS-01", "en", 42, map[int]map[string]string{1: {"answer": "7"}}); err != nil {
 		t.Fatalf("save quiz draft: %v", err)
 	}
-	if _, err := quizSvc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 42, map[int]map[string]string{1: {"answer": "7"}}); err != nil {
+	submitted, err := quizSvc.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 42, map[int]map[string]string{1: {"answer": "7"}})
+	if err != nil {
 		t.Fatalf("submit quiz paper: %v", err)
 	}
 
@@ -92,7 +93,8 @@ func TestPhase2StateSurvivesRestart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if paper.Status != "SUBMITTED" || paper.ElapsedSec != 42 || paper.Questions[0].DraftAnswer["answer"] != "7" {
+	// ElapsedSec is server-measured (the client's 42 is ignored); it must survive the restart.
+	if paper.Status != "SUBMITTED" || paper.ElapsedSec != submitted.ElapsedSec || paper.Questions[0].DraftAnswer["answer"] != "7" {
 		t.Fatalf("quiz attempt lost after restart: %+v", paper)
 	}
 	_, claimed, err := quizReloaded.ListPapers(ctx, studentID, 0, "ALL", "en")

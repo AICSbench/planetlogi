@@ -239,6 +239,9 @@ export interface AcademyLessonDetail {
   conceptVideoUrl?: string;
   storyCaptionsUrl?: string;
   conceptCaptionsUrl?: string;
+  /** YouTube video IDs, played through the privacy-enhanced youtube-nocookie.com embed. */
+  storyYoutubeId?: string;
+  conceptYoutubeId?: string;
   completionPct: number;
   scrollEarned: boolean;
   doAndLearn: Array<{
@@ -289,7 +292,10 @@ export interface PrintablePaper {
   grade: number;
   category: string;
   questions: RenderedQuestion[];
-  answerKeys: Array<Record<string, string>>;
+  /** Whether requesting includeKey=true will succeed (adults, or after this student submitted). */
+  answerKeyAvailable: boolean;
+  /** Present only when requested with includeKey=true and allowed. */
+  answerKeys?: Array<Record<string, string>>;
 }
 
 export interface AssignmentSummary {

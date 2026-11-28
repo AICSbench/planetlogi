@@ -23,11 +23,22 @@ func TestProfileSettingsOTPGateAndScreenTimeCap(t *testing.T) {
 
 	parent := auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi"}
 
-	// Enable OTP and test Brain Galaxy cap clamped to max 25 min
+	// Enabling OTP without a verified code is refused, so a parent who cannot receive codes
+	// can never lock themselves out of their settings.
 	enable := true
 	overCap := 60
+	if _, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{OTPEnabled: &enable}); err != ErrOTPRequired {
+		t.Fatalf("enabling OTP without a code: expected ErrOTPRequired, got %v", err)
+	}
+
+	// Enable OTP with a verified code and test Brain Galaxy cap clamped to max 25 min
+	enrollCode, err := authSvc.RequestParentOTP(context.Background(), parent)
+	if err != nil {
+		t.Fatal(err)
+	}
 	updated, err := svc.UpdateSettings(context.Background(), parent, UpdateSettingsInput{
 		OTPEnabled:             &enable,
+		OTPCode:                enrollCode,
 		Language:               "id",
 		BrainGalaxyDailyCapMin: &overCap,
 	})

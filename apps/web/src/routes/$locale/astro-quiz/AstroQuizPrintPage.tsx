@@ -5,7 +5,7 @@ import { Printer } from "lucide-react";
 import type { InputPart } from "@planetlogi/api-client";
 import type { Locale } from "@planetlogi/i18n";
 import { DiagramRenderer } from "../../../components/question-player/DiagramRenderer";
-import { apiClient } from "../../../store/authStore";
+import { apiClient, useAccountScope } from "../../../store/authStore";
 
 export function AstroQuizPrintPage({
   locale,
@@ -16,18 +16,20 @@ export function AstroQuizPrintPage({
 }) {
   const { t } = useTranslation(["astro-quiz", "common"]);
   const [showKey, setShowKey] = useState(false);
+  const account = useAccountScope();
 
   const printQuery = useQuery({
-    queryKey: ["astro-quiz-print", paperCode, locale],
+    queryKey: ["astro-quiz-print", account, paperCode, locale],
     queryFn: () => apiClient.getPrintablePaper(paperCode, locale),
   });
 
   // Answer keys are a separate, submission-gated request so the worksheet
   // itself never receives them.
   const keyQuery = useQuery({
-    queryKey: ["astro-quiz-print-key", paperCode, locale],
+    queryKey: ["astro-quiz-print-key", account, paperCode, locale],
     queryFn: () => apiClient.getPrintablePaper(paperCode, locale, true),
-    enabled: showKey,
+    // Only ask when the server says the key is available (adult, or this paper submitted).
+    enabled: showKey && Boolean(printQuery.data?.answerKeyAvailable),
     retry: false,
   });
 
@@ -47,14 +49,18 @@ export function AstroQuizPrintPage({
     <div className="min-h-screen bg-white text-black p-6 sm:p-10 print:p-0">
       {/* Screen-only Print Toolbar */}
       <div className="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-300 bg-slate-100 p-3 print:hidden">
-        <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showKey}
-            onChange={(e) => setShowKey(e.target.checked)}
-          />
-          <span>{t("astro-quiz:print.toggleAnswerKey")}</span>
-        </label>
+        {paper.answerKeyAvailable ? (
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showKey}
+              onChange={(e) => setShowKey(e.target.checked)}
+            />
+            <span>{t("astro-quiz:print.toggleAnswerKey")}</span>
+          </label>
+        ) : (
+          <p className="text-xs text-slate-600">{t("astro-quiz:print.keyLocked")}</p>
+        )}
         <button
           type="button"
           onClick={() => window.print()}

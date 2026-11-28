@@ -1165,6 +1165,7 @@ export interface components {
             conceptCaptionsUrl?: string;
             conceptVideoTitle: string;
             conceptVideoUrl?: string;
+            conceptYoutubeId?: string;
             doAndLearn: components["schemas"]["DoLearnQuestion"][] | null;
             scrollEarned: boolean;
             selfCheck: components["schemas"]["SelfCheckItem"][] | null;
@@ -1172,6 +1173,7 @@ export interface components {
             storyCaptionsUrl?: string;
             storyVideoTitle: string;
             storyVideoUrl?: string;
+            storyYoutubeId?: string;
             title: string;
             topicCode: string;
         };
@@ -1377,7 +1379,8 @@ export interface components {
              * @example https://example.com/schemas/PrintablePaper.json
              */
             readonly $schema?: string;
-            answerKeys: {
+            answerKeyAvailable: boolean;
+            answerKeys?: {
                 [key: string]: string;
             }[] | null;
             category: string;

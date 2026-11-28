@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
 import { CurrencyPill, GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient, useAccountScope, useAuthStore } from "../../../store/authStore";
 
 export function AssignmentsPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common"]);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const account = useAccountScope();
 
   const [statusTab, setStatusTab] = useState<"ALL" | "INCOMPLETE" | "COMPLETE">("ALL");
   const [assignedBy, setAssignedBy] = useState("ALL");
@@ -31,7 +32,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
 
   // Every linked child is selectable; the builder never targets a demo ID.
   const childrenQuery = useQuery({
-    queryKey: ["profile-children"],
+    queryKey: ["profile-children", account],
     queryFn: () => apiClient.getProfileChildren(),
   });
   const children = childrenQuery.data?.children ?? [];
@@ -42,18 +43,18 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const isParent = user?.role === "PARENT";
 
   const listQuery = useQuery({
-    queryKey: ["assignments", statusTab, assignedBy],
+    queryKey: ["assignments", account, statusTab, assignedBy],
     queryFn: () => apiClient.getAssignments(statusTab, assignedBy, 0),
   });
 
   const skillsQuery = useQuery({
-    queryKey: ["training-skills", "ALL", grade, locale],
+    queryKey: ["training-skills", account, "ALL", grade, locale],
     queryFn: () => apiClient.getSkills("ALL", grade, locale),
     enabled: showBuilder && Boolean(linkedChild?.studentId),
   });
 
   const detailQuery = useQuery({
-    queryKey: ["assignment-detail", activeId, locale],
+    queryKey: ["assignment-detail", account, activeId, locale],
     queryFn: () => apiClient.getAssignmentDetail(activeId!, locale),
     enabled: Boolean(activeId),
   });
@@ -86,7 +87,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       requestSignatureRef.current = null;
       setCustomTitle("");
       setSelectedTemplates([]);
-      void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      void queryClient.invalidateQueries({ queryKey: ["assignments", account] });
     },
     onError: () => {
       setBuilderToast(null);
@@ -95,11 +96,17 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: (vars: { questionIndex: number; answers: Record<string, string> }) =>
-      apiClient.submitAssignmentQuestion(activeId!, vars.questionIndex, vars.answers, locale),
-    onSuccess: (data) => {
-      queryClient.setQueryData(["assignment-detail", activeId, locale], data.assignment);
-      void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    mutationFn: (vars: {
+      account: string;
+      assignmentId: string;
+      locale: string;
+      questionIndex: number;
+      answers: Record<string, string>;
+    }) => apiClient.submitAssignmentQuestion(vars.assignmentId, vars.questionIndex, vars.answers, vars.locale),
+    onSuccess: (data, vars) => {
+      // Write under the request's own identity so a late response never lands elsewhere.
+      queryClient.setQueryData(["assignment-detail", vars.account, vars.assignmentId, vars.locale], data.assignment);
+      void queryClient.invalidateQueries({ queryKey: ["assignments", vars.account] });
       setActionError(null);
     },
     onError: () => setActionError(t("portals:assignments.submitError")),
@@ -152,7 +159,13 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
           workedSolution={activeQ.workedSolution ?? null}
           submitting={submitMutation.isPending}
           onSubmit={async (answers) => {
-            await submitMutation.mutateAsync({ questionIndex: activeQ.index, answers });
+            await submitMutation.mutateAsync({
+              account,
+              assignmentId: activeId,
+              locale,
+              questionIndex: activeQ.index,
+              answers,
+            });
           }}
           onNext={
             activeQ.index < detail.questions.length ? () => setQIdx(activeQ.index + 1) : undefined
@@ -196,7 +209,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
                 key={k}
                 type="button"
                 onClick={() => setStatusTab(k)}
-                className={`min-h-10 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
+                className={`min-h-11 rounded-xl px-3.5 text-xs font-bold cursor-pointer ${
                   statusTab === k ? "bg-[#6366F1] text-white" : "bg-[#1E2A55] text-slate-200"
                 }`}
               >
@@ -209,7 +222,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
             value={assignedBy}
             onChange={(e) => setAssignedBy(e.target.value)}
             aria-label={t("portals:assignments.assignedByFilter")}
-            className="min-h-10 rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-xs font-semibold text-white"
+            className="min-h-11 rounded-xl border border-indigo-400/30 bg-[#0B1026] px-3 text-xs font-semibold text-white"
           >
             <option value="ALL">{t("portals:assignments.assignedByAll")}</option>
             <option value="SYSTEM">{t("portals:assignments.assignedBySystem")}</option>
