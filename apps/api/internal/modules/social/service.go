@@ -231,17 +231,24 @@ func (s *Service) localDateFor(tz string) string {
 	return timewindow.LocalDateString(s.nowClock(), tz)
 }
 
-// energyUsedFor reads the student's durable (or in-memory) energy usage for the
-// given local date.
-func (s *Service) energyUsedFor(ctx context.Context, studentID, localDate string) int {
+// energyUsedFor reads the student's durable (or in-memory) energy usage for
+// the given local date. A durable read error is returned so callers can fail
+// closed (the quota is never displayed as fully available while the store is
+// down); the authoritative quota check still happens inside the
+// consumeEnergy transaction.
+func (s *Service) energyUsedFor(ctx context.Context, studentID, localDate string) (int, error) {
 	if s.store != nil {
 		var doc duelEnergyDoc
-		if found, err := s.store.Load(ctx, studentID, duelEnergyModule(localDate), &doc); err == nil && found {
-			return doc.Used
+		found, err := s.store.Load(ctx, studentID, duelEnergyModule(localDate), &doc)
+		if err != nil {
+			return DailyEnergyMax, err
 		}
-		return 0
+		if found {
+			return doc.Used, nil
+		}
+		return 0, nil
 	}
-	return s.energyUsed[studentID+":"+localDate]
+	return s.energyUsed[studentID+":"+localDate], nil
 }
 
 // consumeEnergy atomically consumes one energy cell for the local date. In
@@ -536,7 +543,12 @@ func (s *Service) GetLobby(ctx context.Context, studentID string, grade int, tz,
 	s.hydrateDuels(ctx, studentID)
 	s.ensureIncomingLocked(ctx, studentID, grade, locale)
 	localDate := s.localDateFor(tz)
-	used := s.energyUsedFor(ctx, studentID, localDate)
+	used, err := s.energyUsedFor(ctx, studentID, localDate)
+	if err != nil {
+		// Fail closed: show no energy cells while the durable store is down
+		// (the quota check inside consumeEnergy remains authoritative).
+		used = DailyEnergyMax
+	}
 	left := DailyEnergyMax - used
 	if left < 0 {
 		left = 0
@@ -599,7 +611,9 @@ func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz
 	}
 	s.hydrateDuels(ctx, studentID)
 	localDate := s.localDateFor(tz)
-	if s.energyUsedFor(ctx, studentID, localDate) >= DailyEnergyMax {
+	if used, err := s.energyUsedFor(ctx, studentID, localDate); err != nil || used >= DailyEnergyMax {
+		// Fail closed on a durable read error: better a spurious 429 (the
+		// client can retry) than a free energy cell.
 		return DuelRecord{}, 0, ErrNoEnergy
 	}
 
@@ -611,7 +625,11 @@ func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz
 	if err := s.consumeEnergy(ctx, studentID, localDate); err != nil {
 		return DuelRecord{}, 0, err
 	}
-	energyLeft := DailyEnergyMax - s.energyUsedFor(ctx, studentID, localDate)
+	usedAfter, err := s.energyUsedFor(ctx, studentID, localDate)
+	if err != nil {
+		usedAfter = DailyEnergyMax
+	}
+	energyLeft := DailyEnergyMax - usedAfter
 
 	s.seq++
 	id := newDuelID()

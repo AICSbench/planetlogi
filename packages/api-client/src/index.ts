@@ -586,6 +586,7 @@ export interface CreatorSubmission {
   grade: number;
   title: string;
   summary: string;
+  status: string;
   submittedAt: string;
 }
 

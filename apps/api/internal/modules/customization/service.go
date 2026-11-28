@@ -176,7 +176,10 @@ func (s *Service) GetBuddy(ctx context.Context, studentID, firstName string) Ast
 	}
 }
 
-func (s *Service) SaveBuddy(ctx context.Context, studentID, firstName string, cfg AstroBuddyConfig) AstroBuddyConfig {
+// SaveBuddy persists the Astro Buddy config durably (PG mode); a persistence
+// failure is propagated so the client knows the save did not stick instead of
+// receiving a false success.
+func (s *Service) SaveBuddy(ctx context.Context, studentID, firstName string, cfg AstroBuddyConfig) (AstroBuddyConfig, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if firstName == "" {
@@ -199,12 +202,12 @@ func (s *Service) SaveBuddy(ctx context.Context, studentID, firstName string, cf
 			doc.Buddy = &cfg
 			return doc, nil
 		}); err != nil {
-			return cfg
+			return AstroBuddyConfig{}, err
 		}
-		return cfg
+		return cfg, nil
 	}
 	s.buddies[studentID] = cfg
-	return cfg
+	return cfg, nil
 }
 
 // showcaseScope stores the Galaxy Showcase entry list in the shared
@@ -504,7 +507,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body AstroBuddyConfig }{Body: h.svc.SaveBuddy(ctx, ident.ID, name, in.Body)}, nil
+		cfg, err := h.svc.SaveBuddy(ctx, ident.ID, name, in.Body)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable("could not save Astro Buddy; try again")
+		}
+		return &struct{ Body AstroBuddyConfig }{Body: cfg}, nil
 	})
 
 	huma.Register(api, huma.Operation{

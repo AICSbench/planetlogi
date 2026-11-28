@@ -2,6 +2,8 @@ package leaderboards
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -153,9 +155,17 @@ type creatorQueueDoc struct {
 	Pending []CreatorSubmission `json:"pending"`
 }
 
+// bonusGiftDoc is the durable per-student daily bonus gift claim record, so
+// the claimed status shown by GetBonusGift survives restarts and is shared by
+// every API instance instead of living in a process-local map.
+type bonusGiftDoc struct {
+	Claimed map[string]bool `json:"claimed"` // YYYY-MM-DD -> claimed
+}
+
 const (
 	meteorDailyModule  = "sunday_meteor_v1"
 	creatorQueueModule = "creator_challenge_v1"
+	bonusGiftModule    = "bonus_gift_claims_v1"
 )
 
 type Service struct {
@@ -423,14 +433,33 @@ func maskName(full string) string {
 	return parts[0] + " " + strings.ToUpper(last[:1]) + "."
 }
 
-func (s *Service) GetBonusGift(studentID, tz string) BonusGiftStatus {
+// durableBonusClaimed reads the student's durable daily-gift claim record
+// (PG mode). The in-memory map stays the source of truth for test mode.
+func (s *Service) durableBonusClaimed(ctx context.Context, studentID, localDate string) bool {
+	if s.store == nil {
+		return false
+	}
+	var doc bonusGiftDoc
+	if found, err := s.store.Load(ctx, studentID, bonusGiftModule, &doc); err == nil && found {
+		return doc.Claimed[localDate]
+	}
+	return false
+}
+
+// GetBonusGift reports today's daily bonus gift status; the claimed flag is
+// read from durable state so it stays correct across restarts and instances.
+func (s *Service) GetBonusGift(ctx context.Context, studentID, tz string) BonusGiftStatus {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	localDate := timewindow.LocalDateString(s.nowClock(), tz)
 	key := studentID + ":" + localDate
+	claimed := s.bonusClaimed[key]
+	if durable := s.durableBonusClaimed(ctx, studentID, localDate); durable {
+		claimed = true
+	}
 	return BonusGiftStatus{
 		LocalDate: localDate,
-		Claimed:   s.bonusClaimed[key],
+		Claimed:   claimed,
 		RewardAC:  DailyBonusGiftAC,
 	}
 }
@@ -441,6 +470,9 @@ func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (Bon
 	key := studentID + ":" + localDate
 	claimed := s.bonusClaimed[key]
 	s.mu.Unlock()
+	if durable := s.durableBonusClaimed(ctx, studentID, localDate); durable {
+		claimed = true
+	}
 	if claimed {
 		return BonusGiftStatus{LocalDate: localDate, Claimed: true, RewardAC: DailyBonusGiftAC}, ErrAlreadyClaimedToday
 	}
@@ -459,6 +491,22 @@ func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (Bon
 		})
 		if err != nil && !res.WasDuplicate {
 			return BonusGiftStatus{LocalDate: localDate, RewardAC: DailyBonusGiftAC}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+		}
+	}
+
+	// Persist the claim durably so the claimed status survives restarts (the
+	// in-memory map is a fast-path mirror).
+	if s.store != nil {
+		if err := s.store.SaveMerged(ctx, studentID, bonusGiftModule, func(current []byte) (any, error) {
+			var doc bonusGiftDoc
+			_ = json.Unmarshal(current, &doc)
+			if doc.Claimed == nil {
+				doc.Claimed = map[string]bool{}
+			}
+			doc.Claimed[localDate] = true
+			return doc, nil
+		}); err != nil {
+			return BonusGiftStatus{LocalDate: localDate, RewardAC: DailyBonusGiftAC}, err
 		}
 	}
 
@@ -588,11 +636,9 @@ func (s *Service) StartSundayMeteor(ctx context.Context, studentID string, grade
 	}
 
 	tpls, seeds, qs := buildMeteorQuestions(sid, grade, locale)
-	s.mu.Lock()
-	s.meteorSess[sid] = &meteorSession{id: sid, studentID: studentID, templates: tpls, seeds: seeds}
-	s.meteorDaily[dailyKey] = sid
-	s.mu.Unlock()
-
+	// Publish to the in-memory cache ONLY after the durable create succeeds,
+	// so a failed save is retried on the next start instead of being masked
+	// by the cache.
 	if s.store != nil {
 		if err := s.store.Save(ctx, studentID, meteorDailyModule, meteorDailyDoc{
 			LocalDate: localDate,
@@ -602,6 +648,10 @@ func (s *Service) StartSundayMeteor(ctx context.Context, studentID string, grade
 			return SundayMeteorStart{}, err
 		}
 	}
+	s.mu.Lock()
+	s.meteorSess[sid] = &meteorSession{id: sid, studentID: studentID, templates: tpls, seeds: seeds}
+	s.meteorDaily[dailyKey] = sid
+	s.mu.Unlock()
 	return SundayMeteorStart{SessionID: sid, Questions: qs}, nil
 }
 
@@ -664,23 +714,6 @@ func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, 
 		}
 	}
 	rewardSP := int64(correct * SundayMeteorSPPerQ)
-	// Apply the ledger BEFORE recording completion: on ledger failure the
-	// session stays open so the student can retry (the idempotency key
-	// prevents double-awarding on success).
-	if s.ledger != nil && rewardSP > 0 {
-		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
-			StudentID:      studentID,
-			Currency:       economy.CurrencySP,
-			Delta:          rewardSP,
-			SourceType:     "SUNDAY_METEOR",
-			SourceID:       sessionID,
-			IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
-		}); err != nil {
-			s.mu.Unlock()
-			return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
-		}
-	}
-	sess.done = true
 	out := SundayMeteorResult{
 		SessionID: sessionID,
 		Correct:   correct,
@@ -691,29 +724,77 @@ func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, 
 	seeds := sess.seeds
 	s.mu.Unlock()
 
-	// Persist the completed flag so the one-session-per-day limit holds
-	// across restarts (PG mode).
+	// Bind completion to the session's ORIGINAL local date (embedded in the
+	// session ID), never to NOW: a session started at Sunday 23:50 and
+	// submitted after midnight still completes for Sunday, so the
+	// one-session-per-day limit cannot leak across midnight.
+	sessDate := strings.TrimPrefix(sessionID, "meteor-"+studentID+"-")
+
 	if s.store != nil {
-		localDate := timewindow.LocalDateString(s.nowClock(), tz)
-		if err := s.store.SaveMerged(ctx, studentID, meteorDailyModule, func(current []byte) (any, error) {
+		// Durable mode: the ledger award and the done flag commit in ONE
+		// transaction — the reward never exists without the durable flag,
+		// and a failure rolls back both so the retry regrades cleanly.
+		tx, err := s.pool.Begin(ctx)
+		if err != nil {
+			return SundayMeteorResult{}, err
+		}
+		defer func() { _ = tx.Rollback(ctx) }()
+		if _, err := economy.ApplyBatchInTx(ctx, tx, s.ledger, []economy.MutationRequest{
+			{
+				StudentID:      studentID,
+				Currency:       economy.CurrencySP,
+				Delta:          rewardSP,
+				SourceType:     "SUNDAY_METEOR",
+				SourceID:       sessionID,
+				IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
+			},
+		}); err != nil {
+			return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+		}
+		if err := s.store.SaveMergedTx(ctx, tx, studentID, meteorDailyModule, func(current []byte) (any, error) {
 			var doc meteorDailyDoc
 			if len(current) > 0 {
 				if err := json.Unmarshal(current, &doc); err != nil {
 					return nil, err
 				}
 			}
-			if doc.LocalDate != localDate && doc.LocalDate != "" && doc.Done {
+			if doc.Done {
 				return nil, ErrMeteorAlreadyDone
 			}
-			doc.LocalDate = localDate
+			doc.LocalDate = sessDate
 			doc.Templates = templates
 			doc.Seeds = seeds
 			doc.Done = true
 			return doc, nil
 		}); err != nil {
-			return out, err
+			return SundayMeteorResult{}, err
+		}
+		if err := tx.Commit(ctx); err != nil {
+			return SundayMeteorResult{}, err
+		}
+		s.mu.Lock()
+		sess.done = true
+		s.mu.Unlock()
+		return out, nil
+	}
+
+	// In-memory (test) mode: apply the ledger BEFORE recording completion;
+	// on ledger failure the session stays open so the student can retry.
+	if s.ledger != nil && rewardSP > 0 {
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			StudentID:      studentID,
+			Currency:       economy.CurrencySP,
+			Delta:          rewardSP,
+			SourceType:     "SUNDAY_METEOR",
+			SourceID:       sessionID,
+			IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
+		}); err != nil {
+			return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
 		}
 	}
+	s.mu.Lock()
+	sess.done = true
+	s.mu.Unlock()
 	return out, nil
 }
 
@@ -746,15 +827,25 @@ func (s *Service) findMeteorSession(ctx context.Context, studentID, sessionID st
 	return sess
 }
 
+// newSubmissionID returns a random submission ID so durable queue entries
+// never collide after a restart (the old "cr-<seq>" IDs reset with the
+// process — same bug class as the duel ID fix).
+func newSubmissionID() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("cr-%d", time.Now().UnixNano())
+	}
+	return "cr-" + hex.EncodeToString(b[:])
+}
+
 // SubmitCreatorChallenge stores a child's submission in a private moderation
 // queue with status PENDING. Nothing is added to the public Creator Entries
 // list until a moderator approves it, so raw child-submitted text (phone
 // numbers, emails, unsafe content) never reaches other readers unreviewed.
 func (s *Service) SubmitCreatorChallenge(ctx context.Context, studentID, displayName string, grade int, title, summary string) (CreatorSubmission, error) {
 	s.mu.Lock()
-	s.seq++
 	entry := CreatorSubmission{
-		ID:          fmt.Sprintf("cr-%d", s.seq+10),
+		ID:          newSubmissionID(),
 		AuthorMask:  maskName(displayName),
 		Grade:       grade,
 		Title:       strings.TrimSpace(title),
@@ -919,7 +1010,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body BonusGiftStatus }{Body: h.svc.GetBonusGift(ident.ID, ident.Timezone)}, nil
+		return &struct{ Body BonusGiftStatus }{Body: h.svc.GetBonusGift(ctx, ident.ID, ident.Timezone)}, nil
 	})
 
 	huma.Register(api, huma.Operation{

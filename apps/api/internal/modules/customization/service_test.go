@@ -25,7 +25,10 @@ func TestAstroBuddyShowcaseAndBadgeRecovery(t *testing.T) {
 	}
 
 	// Safe 2-part name prevents arbitrary free text
-	saved := svc.SaveBuddy(context.Background(), "stu-1", "Raka", AstroBuddyConfig{Adjective: "BadFreeText", BodyShape: "star", ColorHex: "#22D3EE"})
+	saved, err := svc.SaveBuddy(context.Background(), "stu-1", "Raka", AstroBuddyConfig{Adjective: "BadFreeText", BodyShape: "star", ColorHex: "#22D3EE"})
+	if err != nil {
+		t.Fatalf("SaveBuddy: %v", err)
+	}
 	if saved.FullName != "Starry Raka" {
 		t.Fatalf("expected fallback safe name 'Starry Raka', got %q", saved.FullName)
 	}

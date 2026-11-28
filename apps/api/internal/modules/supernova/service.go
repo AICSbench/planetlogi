@@ -47,10 +47,13 @@ var (
 )
 
 // supernovaProgressDoc is the durable weekly score + score history document
-// per student, so diamond S totals survive restarts.
+// per student, so diamond S totals survive restarts. Recorded keeps the
+// session IDs already persisted, so a ledger duplicate (a previous attempt
+// applied the reward but the durable write failed) is written exactly once.
 type supernovaProgressDoc struct {
-	Weekly  map[string]int      `json:"weekly"`
-	History []ScoreHistoryEntry `json:"history"`
+	Weekly   map[string]int      `json:"weekly"`
+	History  []ScoreHistoryEntry `json:"history"`
+	Recorded map[string]bool     `json:"recorded,omitempty"`
 }
 
 const supernovaProgressModule = "supernova_progress_v1"
@@ -108,15 +111,19 @@ type SuperWarpStart struct {
 }
 
 type sightState struct {
-	id         string
-	studentID  string
-	puzzleID   string
-	title      mathengine.LocaleText
-	targets    []DiffTarget
-	found      int
-	wrong      int
-	score      int
-	completed  bool
+	id        string
+	studentID string
+	puzzleID  string
+	title     mathengine.LocaleText
+	targets   []DiffTarget
+	found     int
+	wrong     int
+	score     int
+	completed bool
+	// ending freezes the session once its end condition is reached but the
+	// score record is still pending (ledger failure): no further tap may
+	// change the score, retries only attempt to persist the frozen score.
+	ending     bool
 	isPractice bool
 	deadline   time.Time
 }
@@ -129,34 +136,40 @@ type warpState struct {
 	seeds      []int64
 	score      int
 	finished   bool
-	deadline   time.Time
+	// graded means the answers were graded once and the score is frozen;
+	// new input is no longer accepted, retries only (re)record the score.
+	graded   bool
+	onTime   bool // graded before the server deadline (expired grades score 0)
+	deadline time.Time
 }
 
 type Service struct {
-	mu             sync.Mutex
-	ledger         economy.Ledger
-	pool           *pgxpool.Pool
-	store          *state.PGStore
-	weeklyScores   map[string]int // studentID:weekKey -> diamond S score
-	history        map[string][]ScoreHistoryEntry
-	progressLoaded map[string]bool
-	sightSess      map[string]*sightState
-	warpSess       map[string]*warpState
-	seq            int
-	nowClock       func() time.Time
-	enforceOpen    bool
+	mu               sync.Mutex
+	ledger           economy.Ledger
+	pool             *pgxpool.Pool
+	store            *state.PGStore
+	weeklyScores     map[string]int // studentID:weekKey -> diamond S score
+	history          map[string][]ScoreHistoryEntry
+	progressLoaded   map[string]bool
+	recordedSessions map[string]bool // studentID:sessionID -> already added to score/history
+	sightSess        map[string]*sightState
+	warpSess         map[string]*warpState
+	seq              int
+	nowClock         func() time.Time
+	enforceOpen      bool
 }
 
 func NewService(ledger economy.Ledger) *Service {
 	return &Service{
-		ledger:         ledger,
-		weeklyScores:   make(map[string]int),
-		history:        make(map[string][]ScoreHistoryEntry),
-		progressLoaded: make(map[string]bool),
-		sightSess:      make(map[string]*sightState),
-		warpSess:       make(map[string]*warpState),
-		seq:            100,
-		nowClock:       time.Now,
+		ledger:           ledger,
+		weeklyScores:     make(map[string]int),
+		history:          make(map[string][]ScoreHistoryEntry),
+		progressLoaded:   make(map[string]bool),
+		recordedSessions: make(map[string]bool),
+		sightSess:        make(map[string]*sightState),
+		warpSess:         make(map[string]*warpState),
+		seq:              100,
+		nowClock:         time.Now,
 		// Ranked windows are enforced by default in production; tests and
 		// demos can relax it via config (SUPERNOVA_ENFORCE_OPEN) or the
 		// SetEnforceWindow setter. Per-question auto-skip stays client-side.
@@ -271,6 +284,9 @@ func (s *Service) ensureProgressLocked(ctx context.Context, studentID string) {
 		s.weeklyScores[studentID+":"+week] = doc.Weekly[week]
 	}
 	s.history[studentID] = doc.History
+	for id := range doc.Recorded {
+		s.recordedSessions[studentID+":"+id] = true
+	}
 }
 
 func (s *Service) StartSuperSight(studentID, tz, locale string, isPractice bool) (SuperSightSession, error) {
@@ -312,12 +328,24 @@ func (s *Service) TapSuperSight(ctx context.Context, studentID, sessionID string
 		return false, renderSight(st, locale), ErrSessionEnded
 	}
 
+	// The session reached its end condition (or deadline) but the frozen
+	// score is still pending in the ledger: no further tap may change the
+	// score — this attempt only retries recording it.
+	if st.ending {
+		if err := s.recordScore(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id); err != nil {
+			return false, renderSight(st, locale), err
+		}
+		st.completed = true
+		return false, renderSight(st, locale), ErrSessionEnded
+	}
+
 	// Server-side 5-minute deadline: a tap after the deadline completes the
 	// session with whatever score was reached, and no further taps count.
 	if now := s.nowClock(); now.After(st.deadline) {
+		st.ending = true
 		if err := s.recordScore(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id); err != nil {
-			// The score was not recorded; leave the session open so a retry
-			// (or the next tap) can record it.
+			// The score was not recorded; the session stays frozen on its
+			// reached score and the next tap retries the record only.
 			return false, renderSight(st, locale), err
 		}
 		st.completed = true
@@ -343,9 +371,10 @@ func (s *Service) TapSuperSight(ctx context.Context, studentID, sessionID string
 	}
 
 	if st.found >= SuperSightDiffCount || st.wrong >= SuperSightMaxWrong {
+		// End condition reached: freeze the session first so a failed record
+		// cannot be extended by further taps, then try to record.
+		st.ending = true
 		if err := s.recordScore(ctx, studentID, "SUPER_SIGHT", st.isPractice, st.score, st.id); err != nil {
-			// The score was not recorded; leave the session open so a retry
-			// can still record it.
 			return false, renderSight(st, locale), err
 		}
 		st.completed = true
@@ -399,38 +428,69 @@ func (s *Service) FinishSuperWarp(ctx context.Context, studentID, sessionID stri
 	if !ok || ws.studentID != studentID {
 		return 0, HubSummary{}, fmt.Errorf("super warp session not found")
 	}
-	if !ws.finished {
-		// Server-side 2-minute deadline (plus a small network grace): a
-		// submission arriving past it expires the session with score 0 and
-		// records nothing.
-		if now := s.nowClock(); now.After(ws.deadline) {
-			ws.finished = true
-			ws.score = 0
-			hist := s.history[studentID]
-			if hist == nil {
-				hist = []ScoreHistoryEntry{}
-			}
-			return 0, HubSummary{
-				IsOpen:             true,
-				WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
-				History:            hist,
-			}, nil
+	if ws.finished {
+		hist := s.history[studentID]
+		if hist == nil {
+			hist = []ScoreHistoryEntry{}
 		}
-		score := 0
-		for i, code := range ws.templates {
-			prob, _ := mathengine.GenerateByCode(code, ws.seeds[i], locale)
-			if mathengine.Grade(prob, answers[i+1]).IsCorrect {
-				score++
-			}
-		}
-		if err := s.recordScore(ctx, studentID, "SUPER_WARP", ws.isPractice, score, ws.id); err != nil {
-			// The score was not recorded; leave the session unfinished so a
-			// retry can still record it.
+		return ws.score, HubSummary{
+			IsOpen:             true,
+			WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
+			History:            hist,
+		}, nil
+	}
+	// Already graded (on time or expired): the score is frozen and new input
+	// is no longer accepted — this attempt only (re)records the ledger entry.
+	if ws.graded {
+		if err := s.recordScore(ctx, studentID, "SUPER_WARP", ws.isPractice, ws.score, ws.id); err != nil {
 			return 0, HubSummary{}, err
 		}
-		ws.score = score
 		ws.finished = true
+		hist := s.history[studentID]
+		if hist == nil {
+			hist = []ScoreHistoryEntry{}
+		}
+		return ws.score, HubSummary{
+			IsOpen:             true,
+			WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
+			History:            hist,
+		}, nil
 	}
+	// Server-side 2-minute deadline (plus a small network grace): a
+	// submission arriving past it expires the session with score 0 and
+	// records nothing.
+	if now := s.nowClock(); now.After(ws.deadline) {
+		ws.graded = true
+		ws.onTime = false
+		ws.score = 0
+		ws.finished = true
+		hist := s.history[studentID]
+		if hist == nil {
+			hist = []ScoreHistoryEntry{}
+		}
+		return 0, HubSummary{
+			IsOpen:             true,
+			WeeklyDiamondScore: s.weeklyScores[studentID+":"+s.weekKey()],
+			History:            hist,
+		}, nil
+	}
+	score := 0
+	for i, code := range ws.templates {
+		prob, _ := mathengine.GenerateByCode(code, ws.seeds[i], locale)
+		if mathengine.Grade(prob, answers[i+1]).IsCorrect {
+			score++
+		}
+	}
+	// Grade and freeze the result BEFORE recording: if the ledger is down,
+	// the on-time score is kept and a retry (even after the deadline) records
+	// it without accepting any new input.
+	ws.graded = true
+	ws.onTime = true
+	ws.score = score
+	if err := s.recordScore(ctx, studentID, "SUPER_WARP", ws.isPractice, score, ws.id); err != nil {
+		return 0, HubSummary{}, err
+	}
+	ws.finished = true
 	hist := s.history[studentID]
 	if hist == nil {
 		hist = []ScoreHistoryEntry{}
@@ -446,19 +506,33 @@ func (s *Service) FinishSuperWarp(ctx context.Context, studentID, sessionID stri
 // session unrecorded so the student can retry), then persists weekly score +
 // history durably (PG mode) and mirrors them in memory. The session ID is a
 // random UUID, so the ledger idempotency key stays unique across restarts.
+// The durable write is itself idempotent per session (Recorded set): if a
+// previous attempt applied the ledger reward but failed to persist, a retry
+// writes the score/history exactly once instead of double-counting.
 func (s *Service) recordScore(ctx context.Context, studentID, mode string, isPractice bool, score int, sessionID string) error {
 	// Practice mode NEVER alters weekly diamond S score or the ledger!
+	duplicated := false
 	if !isPractice && score > 0 && s.ledger != nil {
-		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+		res, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
 			Currency:       economy.CurrencySuperS,
 			Delta:          int64(score),
 			SourceType:     mode,
 			SourceID:       sessionID,
 			IdempotencyKey: fmt.Sprintf("supernova:%s:%s", studentID, sessionID),
-		}); err != nil {
+		})
+		if err != nil {
 			return fmt.Errorf("%w: %v", ErrRewardPending, err)
 		}
+		duplicated = res.WasDuplicate
+	}
+
+	// Already recorded this session in memory: nothing more to add. (A ledger
+	// duplicate whose durable write is still missing is handled by the
+	// idempotent durable branch below, which writes it exactly once.)
+	key := studentID + ":" + sessionID
+	if s.recordedSessions[key] {
+		return nil
 	}
 
 	entry := ScoreHistoryEntry{
@@ -479,6 +553,14 @@ func (s *Service) recordScore(ctx context.Context, studentID, mode string, isPra
 					return nil, err
 				}
 			}
+			if doc.Recorded == nil {
+				doc.Recorded = map[string]bool{}
+			}
+			if doc.Recorded[sessionID] {
+				// Another instance/attempt already recorded this session.
+				weeklyValue = doc.Weekly[week]
+				return doc, nil
+			}
 			if doc.Weekly == nil {
 				doc.Weekly = map[string]int{}
 			}
@@ -489,11 +571,13 @@ func (s *Service) recordScore(ctx context.Context, studentID, mode string, isPra
 			if len(doc.History) > HistoryCap {
 				doc.History = doc.History[:HistoryCap]
 			}
+			doc.Recorded[sessionID] = true
 			weeklyValue = doc.Weekly[week]
 			return doc, nil
 		}); err != nil {
 			return err
 		}
+		s.recordedSessions[key] = true
 		s.weeklyScores[studentID+":"+week] = weeklyValue
 		// Reload the merged history so the in-memory mirror matches the doc.
 		var doc supernovaProgressDoc
@@ -503,6 +587,11 @@ func (s *Service) recordScore(ctx context.Context, studentID, mode string, isPra
 		return nil
 	}
 
+	// In-memory (test) mode: a ledger duplicate must not be added again.
+	if duplicated {
+		return nil
+	}
+	s.recordedSessions[key] = true
 	s.history[studentID] = append([]ScoreHistoryEntry{entry}, s.history[studentID]...)
 	if len(s.history[studentID]) > HistoryCap {
 		s.history[studentID] = s.history[studentID][:HistoryCap]

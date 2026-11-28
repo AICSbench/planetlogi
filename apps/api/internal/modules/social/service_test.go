@@ -65,26 +65,36 @@ func TestStarDuelGradingAndIdempotentSP(t *testing.T) {
 		t.Fatalf("expected completed duel with participation SP, got %+v", res1)
 	}
 
-	// Verify ledger SP updated via probe mutation
-	probe1, _ := ledger.Apply(ctx, economy.MutationRequest{
+	// Verify the wallet was actually credited with the participation reward.
+	probe1, err := ledger.Apply(ctx, economy.MutationRequest{
 		StudentID:      "stu-2",
 		Currency:       economy.CurrencySP,
 		Delta:          1,
 		SourceType:     "PROBE",
 		IdempotencyKey: "probe-1",
 	})
+	if err != nil {
+		t.Fatalf("probe ledger: %v", err)
+	}
+	if want := int64(10) + res1.RewardSP + 1; probe1.Wallet.TotalSP != want {
+		t.Fatalf("expected wallet %d (initial 10 + reward %d + probe 1), got %d", want, res1.RewardSP, probe1.Wallet.TotalSP)
+	}
+
 	// Replay submit is idempotent
 	_, err = svc.SubmitDuel(ctx, "stu-2", duel.ID, "id", map[int]map[string]string{})
 	if err != nil {
 		t.Fatalf("replay SubmitDuel: %v", err)
 	}
-	probe2, _ := ledger.Apply(ctx, economy.MutationRequest{
+	probe2, err := ledger.Apply(ctx, economy.MutationRequest{
 		StudentID:      "stu-2",
 		Currency:       economy.CurrencySP,
 		Delta:          1,
 		SourceType:     "PROBE",
 		IdempotencyKey: "probe-2",
 	})
+	if err != nil {
+		t.Fatalf("probe ledger 2: %v", err)
+	}
 	if probe2.Wallet.TotalSP != probe1.Wallet.TotalSP+1 {
 		t.Fatalf("expected idempotent SP award (only +1 from probe), got %d then %d", probe1.Wallet.TotalSP, probe2.Wallet.TotalSP)
 	}

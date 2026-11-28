@@ -39,7 +39,9 @@ function CosmicSceneSVG({
   const found = new Set(foundIds ?? []);
 
   // Keyboard-operable hotspots over the five difference targets so the Super
-  // Sight canvas is fully usable without a pointer (CR-15).
+  // Sight canvas is fully usable without a pointer (CR-15). The dashed
+  // outline is rendered only while a hotspot has keyboard focus, so it never
+  // leaks the remaining target locations to sighted players.
   const keyboardTargets = INTERACTIVE_TARGETS.filter((tgt) => onTapNormalized && !found.has(tgt.id));
 
   return (
@@ -106,17 +108,23 @@ function CosmicSceneSVG({
         {found.has(5) ? <circle cx="296" cy="195" r="28" fill="none" stroke="#10B981" strokeWidth="4" /> : null}
       </g>
 
+      {/* Focus-only outline for the keyboard hotspots */}
+      <style>{`
+        .sight-hotspot:focus-visible {
+          stroke: #22d3ee;
+        }
+      `}</style>
       {/* Keyboard hotspots: focusable overlays over the remaining targets */}
       {keyboardTargets.map((tgt) => (
         <rect
           key={tgt.id}
+          className="sight-hotspot"
           x={tgt.cx - 32}
           y={tgt.cy - 22}
           width={64}
           height={44}
           rx={10}
           fill="transparent"
-          stroke="#22D3EE"
           strokeDasharray="5 5"
           strokeWidth="2"
           role="button"
@@ -273,7 +281,10 @@ export function SuperNovaPage({ locale }: { locale: Locale }) {
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [warpSess, warpResult, isPaused, pauseQueued, warpAnswers, finishWarpMut]);
+    // Deps keep only primitives + the stable session object: the mutable
+    // answers and the mutation object are reached through finishWarpNowRef,
+    // so submitting cannot tear down and re-create the interval (drift).
+  }, [warpSess, warpResult, isPaused, pauseQueued]);
 
   function submitWarpQuestion() {
     if (!warpSess) return;
