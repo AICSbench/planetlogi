@@ -141,6 +141,7 @@ type Service struct {
 	papers          []paperDef
 	attempts        map[string]map[string]*attemptState // studentID -> paperCode -> state
 	weeklySupplyPod map[string]bool                     // studentID:weekKey -> claimed
+	weeklyPaper     map[string]string                   // studentID:weekKey -> paper that earned it
 	nowClock        func() time.Time
 }
 
@@ -151,6 +152,7 @@ func NewService(ledger economy.Ledger) *Service {
 		papers:          buildPapers(),
 		attempts:        make(map[string]map[string]*attemptState),
 		weeklySupplyPod: make(map[string]bool),
+		weeklyPaper:     make(map[string]string),
 		nowClock:        time.Now,
 	}
 }
@@ -162,8 +164,9 @@ func NewServiceWithStore(store state.Store, ledger economy.Ledger) *Service {
 }
 
 type quizState struct {
-	Attempts map[string]attemptStateDTO `json:"attempts"`
-	Weekly   map[string]bool            `json:"weekly"`
+	Attempts    map[string]attemptStateDTO `json:"attempts"`
+	Weekly      map[string]bool            `json:"weekly"`
+	WeeklyPaper map[string]string          `json:"weeklyPaper,omitempty"`
 }
 
 type attemptStateDTO struct {
@@ -251,6 +254,9 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 			s.weeklySupplyPod[key] = true
 		}
 	}
+	for key, paper := range st.WeeklyPaper {
+		s.weeklyPaper[key] = paper
+	}
 	s.loaded[studentID] = true
 	s.mu.Unlock()
 	return nil
@@ -271,6 +277,14 @@ func mergeQuizState(currentRaw []byte, snapshot quizState) (any, error) {
 	}
 	if current.Weekly == nil {
 		current.Weekly = make(map[string]bool)
+	}
+	if current.WeeklyPaper == nil {
+		current.WeeklyPaper = make(map[string]string)
+	}
+	for key, paper := range snapshot.WeeklyPaper {
+		if current.WeeklyPaper[key] == "" {
+			current.WeeklyPaper[key] = paper
+		}
 	}
 	for code, snap := range snapshot.Attempts {
 		existing, ok := current.Attempts[code]
@@ -336,8 +350,9 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	}
 	s.mu.Lock()
 	st := quizState{
-		Attempts: make(map[string]attemptStateDTO),
-		Weekly:   make(map[string]bool),
+		Attempts:    make(map[string]attemptStateDTO),
+		Weekly:      make(map[string]bool),
+		WeeklyPaper: make(map[string]string),
 	}
 	for code, attempt := range s.attempts[studentID] {
 		st.Attempts[code] = attempt.toDTO()
@@ -346,6 +361,11 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	for key, claimed := range s.weeklySupplyPod {
 		if claimed && strings.HasPrefix(key, prefix) {
 			st.Weekly[key] = true
+		}
+	}
+	for key, paper := range s.weeklyPaper {
+		if strings.HasPrefix(key, prefix) {
+			st.WeeklyPaper[key] = paper
 		}
 	}
 	s.mu.Unlock()
@@ -444,10 +464,10 @@ func mergeSubmissionAttempt(dto attemptStateDTO, p paperDef, drafts map[int]map[
 	return dto
 }
 
-func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef, drafts map[int]map[string]string, locale, claimWeek string) (attemptStateDTO, map[string]bool, error) {
+func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef, drafts map[int]map[string]string, locale, claimWeek string) (attemptStateDTO, map[string]bool, map[string]string, error) {
 	ms, ok := s.store.(state.MergeStore)
 	if !ok {
-		return attemptStateDTO{}, nil, fmt.Errorf("astroquiz store does not support atomic merges")
+		return attemptStateDTO{}, nil, nil, fmt.Errorf("astroquiz store does not support atomic merges")
 	}
 	s.mu.Lock()
 	snapshotWeekly := make(map[string]bool)
@@ -455,6 +475,12 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 	for key, claimed := range s.weeklySupplyPod {
 		if claimed && strings.HasPrefix(key, prefix) {
 			snapshotWeekly[key] = true
+		}
+	}
+	snapshotWeeklyPaper := make(map[string]string)
+	for key, paper := range s.weeklyPaper {
+		if strings.HasPrefix(key, prefix) {
+			snapshotWeeklyPaper[key] = paper
 		}
 	}
 	var localAwarded bool
@@ -470,10 +496,12 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 	now := s.nowClock()
 	var submitted attemptStateDTO
 	var mergedWeekly map[string]bool
+	var mergedWeeklyPaper map[string]string
 	err := ms.SaveMerged(ctx, studentID, "astroquiz", func(currentRaw []byte) (any, error) {
 		current := quizState{
-			Attempts: make(map[string]attemptStateDTO),
-			Weekly:   make(map[string]bool),
+			Attempts:    make(map[string]attemptStateDTO),
+			Weekly:      make(map[string]bool),
+			WeeklyPaper: make(map[string]string),
 		}
 		if len(currentRaw) > 0 {
 			if err := json.Unmarshal(currentRaw, &current); err != nil {
@@ -486,8 +514,16 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 		if current.Weekly == nil {
 			current.Weekly = make(map[string]bool)
 		}
+		if current.WeeklyPaper == nil {
+			current.WeeklyPaper = make(map[string]string)
+		}
 		for key, claimed := range snapshotWeekly {
 			current.Weekly[key] = current.Weekly[key] || claimed
+		}
+		for key, paper := range snapshotWeeklyPaper {
+			if current.WeeklyPaper[key] == "" {
+				current.WeeklyPaper[key] = paper
+			}
 		}
 		submitted = mergeSubmissionAttempt(current.Attempts[p.code], p, drafts, locale, claimWeek, now)
 		if localAwarded && localClaimWeek != "" && submitted.ClaimWeek == localClaimWeek {
@@ -496,18 +532,29 @@ func (s *Service) submitAtomic(ctx context.Context, studentID string, p paperDef
 			submitted.SupplyPodAwarded = true
 			submitted.RewardClaimed = true
 			current.Weekly[studentID+":"+localClaimWeek] = true
+			current.WeeklyPaper[studentID+":"+localClaimWeek] = p.code
+		}
+		if submitted.ClaimWeek != "" {
+			wkKey := studentID + ":" + submitted.ClaimWeek
+			if !current.Weekly[wkKey] && current.WeeklyPaper[wkKey] == "" {
+				current.WeeklyPaper[wkKey] = p.code
+			}
 		}
 		current.Attempts[p.code] = submitted
 		mergedWeekly = make(map[string]bool, len(current.Weekly))
 		for key, claimed := range current.Weekly {
 			mergedWeekly[key] = claimed
 		}
+		mergedWeeklyPaper = make(map[string]string, len(current.WeeklyPaper))
+		for key, paper := range current.WeeklyPaper {
+			mergedWeeklyPaper[key] = paper
+		}
 		return current, nil
 	})
 	if err != nil {
-		return attemptStateDTO{}, nil, err
+		return attemptStateDTO{}, nil, nil, err
 	}
-	return submitted, mergedWeekly, nil
+	return submitted, mergedWeekly, mergedWeeklyPaper, nil
 }
 
 func (s *Service) submitLocal(ctx context.Context, studentID string, p paperDef, drafts map[int]map[string]string, locale, claimWeek string) (attemptStateDTO, error) {
@@ -654,8 +701,9 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 	if s.store != nil && isUUID(studentID) {
 		if _, ok := s.store.(state.MergeStore); ok {
 			var mergedWeekly map[string]bool
+			var mergedWeeklyPaper map[string]string
 			var err error
-			submitted, mergedWeekly, err = s.submitAtomic(ctx, studentID, p, drafts, locale, claimWeek)
+			submitted, mergedWeekly, mergedWeeklyPaper, err = s.submitAtomic(ctx, studentID, p, drafts, locale, claimWeek)
 			if err != nil {
 				return PaperAttemptView{}, err
 			}
@@ -669,6 +717,9 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 					s.weeklySupplyPod[key] = true
 				}
 			}
+			for key, paper := range mergedWeeklyPaper {
+				s.weeklyPaper[key] = paper
+			}
 			s.mu.Unlock()
 		} else if _, err := s.submitLocal(ctx, studentID, p, drafts, locale, claimWeek); err != nil {
 			return PaperAttemptView{}, err
@@ -677,24 +728,38 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 		return PaperAttemptView{}, err
 	}
 
-	// The submitted attempt is durable now. Award the weekly pod from the
-	// canonical claim week, leaving it retryable if the ledger fails.
+	// The submitted attempt is durable now. Settle the weekly pod from the
+	// canonical claim week and the paper that reserved it.
 	s.mu.Lock()
 	st := s.getOrCreateAttemptLocked(studentID, p.code)
 	claimWeek = st.claimWeek
 	wkKey := studentID + ":" + claimWeek
-	needsReward := !st.rewardClaimed
 	weeklyClaimed := s.weeklySupplyPod[wkKey]
+	weeklyPaper := s.weeklyPaper[wkKey]
+	needsReward := !st.rewardClaimed || (weeklyPaper == p.code && !st.supplyPodAwarded)
 	view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 	s.mu.Unlock()
 
 	if needsReward {
-		if s.ledger == nil || weeklyClaimed {
+		switch {
+		case weeklyPaper != "" && weeklyPaper != p.code:
+			// Another paper earned this week; this paper may submit but
+			// must not receive the pod badge.
 			s.mu.Lock()
 			st = s.getOrCreateAttemptLocked(studentID, p.code)
 			st.rewardClaimed = true
-			if s.ledger == nil {
-				s.weeklySupplyPod[wkKey] = true
+			view = s.renderAttemptLocked(ctx, studentID, p, st, locale)
+			s.mu.Unlock()
+			if err := s.persistStudent(ctx, studentID); err != nil {
+				return PaperAttemptView{}, err
+			}
+		case weeklyClaimed:
+			// The credit is already settled. Only the paper that reserved
+			// the week may carry the badge.
+			s.mu.Lock()
+			st = s.getOrCreateAttemptLocked(studentID, p.code)
+			st.rewardClaimed = true
+			if weeklyPaper == p.code {
 				st.supplyPodAwarded = true
 			}
 			view = s.renderAttemptLocked(ctx, studentID, p, st, locale)
@@ -702,26 +767,41 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 			if err := s.persistStudent(ctx, studentID); err != nil {
 				return PaperAttemptView{}, err
 			}
-		} else {
-			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencyAC,
-				Delta:          WeeklySupplyPodRewardAC,
-				SourceType:     "ASTRO_QUIZ_SUPPLY_POD",
-				SourceID:       claimWeek,
-				IdempotencyKey: fmt.Sprintf("supply_pod:%s:%s", studentID, claimWeek),
-			}); err != nil {
-				return PaperAttemptView{}, fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
-			}
-			s.mu.Lock()
-			st = s.getOrCreateAttemptLocked(studentID, p.code)
-			s.weeklySupplyPod[wkKey] = true
-			st.rewardClaimed = true
-			st.supplyPodAwarded = true
-			view = s.renderAttemptLocked(ctx, studentID, p, st, locale)
-			s.mu.Unlock()
-			if err := s.persistStudent(ctx, studentID); err != nil {
-				return PaperAttemptView{}, err
+		default:
+			if s.ledger == nil {
+				s.mu.Lock()
+				st = s.getOrCreateAttemptLocked(studentID, p.code)
+				s.weeklySupplyPod[wkKey] = true
+				s.weeklyPaper[wkKey] = p.code
+				st.rewardClaimed = true
+				st.supplyPodAwarded = true
+				view = s.renderAttemptLocked(ctx, studentID, p, st, locale)
+				s.mu.Unlock()
+				if err := s.persistStudent(ctx, studentID); err != nil {
+					return PaperAttemptView{}, err
+				}
+			} else {
+				if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+					StudentID:      studentID,
+					Currency:       economy.CurrencyAC,
+					Delta:          WeeklySupplyPodRewardAC,
+					SourceType:     "ASTRO_QUIZ_SUPPLY_POD",
+					SourceID:       p.code,
+					IdempotencyKey: fmt.Sprintf("supply_pod:%s:%s", studentID, claimWeek),
+				}); err != nil {
+					return PaperAttemptView{}, fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
+				}
+				s.mu.Lock()
+				st = s.getOrCreateAttemptLocked(studentID, p.code)
+				s.weeklySupplyPod[wkKey] = true
+				s.weeklyPaper[wkKey] = p.code
+				st.rewardClaimed = true
+				st.supplyPodAwarded = true
+				view = s.renderAttemptLocked(ctx, studentID, p, st, locale)
+				s.mu.Unlock()
+				if err := s.persistStudent(ctx, studentID); err != nil {
+					return PaperAttemptView{}, err
+				}
 			}
 		}
 	}
@@ -830,9 +910,15 @@ func (s *Service) renderAttemptLocked(ctx context.Context, studentID string, p p
 		qs[i] = pq
 	}
 
-	retryable := st.status == "SUBMITTED" && !st.supplyPodAwarded && !st.rewardClaimed
+	retryable := st.status == "SUBMITTED" && !st.supplyPodAwarded
 	if retryable && st.claimWeek != "" {
-		retryable = !s.weeklySupplyPod[studentID+":"+st.claimWeek]
+		wkKey := studentID + ":" + st.claimWeek
+		owner := s.weeklyPaper[wkKey]
+		if owner != "" && owner != p.code {
+			retryable = false
+		} else if owner == "" && s.weeklySupplyPod[wkKey] {
+			retryable = false
+		}
 	}
 	return PaperAttemptView{
 		PaperCode:          p.code,

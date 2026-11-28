@@ -245,19 +245,16 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	if s.ledger != nil {
 		s.mu.Lock()
 		pending := make([]*assignmentRecord, 0)
+		needsPersist := false
 		for _, rec := range s.records {
 			if rec.studentID == studentID && rec.completed && !rec.rewarded {
 				pending = append(pending, rec)
+				if !rec.persisted {
+					needsPersist = true
+				}
 			}
 		}
 		s.mu.Unlock()
-		needsPersist := false
-		for _, rec := range pending {
-			if !rec.persisted {
-				needsPersist = true
-				break
-			}
-		}
 		if needsPersist {
 			// The completed answer must be durable before its reward is
 			// credited; if storage is unavailable, defer the credit and keep
@@ -297,10 +294,27 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	return nil
 }
 
+func sameAssignmentItems(a, b []itemSpecDTO) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].TemplateCode != b[i].TemplateCode || a[i].Seed != b[i].Seed {
+			return false
+		}
+	}
+	return true
+}
+
 func mergeAssignmentRecord(existing, snap assignmentRecordDTO) assignmentRecordDTO {
 	// Assignment identity and question seeds are immutable once durable; only
 	// progress and reward state may be merged from a concurrent snapshot.
 	merged := existing
+	if !sameAssignmentItems(existing.Items, snap.Items) {
+		// A request-ID alias with different questions is a different assignment;
+		// never copy its answers or correctness onto the durable record.
+		return merged
+	}
 	merged.Completed = existing.Completed || snap.Completed
 	merged.Rewarded = existing.Rewarded || snap.Rewarded
 	submitted := make(map[int]map[string]string, len(existing.Submitted)+len(snap.Submitted))

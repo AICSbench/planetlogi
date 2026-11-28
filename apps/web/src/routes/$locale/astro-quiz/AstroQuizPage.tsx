@@ -203,7 +203,14 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
   // the learner works for more than the 15-minute idle gap without saving.
   const saveCheckpoint = saveMutation.mutate;
   useEffect(() => {
-    if (!activePaperCode || attempt?.status === "SUBMITTED" || submitMutation.isPending) return;
+    if (
+      !activePaperCode ||
+      attempt?.status === "SUBMITTED" ||
+      submitMutation.isPending ||
+      saveMutation.isPending
+    ) {
+      return;
+    }
     const id = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
       if (Date.now() - lastActivityRef.current > CHECKPOINT_IDLE_MS) return;
@@ -211,7 +218,13 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
       if (next && next.elapsedSec > 0) saveCheckpoint(next);
     }, 60_000);
     return () => window.clearInterval(id);
-  }, [activePaperCode, attempt?.status, saveCheckpoint, submitMutation.isPending]);
+  }, [
+    activePaperCode,
+    attempt?.status,
+    saveCheckpoint,
+    saveMutation.isPending,
+    submitMutation.isPending,
+  ]);
 
   if (activePaperCode && attemptQuery.isError) {
     return (

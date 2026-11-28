@@ -57,11 +57,36 @@ func TestCompletionRewardCreditedOnlyAfterAnswerIsDurable(t *testing.T) {
 	}
 }
 
+type storeCheckingLedger struct {
+	*recordingLedger
+	store        *assignmentMemoryStore
+	studentID    string
+	assignmentID string
+	t            *testing.T
+}
+
+func (l *storeCheckingLedger) Apply(ctx context.Context, req economy.MutationRequest) (economy.MutationResult, error) {
+	var st assignmentState
+	found, err := l.store.Load(ctx, l.studentID, "assignments", &st)
+	if err != nil || !found {
+		l.t.Fatalf("ledger called without durable assignment state: found=%v err=%v", found, err)
+	}
+	rec, ok := st.Records[l.assignmentID]
+	if !ok || !rec.Completed {
+		l.t.Fatalf("ledger called before completion was durable: %+v", rec)
+	}
+	return l.recordingLedger.Apply(ctx, req)
+}
+
+func (l *storeCheckingLedger) ApplyBatch(ctx context.Context, reqs []economy.MutationRequest) ([]economy.MutationResult, error) {
+	return l.recordingLedger.ApplyBatch(ctx, reqs)
+}
+
 // Load-time reconciliation must also persist completion before crediting.
 func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 	ctx := context.Background()
 	store := newAssignmentMemoryStore()
-	ledger := &recordingLedger{}
+	ledger := &storeCheckingLedger{recordingLedger: &recordingLedger{}, store: store, studentID: stuUUID, t: t}
 	svc := NewServiceWithDeps(nil, store, ledger)
 	svc.LinkParentChild("par-1", stuUUID)
 
@@ -69,6 +94,7 @@ func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	ledger.assignmentID = created.ID
 	detail, err := svc.GetDetail(ctx, stuUUID, created.ID, "en")
 	if err != nil {
 		t.Fatal(err)
@@ -81,7 +107,7 @@ func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 	if _, _, err := svc.SubmitQuestion(ctx, stuUUID, created.ID, 1, prob.Solution.CorrectAnswers, "en"); err == nil {
 		t.Fatal("expected the failed save to surface")
 	}
-	if got := acCredited(ledger); got != 0 {
+	if got := acCredited(ledger.recordingLedger); got != 0 {
 		t.Fatalf("AC credited before durable completion: %d", got)
 	}
 
@@ -91,14 +117,14 @@ func TestLoadReconciliationPersistsBeforeCredit(t *testing.T) {
 	if _, err := svc.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0); err != nil {
 		t.Fatalf("read failed while completion was pending: %v", err)
 	}
-	if got := acCredited(ledger); got != 0 {
+	if got := acCredited(ledger.recordingLedger); got != 0 {
 		t.Fatalf("AC credited before completion was durable: %d", got)
 	}
 
 	if _, err := svc.ListForStudent(ctx, stuUUID, "ALL", "ALL", 0); err != nil {
 		t.Fatal(err)
 	}
-	if got := acCredited(ledger); got != 5 {
+	if got := acCredited(ledger.recordingLedger); got != 5 {
 		t.Fatalf("expected exactly +5 AC after durable reconciliation, got %d", got)
 	}
 }
@@ -114,7 +140,10 @@ func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
 	snapshot := assignmentState{Records: map[string]assignmentRecordDTO{
 		"local-id": {
 			ID: "local-id", StudentID: stuUUID, RequestID: "req-alias", Title: "Local",
-			Items: []itemSpecDTO{{TemplateCode: "g1_sub_within_20", Seed: 22}},
+			Items:     []itemSpecDTO{{TemplateCode: "g1_sub_within_20", Seed: 22}},
+			Submitted: map[int]map[string]string{1: {"answer": "local"}},
+			Correct:   map[int]bool{1: true},
+			Completed: true,
 		},
 	}}
 	merged, aliases, err := mergeAssignmentStateAliases(raw, snapshot)
@@ -134,6 +163,9 @@ func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
 	}
 	if _, exists := merged.Records["local-id"]; exists {
 		t.Fatal("local duplicate survived the alias merge")
+	}
+	if len(rec.Submitted) != 0 || len(rec.Correct) != 0 || rec.Completed {
+		t.Fatalf("answers for different questions were copied onto the durable record: %+v", rec)
 	}
 }
 

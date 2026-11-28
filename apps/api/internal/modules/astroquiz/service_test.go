@@ -59,6 +59,53 @@ func (l *recordingLedger) totalAC() int64 {
 	return total
 }
 
+// idempotentLedger mirrors the PostgreSQL ledger's idempotency-key behavior so
+// cross-instance retries can be tested without double-crediting.
+type idempotentLedger struct {
+	mu      sync.Mutex
+	seen    map[string]bool
+	applied []economy.MutationRequest
+}
+
+func newIdempotentLedger() *idempotentLedger {
+	return &idempotentLedger{seen: make(map[string]bool)}
+}
+
+func (l *idempotentLedger) Apply(_ context.Context, req economy.MutationRequest) (economy.MutationResult, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.seen[req.IdempotencyKey] {
+		return economy.MutationResult{WasDuplicate: true}, nil
+	}
+	l.seen[req.IdempotencyKey] = true
+	l.applied = append(l.applied, req)
+	return economy.MutationResult{BalanceAfter: req.Delta}, nil
+}
+
+func (l *idempotentLedger) ApplyBatch(ctx context.Context, reqs []economy.MutationRequest) ([]economy.MutationResult, error) {
+	out := make([]economy.MutationResult, 0, len(reqs))
+	for _, req := range reqs {
+		res, err := l.Apply(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+	return out, nil
+}
+
+func (l *idempotentLedger) totalAC() int64 {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	var total int64
+	for _, req := range l.applied {
+		if req.Currency == economy.CurrencyAC {
+			total += req.Delta
+		}
+	}
+	return total
+}
+
 func TestAstroQuizHiddenSolutionsAndWeeklySupplyPodCap(t *testing.T) {
 	ledger := &recordingLedger{}
 	svc := NewService(ledger)
@@ -451,6 +498,60 @@ func TestSupplyPodRetryableUsesPaperClaimWeek(t *testing.T) {
 	}
 	if got := ledger.totalAC(); got != 2*WeeklySupplyPodRewardAC {
 		t.Fatalf("expected W1 and W2 credits, got %d", got)
+	}
+}
+
+func TestSupplyPodIdentitySurvivesCrossInstanceRetry(t *testing.T) {
+	const studentID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+	store := newQuizMemoryStore()
+	ledger := newIdempotentLedger()
+	a := NewServiceWithStore(store, ledger)
+	ctx := context.Background()
+
+	openAndDraft := func(svc *Service, code string) map[int]map[string]string {
+		view, err := svc.OpenPaper(ctx, studentID, code, "en")
+		if err != nil {
+			t.Fatal(err)
+		}
+		drafts := map[int]map[string]string{}
+		for _, q := range view.Questions {
+			prob, _ := mathengine.GenerateByCode(q.Question.TemplateCode, q.Question.Seed, "en")
+			drafts[q.Index] = prob.Solution.CorrectAnswers
+		}
+		return drafts
+	}
+	aDrafts := openAndDraft(a, "G1-ESS-01")
+	store.failAfter = 2
+	if _, err := a.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, aDrafts); err == nil {
+		t.Fatal("expected A's final persist to fail")
+	}
+	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
+		t.Fatalf("expected A's credit once, got %d", got)
+	}
+
+	b := NewServiceWithStore(store, ledger)
+	bDrafts := openAndDraft(b, "G1-TOP-01")
+	bView, err := b.SubmitPaper(ctx, studentID, "G1-TOP-01", "en", 0, bDrafts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bView.SupplyPodAwarded {
+		t.Fatal("paper B received a badge from paper A's weekly credit")
+	}
+	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
+		t.Fatalf("paper B double-credited the week: %d", got)
+	}
+
+	a2 := NewServiceWithStore(store, ledger)
+	aView, err := a2.SubmitPaper(ctx, studentID, "G1-ESS-01", "en", 0, map[int]map[string]string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !aView.SupplyPodAwarded {
+		t.Fatal("paper A did not recover its badge after cross-instance retry")
+	}
+	if got := ledger.totalAC(); got != WeeklySupplyPodRewardAC {
+		t.Fatalf("retry created a second weekly credit: %d", got)
 	}
 }
 
