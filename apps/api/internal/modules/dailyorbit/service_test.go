@@ -350,6 +350,71 @@ func TestDailyOrbitPGSingleConnectionPool(t *testing.T) {
 	}
 }
 
+func TestDailyOrbitPGStatusDoesNotDeadlockSingleConnection(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL lock-order test")
+	}
+	ctx := context.Background()
+	cfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.MaxConns = 1
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	studentID := newTestStudent(t, pool)
+
+	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
+	fixedNow := time.Date(2099, 4, 5, 10, 0, 0, 0, loc)
+	streaks := streak.NewServiceWithPG(pool)
+	svc := NewServiceWithPG(pool, economy.NewPGLedger(pool), streaks)
+	svc.nowClock = func() time.Time { return fixedNow }
+	today := getToday(t, svc, studentID)
+	slot := today.Slots[0]
+	prob, _ := mathengine.GenerateByCode(slot.Question.TemplateCode, slot.Question.Seed, "en")
+
+	stop := make(chan struct{})
+	statusErr := make(chan error, 1)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+			}
+			if _, err := streaks.GetStatus(studentID, "Asia/Jakarta"); err != nil {
+				select {
+				case statusErr <- err:
+				default:
+				}
+				return
+			}
+		}
+	}()
+	defer func() {
+		close(stop)
+		wg.Wait()
+	}()
+
+	submitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if _, _, err := svc.SubmitAnswer(submitCtx, studentID, 1, "Asia/Jakarta", "en", slot.Index, prob.Solution.CorrectAnswers, slot.Question.TemplateCode, slot.Question.Seed); err != nil {
+		t.Fatalf("submit must not deadlock with concurrent streak reads: %v", err)
+	}
+	select {
+	case err := <-statusErr:
+		t.Fatalf("concurrent GetStatus failed: %v", err)
+	default:
+	}
+}
+
 func newTestStudent(t *testing.T, pool *pgxpool.Pool) string {
 	t.Helper()
 	var studentID string

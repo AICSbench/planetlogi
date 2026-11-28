@@ -53,7 +53,8 @@ type record struct {
 }
 
 type Service struct {
-	mu        sync.Mutex
+	mu        sync.Mutex // guards records only; never held during database calls
+	subjectMu sync.Mutex
 	records   map[string]*record
 	pool      *pgxpool.Pool
 	subjectID string
@@ -75,14 +76,12 @@ func NewServiceWithPG(pool *pgxpool.Pool) *Service {
 	}
 }
 
-func (s *Service) getOrCreateLocked(studentID string) (*record, error) {
-	return s.getOrCreate(context.Background(), s.pool, studentID)
+func (s *Service) isPG(studentID string) bool {
+	return s.pool != nil && isUUID(studentID)
 }
 
-func (s *Service) getOrCreate(ctx context.Context, db pgExecutor, studentID string) (*record, error) {
-	if s.pool != nil && isUUID(studentID) {
-		return s.loadRecordPG(ctx, db, studentID)
-	}
+// getOrCreateMemoryLocked requires s.mu and only serves in-memory students.
+func (s *Service) getOrCreateMemoryLocked(studentID string) *record {
 	r, ok := s.records[studentID]
 	if !ok {
 		r = &record{
@@ -99,7 +98,7 @@ func (s *Service) getOrCreate(ctx context.Context, db pgExecutor, studentID stri
 		}
 		s.records[studentID] = r
 	}
-	return r, nil
+	return r
 }
 
 func NovaPetStageForStreak(streak int) int {
@@ -118,13 +117,18 @@ func NovaPetStageForStreak(streak int) int {
 }
 
 func (s *Service) GetStatus(studentID, tz string) (Status, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
-	if err != nil {
-		return Status{}, err
+	var out Status
+	if s.isPG(studentID) {
+		r, err := s.loadRecordPG(context.Background(), s.pool, studentID)
+		if err != nil {
+			return Status{}, err
+		}
+		out = r.status
+	} else {
+		s.mu.Lock()
+		out = s.getOrCreateMemoryLocked(studentID).status
+		s.mu.Unlock()
 	}
-	out := r.status
 	out.MaxCryoShields = MaxCryoShields
 	out.DailyMilestoneTarget = DailyStreakMilestone
 	_ = tz
@@ -132,14 +136,24 @@ func (s *Service) GetStatus(studentID, tz string) (Status, error) {
 }
 
 func (s *Service) GetCalendar(studentID, monthPrefix string) ([]CalendarEntry, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
-	if err != nil {
-		return nil, err
+	var cal map[string]DayStatus
+	if s.isPG(studentID) {
+		r, err := s.loadRecordPG(context.Background(), s.pool, studentID)
+		if err != nil {
+			return nil, err
+		}
+		cal = r.calendar
+	} else {
+		s.mu.Lock()
+		records := s.getOrCreateMemoryLocked(studentID).calendar
+		cal = make(map[string]DayStatus, len(records))
+		for dt, st := range records {
+			cal[dt] = st
+		}
+		s.mu.Unlock()
 	}
-	entries := make([]CalendarEntry, 0, len(r.calendar))
-	for dt, st := range r.calendar {
+	entries := make([]CalendarEntry, 0, len(cal))
+	for dt, st := range cal {
 		if monthPrefix == "" || (len(dt) >= len(monthPrefix) && dt[:len(monthPrefix)] == monthPrefix) {
 			entries = append(entries, CalendarEntry{Date: dt, Status: st})
 		}
@@ -150,27 +164,28 @@ func (s *Service) GetCalendar(studentID, monthPrefix string) ([]CalendarEntry, e
 // RecordDailyOrbitProgress updates today's correct count and advances the Orbit Streak
 // once the student reaches 5 correct answers on localDate.
 func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, correctCount int) (Status, error) {
-	return s.recordDailyOrbitProgress(context.Background(), nil, studentID, tz, now, correctCount)
+	return s.mutateRecord(context.Background(), studentID, func(r *record) (string, error) {
+		return applyDailyProgress(r, tz, now, correctCount), nil
+	})
 }
 
 // RecordDailyOrbitProgressTx writes the streak inside the caller's transaction.
 func (s *Service) RecordDailyOrbitProgressTx(ctx context.Context, tx pgx.Tx, studentID, tz string, now time.Time, correctCount int) (Status, error) {
-	return s.recordDailyOrbitProgress(ctx, tx, studentID, tz, now, correctCount)
-}
-
-func (s *Service) recordDailyOrbitProgress(ctx context.Context, tx pgx.Tx, studentID, tz string, now time.Time, correctCount int) (Status, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	var db pgExecutor
-	if tx != nil {
-		db = tx
-	} else if s.pool != nil {
-		db = s.pool
+	if tx == nil || !s.isPG(studentID) {
+		return s.RecordDailyOrbitProgress(studentID, tz, now, correctCount)
 	}
-	r, err := s.getOrCreate(ctx, db, studentID)
+	r, err := s.loadRecordPG(ctx, tx, studentID)
 	if err != nil {
 		return Status{}, err
 	}
+	changedDate := applyDailyProgress(r, tz, now, correctCount)
+	if err := s.writeRecordPG(ctx, tx, studentID, r, changedDate); err != nil {
+		return Status{}, err
+	}
+	return r.status, nil
+}
+
+func applyDailyProgress(r *record, tz string, now time.Time, correctCount int) string {
 	localDate := timewindow.LocalDateString(now, tz)
 	r.todayDate = localDate
 	r.status.TodayCorrectCount = correctCount
@@ -186,10 +201,33 @@ func (s *Service) recordDailyOrbitProgress(ctx context.Context, tx pgx.Tx, stude
 		r.calendar[localDate] = DayCompleted
 		changedDate = localDate
 	}
-	if tx != nil {
-		return r.status, s.writeRecordPG(ctx, tx, studentID, r, changedDate)
+	return changedDate
+}
+
+// mutateRecord never holds s.mu across a database call, so a transaction can
+// never wait for the mutex while it holds a pool connection.
+func (s *Service) mutateRecord(ctx context.Context, studentID string, fn func(*record) (string, error)) (Status, error) {
+	if s.isPG(studentID) {
+		r, err := s.loadRecordPG(ctx, s.pool, studentID)
+		if err != nil {
+			return Status{}, err
+		}
+		changedDate, err := fn(r)
+		if err != nil {
+			return Status{}, err
+		}
+		if err := s.saveRecordPG(ctx, studentID, r, changedDate); err != nil {
+			return Status{}, err
+		}
+		return r.status, nil
 	}
-	return r.status, s.saveRecordPG(ctx, studentID, r, changedDate)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	r := s.getOrCreateMemoryLocked(studentID)
+	if _, err := fn(r); err != nil {
+		return Status{}, err
+	}
+	return r.status, nil
 }
 
 // ReconcileMidnight evaluates yesterday (D-1) in the student's timezone:
@@ -200,29 +238,56 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 }
 
 func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string, now time.Time) (Status, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	r, err := s.getOrCreate(ctx, s.pool, studentID)
-	if err != nil {
-		return Status{}, err
-	}
-	loc := timewindow.LoadLocationSafe(tz)
-	localToday := timewindow.LocalDateString(now, tz)
-	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
-
-	resetToday := r.todayDate != localToday
-	if resetToday {
-		r.status.TodayCorrectCount = 0
-		r.todayDate = localToday
-	}
-	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen || r.calendar[yesterday] == DayMissed {
-		if resetToday && s.pool != nil && isUUID(studentID) {
-			if err := s.resetTodayPG(ctx, s.pool, studentID, localToday); err != nil {
-				return Status{}, err
+	if s.isPG(studentID) {
+		r, err := s.loadRecordPG(ctx, s.pool, studentID)
+		if err != nil {
+			return Status{}, err
+		}
+		localToday, yesterday := reconcileDates(tz, now)
+		resetToday := applyTodayReset(r, localToday)
+		if r.calendar[yesterday] != "" {
+			if resetToday {
+				if err := s.resetTodayPG(ctx, s.pool, studentID, localToday); err != nil {
+					return Status{}, err
+				}
 			}
+			return r.status, nil
+		}
+		applyMidnight(r, yesterday)
+		if err := s.saveRecordPG(ctx, studentID, r, yesterday); err != nil {
+			return Status{}, err
 		}
 		return r.status, nil
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	r := s.getOrCreateMemoryLocked(studentID)
+	localToday, yesterday := reconcileDates(tz, now)
+	applyTodayReset(r, localToday)
+	if r.calendar[yesterday] != "" {
+		return r.status, nil
+	}
+	applyMidnight(r, yesterday)
+	return r.status, nil
+}
+
+func reconcileDates(tz string, now time.Time) (string, string) {
+	loc := timewindow.LoadLocationSafe(tz)
+	localToday := timewindow.LocalDateString(now, tz)
+	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
+	return localToday, yesterday
+}
+
+func applyTodayReset(r *record, localToday string) bool {
+	if r.todayDate == localToday {
+		return false
+	}
+	r.status.TodayCorrectCount = 0
+	r.todayDate = localToday
+	return true
+}
+
+func applyMidnight(r *record, yesterday string) {
 	if r.status.CurrentStreak > 0 {
 		if r.status.CryoShields > 0 {
 			r.status.CryoShields--
@@ -233,42 +298,30 @@ func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string
 			r.calendar[yesterday] = DayMissed
 		}
 	}
-	if err := s.saveRecordPG(ctx, studentID, r, yesterday); err != nil {
-		return Status{}, err
-	}
-	return r.status, nil
 }
 
 // GrantCryoShield adds shields up to the strict cap of 3.
 func (s *Service) GrantCryoShield(studentID string, count int) (Status, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
-	if err != nil {
-		return Status{}, err
-	}
-	r.status.CryoShields += count
-	if r.status.CryoShields > MaxCryoShields {
-		r.status.CryoShields = MaxCryoShields
-	}
-	if r.status.CryoShields < 0 {
-		r.status.CryoShields = 0
-	}
-	return r.status, s.saveRecordPG(context.Background(), studentID, r, "")
+	return s.mutateRecord(context.Background(), studentID, func(r *record) (string, error) {
+		r.status.CryoShields += count
+		if r.status.CryoShields > MaxCryoShields {
+			r.status.CryoShields = MaxCryoShields
+		}
+		if r.status.CryoShields < 0 {
+			r.status.CryoShields = 0
+		}
+		return "", nil
+	})
 }
 
 func (s *Service) SetReminder(studentID string, enabled bool, timeLocal string) (Status, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	r, err := s.getOrCreateLocked(studentID)
-	if err != nil {
-		return Status{}, err
-	}
-	r.status.ReminderEnabled = enabled
-	if timeLocal != "" {
-		r.status.ReminderTimeLocal = timeLocal
-	}
-	return r.status, s.saveRecordPG(context.Background(), studentID, r, "")
+	return s.mutateRecord(context.Background(), studentID, func(r *record) (string, error) {
+		r.status.ReminderEnabled = enabled
+		if timeLocal != "" {
+			r.status.ReminderTimeLocal = timeLocal
+		}
+		return "", nil
+	})
 }
 
 type Handler struct {

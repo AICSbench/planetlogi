@@ -37,15 +37,23 @@ func isUUID(s string) bool {
 }
 
 func (s *Service) subjectIDPG(ctx context.Context, db pgExecutor) (string, error) {
-	if s.subjectID != "" {
-		return s.subjectID, nil
+	s.subjectMu.Lock()
+	cached := s.subjectID
+	s.subjectMu.Unlock()
+	if cached != "" {
+		return cached, nil
 	}
 	var id string
 	err := db.QueryRow(ctx, `SELECT id::text FROM subjects WHERE code = 'math' LIMIT 1`).Scan(&id)
 	if err != nil {
 		return "", err
 	}
-	s.subjectID = id
+	s.subjectMu.Lock()
+	if s.subjectID == "" {
+		s.subjectID = id
+	}
+	id = s.subjectID
+	s.subjectMu.Unlock()
 	return id, nil
 }
 

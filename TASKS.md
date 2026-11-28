@@ -420,6 +420,11 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR3-REVIEW-ROUND3** — Remove the streak mutex/pool lock-order cycle found on `4876e87`. *(Owner: agent-pr3-integrity | Done: 2026-11-28T03:31Z)*
+  - **Depends On**: `PR3-REVIEW-ROUND2`
+  - **Spec**: `docs/02-features-student-portal.md` §4
+  - **Acceptance Criteria**: No streak operation holds the memory mutex across a pool call, and no transaction waits for that mutex while holding a connection.
+
 - [x] **PR3-REVIEW-ROUND2** — Address the seven CodeRabbit findings on the transaction refactor. *(Owner: agent-pr3-integrity | Done: 2026-11-28T03:02Z)*
   - **Depends On**: `PR3-SESSION-RECOVERY`
   - **Spec**: `docs/02-features-student-portal.md` §3–4; `docs/04-curriculum-and-pedagogy.md` §4.1–4.2
@@ -444,6 +449,7 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
+| 2026-11-28T03:31Z | `agent-pr3-integrity` | `PR3-REVIEW-ROUND3` | `[x]` | Streak PostgreSQL paths no longer take the in-memory mutex: reads copy under the lock, mutations use `mutateRecord`, and the Daily Orbit transaction path is lock-free. Added a `MaxConns=1` regression that submits while `GetStatus` loops. Full race suite, vet, build, and unchanged OpenAPI pass. |
 | 2026-11-28T03:02Z | `agent-pr3-integrity` | `PR3-REVIEW-ROUND2` | `[x]` | Streak now commits inside the Daily Orbit transaction, eliminating the second pool connection; PostgreSQL session/prefs caches are no longer populated, request contexts reach all lock waits, and midnight resets update only the dated count. Tests now assert rolled-back receipts/stats and both persisted answered slots; High Score stars update only after 10 answers. A one-connection pool regression passes, and the old split path was confirmed to hang. Full race suite, vet, build, and unchanged OpenAPI pass. |
 | 2026-11-28T02:35Z | `agent-pr3-integrity` | `PR3-SESSION-RECOVERY` | `[x]` | Daily Orbit mutations now hold a per-student advisory lock and commit session, prefs, wallet, and proficiency together; no partially accepted answer survives a rollover. Training loads sessions with `FOR UPDATE` and commits XP, stats, and the answered slot atomically. Streak midnight reconciliation clears only a stale date's count. Verified with PostgreSQL restart and concurrent-instance regressions (both fail with the locks removed), full race suite, vet, build, and unchanged OpenAPI. |
 | 2026-11-28T01:16Z | `agent-pr3-integrity` | `PR3-STREAK-RETRY` | `[x]` | Daily Orbit stores the accepted answer before streak recording; the streak counter and calendar now write atomically. Playwright matches three mock endpoints by pathname. PostgreSQL milestone failure/restart regression, Go race suite/vet/build, and both targeted Chromium desktop E2E scenarios passed. No additional migration or API change. |
