@@ -35,3 +35,60 @@ func TestPlanetStoriesOpeningFreeAndAtomic20ACUnlock(t *testing.T) {
 		t.Fatalf("expected ErrInsufficientFunds for ch2, got %v", err)
 	}
 }
+
+func TestBookmarkPageClampsAndIsolatesProgress(t *testing.T) {
+	ctx := context.Background()
+	svc := NewService(nil)
+	const chapter = "terra_pebble-ch0"
+	for _, tc := range []struct {
+		name string
+		page int
+		want int
+	}{
+		{"above opening length", 100, 20},
+		{"in range", 8, 8},
+		{"below first page", 0, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := svc.BookmarkPage(ctx, "reader", chapter, tc.page); err != nil {
+				t.Fatal(err)
+			}
+			view, err := svc.OpenChapter(ctx, "reader", chapter, "id")
+			if err != nil || view.LastPageRead != tc.want {
+				t.Fatalf("open after bookmark: page=%d err=%v, want %d", view.LastPageRead, err, tc.want)
+			}
+			summary := svc.ListPlanets(ctx, "reader", "id")[0].Chapters[0]
+			if summary.Code != chapter || summary.LastPageRead != tc.want {
+				t.Fatalf("planet listing disagrees with viewer: %+v", summary)
+			}
+			other, err := svc.OpenChapter(ctx, "other-reader", chapter, "en")
+			if err != nil || other.LastPageRead != 1 {
+				t.Fatalf("bookmark leaked to another reader: page=%d err=%v", other.LastPageRead, err)
+			}
+		})
+	}
+	if err := svc.BookmarkPage(ctx, "reader", "unknown-chapter", 3); err == nil {
+		t.Fatal("expected unknown chapter to be rejected")
+	}
+}
+
+func TestStoryUnlockIsScopedToPurchaser(t *testing.T) {
+	ctx := context.Background()
+	svc := NewService(economy.NewMemoryLedger(
+		economy.Wallet{StudentID: "buyer", AstroCoins: 20},
+		economy.Wallet{StudentID: "other", AstroCoins: 19},
+	))
+	const chapter = "terra_pebble-ch1"
+	if _, err := svc.UnlockChapter(ctx, "buyer", chapter, "en"); err != nil {
+		t.Fatalf("unlock with exact price: %v", err)
+	}
+	if _, err := svc.OpenChapter(ctx, "buyer", chapter, "en"); err != nil {
+		t.Fatalf("purchaser cannot reopen chapter: %v", err)
+	}
+	if _, err := svc.UnlockChapter(ctx, "other", chapter, "en"); err != economy.ErrInsufficientFunds {
+		t.Fatalf("unlock with 19 AC: got %v, want insufficient funds", err)
+	}
+	if _, err := svc.OpenChapter(ctx, "other", chapter, "en"); err != economy.ErrInsufficientFunds {
+		t.Fatalf("other reader could open paid chapter: %v", err)
+	}
+}

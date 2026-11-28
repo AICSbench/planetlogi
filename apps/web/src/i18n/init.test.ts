@@ -14,3 +14,14 @@ describe("web i18n initialization", () => {
     expect(i18n.t("dashboard:pillars.challenges")).toBe("Tantangan Bintang");
   });
 });
+
+describe("Phase 3 web translations", () => {
+  it.each([
+    { locale: "en", stories: "Planet Stories", duels: "Star Duels (1v1)" },
+    { locale: "id", stories: "Cerita Planet", duels: "Duel Bintang (1v1)" },
+  ] as const)("loads both feature namespaces in $locale", async ({ locale, stories, duels }) => {
+    await setAppLocale(locale);
+    expect(i18n.t("stories:stories.title")).toBe(stories);
+    expect(i18n.t("social:duels.title")).toBe(duels);
+  });
+});
