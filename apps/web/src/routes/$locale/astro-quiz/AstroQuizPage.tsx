@@ -341,11 +341,16 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
           }}
           onSaveDraft={(answers) => {
+            // Saving an untouched cached answer would let a stale tab
+            // overwrite a newer save from another tab.
+            if (draftEdits[activeQ.index] === undefined) return Promise.resolve();
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
             return saveMutation.mutateAsync(payload({ [activeQ.index]: answers }));
           }}
           onSubmit={(answers) => {
-            setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+            if (draftEdits[activeQ.index] !== undefined) {
+              setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
+            }
             if (activeQ.index < attempt.questions.length) {
               setQIdx(activeQ.index + 1);
             }
