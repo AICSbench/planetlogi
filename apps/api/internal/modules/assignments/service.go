@@ -886,6 +886,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	resolveAliases := func() {
 		s.mu.Lock()
 		defer s.mu.Unlock()
+		found := false
 		if assignmentRequestID != "" {
 			for id, rec := range s.records {
 				if rec.studentID == studentID && rec.requestID == assignmentRequestID {
@@ -893,8 +894,18 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 					detail = renderDetail(rec, locale)
 					submissionDiscarded = !sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
 						!sameAnswerMap(rec.submitted[qIndex], gradedAnswers)
+					found = true
 					break
 				}
+			}
+		}
+		if !found {
+			// Assignments created without a request ID cannot be matched by
+			// alias, so compare the refreshed record under its own ID.
+			if rec, ok := s.records[assignmentID]; ok && rec.studentID == studentID {
+				detail = renderDetail(rec, locale)
+				submissionDiscarded = !sameAssignmentItems(localItems, toRecordDTO(rec).Items) ||
+					!sameAnswerMap(rec.submitted[qIndex], gradedAnswers)
 			}
 		}
 		if rewardRequestID != "" {
