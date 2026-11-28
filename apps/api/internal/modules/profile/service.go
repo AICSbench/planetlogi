@@ -465,6 +465,22 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 				return ProfileBundle{}, fmt.Errorf("persist family settings: %w", err)
 			}
 		}
+		if len(in.DailyOrbitCurricula) > 0 {
+			// Daily Orbit selects questions from daily_orbit_prefs.active_curricula, so the
+			// parent's curriculum change must reach that row in the same transaction or the
+			// settings update is a silent no-op for Daily Orbit.
+			dailyJSON, err := json.Marshal(in.DailyOrbitCurricula)
+			if err != nil {
+				return ProfileBundle{}, fmt.Errorf("encode daily orbit curricula: %w", err)
+			}
+			if _, err := tx.Exec(ctx, `
+				UPDATE daily_orbit_prefs
+				SET active_curricula = $2::jsonb, updated_at = NOW()
+				WHERE student_id = $1::uuid
+			`, childID, dailyJSON); err != nil {
+				return ProfileBundle{}, fmt.Errorf("sync daily orbit curricula: %w", err)
+			}
+		}
 		if in.OTPEnabled != nil && isUUID(parentID) {
 			if _, err := tx.Exec(ctx, `UPDATE user_accounts SET otp_enabled = $2, updated_at = NOW() WHERE id = $1::uuid`, parentID, *in.OTPEnabled); err != nil {
 				return ProfileBundle{}, fmt.Errorf("persist otp setting: %w", err)

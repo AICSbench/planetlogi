@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/profile"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
@@ -492,4 +494,70 @@ func TestSkipFinalSlotRetriesFailedBonus(t *testing.T) {
 	if err != nil || slot.Status != SlotSkipped || !view.CompletionBonusAward || ledger.coins != 5 {
 		t.Fatalf("retry: slot=%s bonus=%v coins=%d err=%v", slot.Status, view.CompletionBonusAward, ledger.coins, err)
 	}
+}
+
+// A parent's curriculum change in family settings must reach Daily Orbit question
+// selection: on an existing prefs row (same-transaction sync in profile.UpdateSettings)
+// and before the student's first Daily Orbit visit (seeded from student_profiles).
+func TestDailyOrbitPGCurriculumFollowsParentSettings(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL curriculum sync test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+
+	studentID := newTestStudent(t, pool)
+	var parentID string
+	if err := pool.QueryRow(ctx,
+		`SELECT parent_account_id::text FROM student_profiles WHERE id = $1::uuid`, studentID,
+	).Scan(&parentID); err != nil {
+		t.Fatal(err)
+	}
+
+	profileSvc := profile.NewServiceWithPG(pool, nil, nil, nil, false)
+	parent := auth.Principal{ID: parentID, Role: auth.RoleParent}
+	assertCurricula := func(svc *Service, want []string) {
+		t.Helper()
+		today := getToday(t, svc, studentID)
+		if len(today.ActiveCurricula) != len(want) {
+			t.Fatalf("expected curricula %v, got %v", want, today.ActiveCurricula)
+		}
+		for i := range want {
+			if today.ActiveCurricula[i] != want[i] {
+				t.Fatalf("expected curricula %v, got %v", want, today.ActiveCurricula)
+			}
+		}
+	}
+
+	// Before the first Daily Orbit visit (no prefs row yet): the selection is seeded
+	// from the parent-managed curricula in student_profiles.
+	if _, err := profileSvc.UpdateSettings(ctx, parent, profile.UpdateSettingsInput{
+		// Select this child explicitly: the parent has several linked children and
+		// the default target is the first one.
+		ChildID:             studentID,
+		DailyOrbitCurricula: []string{"CAMBRIDGE_0096", "EXPLORER_SERIES"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	assertCurricula(NewServiceWithPG(pool, nil, nil), []string{"CAMBRIDGE_0096", "EXPLORER_SERIES"})
+
+	// Once a prefs row exists (created here via the student's own SetCurricula),
+	// a further parent change must overwrite it in the same transaction.
+	svc := NewServiceWithPG(pool, nil, nil)
+	if _, err := svc.SetCurricula(ctx, studentID, 1, "Asia/Jakarta", "en", []string{"SINGAPORE_MOE"}); err != nil {
+		t.Fatal(err)
+	}
+	assertCurricula(svc, []string{"SINGAPORE_MOE"})
+	if _, err := profileSvc.UpdateSettings(ctx, parent, profile.UpdateSettingsInput{
+		ChildID:             studentID,
+		DailyOrbitCurricula: []string{"KURIKULUM_MERDEKA"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	assertCurricula(svc, []string{"KURIKULUM_MERDEKA"})
 }
