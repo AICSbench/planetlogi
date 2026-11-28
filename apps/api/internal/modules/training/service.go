@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
@@ -332,9 +335,11 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 		seeds:        seeds,
 		answered:     make(map[int]bool),
 	}
-	s.sessions[sessID] = sess
 	if err := s.saveSessionPG(context.Background(), sess, target.grade); err != nil {
 		return PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
+	}
+	if s.pool == nil || !isUUID(studentID) {
+		s.sessions[sessID] = sess
 	}
 
 	return PracticeSession{
@@ -349,15 +354,24 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	sess, ok := s.sessions[sessionID]
-	if !ok {
-		if pgSess, loaded := s.loadSessionPG(ctx, sessionID); loaded {
-			s.sessions[sessionID] = pgSess
-			sess = pgSess
-			ok = true
+	sess := s.sessions[sessionID]
+	var tx pgx.Tx
+	if s.pool != nil && isUUID(studentID) {
+		var err error
+		tx, err = s.pool.Begin(ctx)
+		if err != nil {
+			return mathengine.GradeResult{}, PracticeSession{}, err
+		}
+		defer tx.Rollback(context.Background())
+		sess, err = s.loadSessionPG(ctx, tx, sessionID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("practice session not found")
+		}
+		if err != nil {
+			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("load practice session: %w", err)
 		}
 	}
-	if !ok || sess.studentID != studentID {
+	if sess == nil || sess.studentID != studentID {
 		return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("practice session not found")
 	}
 	if questionIndex < 1 || questionIndex > len(sess.seeds) {
@@ -374,14 +388,21 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 			if gradeRes.IsCorrect {
 				xp = 2
 			}
-			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			req := economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyXP,
 				Delta:          xp,
 				SourceType:     "GALAXY_TRAINING",
 				SourceID:       fmt.Sprintf("%s:q%d", sessionID, questionIndex),
 				IdempotencyKey: fmt.Sprintf("training:%s:%s:q%d", sessionID, studentID, questionIndex),
-			}); err != nil {
+			}
+			var err error
+			if ledger, ok := s.ledger.(*economy.PGLedger); ok && tx != nil {
+				_, err = ledger.ApplyBatchTx(ctx, tx, []economy.MutationRequest{req})
+			} else {
+				_, err = s.ledger.Apply(ctx, req)
+			}
+			if err != nil {
 				return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("award training XP: %w", err)
 			}
 		}
@@ -389,13 +410,32 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 		if gradeRes.IsCorrect {
 			correct++
 		}
-		if err := s.recordSkillAttemptLocked(ctx, studentID, "", sess.skillCode, gradeRes.IsCorrect, correct); err != nil {
+		var err error
+		if tx != nil {
+			err = recordSkillStatPG(ctx, tx, studentID, sess.skillCode, gradeRes.IsCorrect, correct)
+		} else {
+			err = s.recordSkillAttemptLocked(ctx, studentID, "", sess.skillCode, gradeRes.IsCorrect, correct)
+		}
+		if err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist skill stats: %w", err)
 		}
 		sess.answered[questionIndex] = true
 		sess.correct = correct
-		if err := s.saveSessionPG(ctx, sess, 0); err != nil {
-			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
+		if tx != nil {
+			answeredRaw, err := json.Marshal(sess.answered)
+			if err != nil {
+				return mathengine.GradeResult{}, PracticeSession{}, err
+			}
+			if _, err := tx.Exec(ctx, `UPDATE training_practice_sessions
+				SET answered = jsonb_set(answered, '{answered}', $2::jsonb), correct_count = $3
+				WHERE id = $1`, sessionID, answeredRaw, correct); err != nil {
+				return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist practice session: %w", err)
+			}
+		}
+	}
+	if tx != nil {
+		if err := tx.Commit(ctx); err != nil {
+			return mathengine.GradeResult{}, PracticeSession{}, err
 		}
 	}
 
@@ -414,6 +454,11 @@ func (s *Service) RecordSkillAttempt(ctx context.Context, studentID, attemptID, 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.recordSkillAttemptLocked(ctx, studentID, attemptID, skillCode, isCorrect, 0)
+}
+
+// RecordSkillAttemptTx adds the attempt inside the caller's transaction.
+func (s *Service) RecordSkillAttemptTx(ctx context.Context, tx pgx.Tx, studentID, attemptID, skillCode string, isCorrect bool) error {
+	return recordSkillAttemptTx(ctx, tx, studentID, attemptID, skillCode, isCorrect, 0)
 }
 
 func (s *Service) recordSkillAttemptLocked(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool, sessionScore int) error {

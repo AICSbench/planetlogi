@@ -75,30 +75,38 @@ func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) (ma
 
 func (s *Service) recordSkillAttemptPG(ctx context.Context, studentID, attemptID, skillCode string, correct bool, sessionScore int) error {
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
-		if attemptID != "" {
-			tag, err := tx.Exec(ctx, `INSERT INTO training_attempt_receipts (student_id, attempt_id)
-				VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, attemptID)
-			if err != nil || tag.RowsAffected() == 0 {
-				return err
-			}
-		}
-		if _, err := tx.Exec(ctx, `INSERT INTO training_skill_stats (student_id, skill_code)
-			VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, skillCode); err != nil {
-			return err
-		}
-		var st skillStat
-		var results []byte
-		if err := tx.QueryRow(ctx, `SELECT recent_results, best_session_score, best_stars
-			FROM training_skill_stats WHERE student_id = $1::uuid AND skill_code = $2 FOR UPDATE`,
-			studentID, skillCode).Scan(&results, &st.bestSessionScore, &st.bestStars); err != nil {
-			return err
-		}
-		if err := json.Unmarshal(results, &st.recentWindow); err != nil {
-			return err
-		}
-		st.record(correct, sessionScore)
-		return saveSkillStatPG(ctx, tx, studentID, skillCode, &st)
+		return recordSkillAttemptTx(ctx, tx, studentID, attemptID, skillCode, correct, sessionScore)
 	})
+}
+
+func recordSkillAttemptTx(ctx context.Context, tx pgx.Tx, studentID, attemptID, skillCode string, correct bool, sessionScore int) error {
+	if attemptID != "" {
+		tag, err := tx.Exec(ctx, `INSERT INTO training_attempt_receipts (student_id, attempt_id)
+			VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, attemptID)
+		if err != nil || tag.RowsAffected() == 0 {
+			return err
+		}
+	}
+	return recordSkillStatPG(ctx, tx, studentID, skillCode, correct, sessionScore)
+}
+
+func recordSkillStatPG(ctx context.Context, tx pgx.Tx, studentID, skillCode string, correct bool, sessionScore int) error {
+	if _, err := tx.Exec(ctx, `INSERT INTO training_skill_stats (student_id, skill_code)
+		VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, skillCode); err != nil {
+		return err
+	}
+	var st skillStat
+	var results []byte
+	if err := tx.QueryRow(ctx, `SELECT recent_results, best_session_score, best_stars
+		FROM training_skill_stats WHERE student_id = $1::uuid AND skill_code = $2 FOR UPDATE`,
+		studentID, skillCode).Scan(&results, &st.bestSessionScore, &st.bestStars); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(results, &st.recentWindow); err != nil {
+		return err
+	}
+	st.record(correct, sessionScore)
+	return saveSkillStatPG(ctx, tx, studentID, skillCode, &st)
 }
 
 func saveSkillStatPG(ctx context.Context, tx pgx.Tx, studentID, skillCode string, st *skillStat) error {
@@ -123,24 +131,21 @@ func saveSkillStatPG(ctx context.Context, tx pgx.Tx, studentID, skillCode string
 	return err
 }
 
-func (s *Service) loadSessionPG(ctx context.Context, sessionID string) (*activePractice, bool) {
-	if s.pool == nil {
-		return nil, false
-	}
+func (s *Service) loadSessionPG(ctx context.Context, tx pgx.Tx, sessionID string) (*activePractice, error) {
 	var studentID, skillCode string
 	var payloadRaw []byte
 	var correct int
-	err := s.pool.QueryRow(ctx, `
+	err := tx.QueryRow(ctx, `
 		SELECT student_id::text, skill_code, answered, correct_count
 		FROM training_practice_sessions
-		WHERE id = $1
+		WHERE id = $1 FOR UPDATE
 	`, sessionID).Scan(&studentID, &skillCode, &payloadRaw, &correct)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 	var payload pgPracticePayload
-	if err := json.Unmarshal(payloadRaw, &payload); err != nil || len(payload.Seeds) == 0 {
-		return nil, false
+	if err := json.Unmarshal(payloadRaw, &payload); err != nil {
+		return nil, err
 	}
 	if payload.Answered == nil {
 		payload.Answered = make(map[int]bool)
@@ -160,7 +165,7 @@ func (s *Service) loadSessionPG(ctx context.Context, sessionID string) (*activeP
 		seeds:        payload.Seeds,
 		answered:     payload.Answered,
 		correct:      correct,
-	}, true
+	}, nil
 }
 
 func (s *Service) saveSessionPG(ctx context.Context, sess *activePractice, grade int) error {

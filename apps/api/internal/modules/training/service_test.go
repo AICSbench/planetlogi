@@ -2,7 +2,11 @@ package training
 
 import (
 	"context"
+	"os"
+	"sync"
 	"testing"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
@@ -77,5 +81,73 @@ func TestRemappedSkillsArePlayableInTraining(t *testing.T) {
 				t.Errorf("skill %s (%s): got template %s with skill %s, want %s", code, locale, q.TemplateCode, q.SkillCode, template)
 			}
 		}
+	}
+}
+
+func TestTrainingPGConcurrentAnswers(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL concurrency test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+
+	var studentID string
+	if err := pool.QueryRow(ctx, `
+		INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code)
+		SELECT parent_account_id, 'test-' || gen_random_uuid(), password_hash, 'Test Pilot', 'Test Pilot', 1,
+			left(replace(gen_random_uuid()::text, '-', ''), 9)
+		FROM student_profiles WHERE login_id = 'pilot1'
+		RETURNING id::text
+	`).Scan(&studentID); err != nil {
+		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
+	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(ctx, `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
+			t.Error(err)
+		}
+	})
+
+	newSvc := func() *Service { return NewServiceWithPG(pool, economy.NewPGLedger(pool)) }
+	sess, err := newSvc().StartPracticeSession(studentID, "num-add-within-20", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var wg sync.WaitGroup
+	errs := make([]error, 2)
+	for i := 0; i < 2; i++ {
+		q := sess.Questions[i]
+		prob, _ := mathengine.GenerateByCode(q.TemplateCode, q.Seed, "en")
+		svc := newSvc()
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			_, _, errs[idx] = svc.SubmitPracticeAnswer(ctx, studentID, sess.SessionID, idx+1, "en", prob.Solution.CorrectAnswers)
+		}(i)
+	}
+	wg.Wait()
+	for i, err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent answer %d failed: %v", i+1, err)
+		}
+	}
+
+	var correct int
+	if err := pool.QueryRow(ctx, `SELECT correct_count FROM training_practice_sessions WHERE id = $1`, sess.SessionID).Scan(&correct); err != nil || correct != 2 {
+		t.Fatalf("expected both answers saved, got correct=%d: %v", correct, err)
+	}
+	var window, correctStats int
+	if err := pool.QueryRow(ctx, `SELECT recent_window_count, recent_correct_count FROM training_skill_stats
+		WHERE student_id = $1::uuid AND skill_code = 'num-add-within-20'`, studentID).Scan(&window, &correctStats); err != nil || window != 2 || correctStats != 2 {
+		t.Fatalf("expected both attempts in proficiency, got %d/%d: %v", correctStats, window, err)
+	}
+	var xp int
+	if err := pool.QueryRow(ctx, `SELECT pilot_xp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&xp); err != nil || xp != 4 {
+		t.Fatalf("expected exactly 4 XP, got %d: %v", xp, err)
 	}
 }

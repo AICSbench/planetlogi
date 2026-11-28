@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -150,28 +151,13 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	}
 	t.Cleanup(pool.Close)
 
-	var studentID string
-	if err := pool.QueryRow(ctx, `
-		INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code)
-		SELECT parent_account_id, 'test-' || gen_random_uuid(), password_hash, 'Test Pilot', 'Test Pilot', 1,
-			left(replace(gen_random_uuid()::text, '-', ''), 9)
-		FROM student_profiles WHERE login_id = 'pilot1'
-		RETURNING id::text
-	`).Scan(&studentID); err != nil {
-		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
-	}
-	t.Cleanup(func() {
-		if _, err := pool.Exec(ctx, `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
-			t.Error(err)
-		}
-	})
+	studentID := newTestStudent(t, pool)
 
 	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
 	fixedNow := time.Date(2099, 1, 2, 10, 0, 0, 0, loc)
 
 	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc1.nowClock = func() time.Time { return fixedNow }
-	recorder := &mockAttemptRecorder{err: errors.New("recorder unavailable")}
 	today := getToday(t, svc1, studentID)
 	for _, earlier := range today.Slots[:4] {
 		p, _ := mathengine.GenerateByCode(earlier.Question.TemplateCode, earlier.Question.Seed, "en")
@@ -179,12 +165,20 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	svc1.SetAttemptRecorder(recorder)
 	sl := today.Slots[4]
 	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
 	submit := func(svc *Service, answers map[string]string) (SlotView, SessionView, error) {
 		return svc.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index, answers, sl.Question.TemplateCode, sl.Question.Seed)
 	}
+	assertWallet := func(sp, xp int) {
+		t.Helper()
+		var gotSP, gotXP int
+		if err := pool.QueryRow(ctx, `SELECT total_sp, pilot_xp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&gotSP, &gotXP); err != nil || gotSP != sp || gotXP != xp {
+			t.Fatalf("expected wallet %d SP / %d XP, got %d / %d: %v", sp, xp, gotSP, gotXP, err)
+		}
+	}
+	assertWallet(4, 12)
+
 	constraint := "test_streak_" + studentID
 	name := pgx.Identifier{constraint}.Sanitize()
 	if _, err := pool.Exec(ctx, `ALTER TABLE streak_calendar_days ADD CONSTRAINT `+name+
@@ -200,6 +194,11 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	if _, _, err := submit(svc1, prob.Solution.CorrectAnswers); !errors.As(err, &pgErr) || pgErr.ConstraintName != constraint {
 		t.Fatalf("expected streak write failure, got %v", err)
 	}
+	// The failed streak write rolls the accepted answer and rewards back together.
+	if after := getToday(t, svc1, studentID); after.Slots[sl.Index-1].Status != SlotPending || after.CompletedCount != 4 || after.TotalSPEarned != 4 {
+		t.Fatalf("expected slot 5 to stay pending after rollback, got status=%s completed=%d SP=%d", after.Slots[sl.Index-1].Status, after.CompletedCount, after.TotalSPEarned)
+	}
+	assertWallet(4, 12)
 
 	if _, err := pool.Exec(ctx, `ALTER TABLE streak_calendar_days DROP CONSTRAINT `+name); err != nil {
 		t.Fatal(err)
@@ -207,40 +206,34 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	streaks := streak.NewServiceWithPG(pool)
 	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streaks)
 	svc2.nowClock = func() time.Time { return fixedNow }
-	if _, _, err := svc2.SkipSlot(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index); !errors.Is(err, ErrAlreadyAnswered) {
-		t.Fatalf("skip after a streak write failure must not replace the accepted answer, got %v", err)
+	svc2.SetAttemptRecorder(lostAttemptAck{training.NewServiceWithPG(pool, nil)})
+	if _, _, err := submit(svc2, prob.Solution.CorrectAnswers); !errors.Is(err, errLostAttemptAck) {
+		t.Fatalf("expected lost proficiency acknowledgement, got %v", err)
 	}
-	svc2.SetAttemptRecorder(recorder)
-	if _, _, err := submit(svc2, nil); !errors.Is(err, recorder.err) {
-		t.Fatalf("expected proficiency failure after recovering streak, got %v", err)
-	}
+	// Streak committed, but the session, rewards, and proficiency receipt did not.
 	if st, err := streaks.GetStatus(studentID, "Asia/Jakarta"); err != nil || st.TodayCorrectCount != 5 || st.CurrentStreak != 4 {
-		t.Fatalf("expected streak to reach milestone once, got %+v: %v", st, err)
+		t.Fatalf("expected streak milestone once, got %+v: %v", st, err)
 	}
 	if days, err := streaks.GetCalendar(studentID, "2099-01"); err != nil || len(days) != 1 || days[0].Status != streak.DayCompleted {
-		t.Fatalf("expected a completed calendar day after retry, got %v: %v", days, err)
+		t.Fatalf("expected one completed calendar day, got %v: %v", days, err)
 	}
-
-	svc2.SetAttemptRecorder(lostAttemptAck{training.NewServiceWithPG(pool, nil)})
-	if _, _, err := submit(svc2, nil); !errors.Is(err, errLostAttemptAck) {
-		t.Fatalf("retry after restart should reach recorder and lose its acknowledgement, got %v", err)
+	if after := getToday(t, svc2, studentID); after.Slots[sl.Index-1].Status != SlotPending {
+		t.Fatalf("expected slot 5 pending after lost acknowledgement, got %s", after.Slots[sl.Index-1].Status)
 	}
+	assertWallet(4, 12)
 
 	svc3 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc3.nowClock = func() time.Time { return fixedNow }
 	stats := training.NewServiceWithPG(pool, nil)
 	svc3.SetAttemptRecorder(stats)
-	got, reloaded, err := submit(svc3, nil)
+	got, reloaded, err := submit(svc3, prob.Solution.CorrectAnswers)
 	if err != nil || got.Status != SlotCorrect || reloaded.CompletedCount != 5 || reloaded.TotalSPEarned != 5 {
-		t.Fatalf("expected original correct answer and five completions after retry, got %s, completed=%d SP=%d: %v", got.Status, reloaded.CompletedCount, reloaded.TotalSPEarned, err)
+		t.Fatalf("expected retry to accept once, got %s, completed=%d SP=%d: %v", got.Status, reloaded.CompletedCount, reloaded.TotalSPEarned, err)
 	}
-	if _, _, err := submit(svc3, nil); !errors.Is(err, ErrAlreadyAnswered) {
+	if _, _, err := submit(svc3, prob.Solution.CorrectAnswers); !errors.Is(err, ErrAlreadyAnswered) {
 		t.Fatalf("expected completed submission to remain locked, got %v", err)
 	}
-	var sp, xp int
-	if err := pool.QueryRow(ctx, `SELECT total_sp, pilot_xp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&sp, &xp); err != nil || sp != 5 || xp != 15 {
-		t.Fatalf("expected exactly 5 SP + 15 XP, got SP=%d XP=%d: %v", sp, xp, err)
-	}
+	assertWallet(5, 15)
 	skills, err := stats.ListSkills(studentID, "ALL", 1, "en")
 	if err != nil {
 		t.Fatal(err)
@@ -254,6 +247,77 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 		}
 	}
 	t.Fatalf("skill %s not found in proficiency", prob.Question.SkillCode)
+}
+
+func TestDailyOrbitPGConcurrentSubmissions(t *testing.T) {
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("TEST_DATABASE_URL not set; skipping PostgreSQL concurrency test")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
+	studentID := newTestStudent(t, pool)
+
+	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
+	fixedNow := time.Date(2099, 2, 3, 10, 0, 0, 0, loc)
+	newSvc := func() *Service {
+		svc := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
+		svc.nowClock = func() time.Time { return fixedNow }
+		return svc
+	}
+	today := getToday(t, newSvc(), studentID)
+
+	var wg sync.WaitGroup
+	errs := make([]error, 2)
+	for i := 0; i < 2; i++ {
+		slot := today.Slots[i]
+		prob, _ := mathengine.GenerateByCode(slot.Question.TemplateCode, slot.Question.Seed, "en")
+		svc := newSvc()
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			_, _, errs[idx] = svc.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", slot.Index, prob.Solution.CorrectAnswers, slot.Question.TemplateCode, slot.Question.Seed)
+		}(i)
+	}
+	wg.Wait()
+	for i, err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent submit %d failed: %v", i+1, err)
+		}
+	}
+
+	reloaded := getToday(t, newSvc(), studentID)
+	if reloaded.CompletedCount != 2 || reloaded.CorrectCount != 2 || reloaded.TotalSPEarned != 2 {
+		t.Fatalf("lost a concurrent answer: completed=%d correct=%d SP=%d", reloaded.CompletedCount, reloaded.CorrectCount, reloaded.TotalSPEarned)
+	}
+	var sp, xp int
+	if err := pool.QueryRow(ctx, `SELECT total_sp, pilot_xp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&sp, &xp); err != nil || sp != 2 || xp != 6 {
+		t.Fatalf("expected exactly 2 SP + 6 XP, got %d/%d: %v", sp, xp, err)
+	}
+}
+
+func newTestStudent(t *testing.T, pool *pgxpool.Pool) string {
+	t.Helper()
+	var studentID string
+	if err := pool.QueryRow(context.Background(), `
+		INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code)
+		SELECT parent_account_id, 'test-' || gen_random_uuid(), password_hash, 'Test Pilot', 'Test Pilot', 1,
+			left(replace(gen_random_uuid()::text, '-', ''), 9)
+		FROM student_profiles WHERE login_id = 'pilot1'
+		RETURNING id::text
+	`).Scan(&studentID); err != nil {
+		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
+	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(context.Background(), `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
+			t.Error(err)
+		}
+	})
+	return studentID
 }
 
 func getToday(t *testing.T, svc *Service, studentID string) SessionView {
@@ -278,6 +342,17 @@ func (l *bonusLedger) Apply(ctx context.Context, req economy.MutationRequest) (e
 	result, err := l.Ledger.Apply(ctx, req)
 	l.coins = result.Wallet.AstroCoins
 	return result, err
+}
+
+func (l *bonusLedger) ApplyBatch(ctx context.Context, reqs []economy.MutationRequest) ([]economy.MutationResult, error) {
+	if l.err != nil {
+		return nil, l.err
+	}
+	results, err := l.Ledger.ApplyBatch(ctx, reqs)
+	if len(results) > 0 {
+		l.coins = results[len(results)-1].Wallet.AstroCoins
+	}
+	return results, err
 }
 
 func TestSkipFinalSlotRetriesFailedBonus(t *testing.T) {

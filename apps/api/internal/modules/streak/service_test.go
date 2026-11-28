@@ -72,3 +72,27 @@ func TestOrbitStreakAndCryoShieldTimeTravel(t *testing.T) {
 		t.Fatalf("expected ReconcileAllMidnight to process 1 student, got n=%d err=%v", n, err)
 	}
 }
+
+func TestReconcileResetsOnlyStaleDailyCount(t *testing.T) {
+	svc := NewService()
+	tz := "Asia/Jakarta"
+	loc := timewindow.LoadLocationSafe(tz)
+	day1 := time.Date(2026, 12, 1, 10, 0, 0, 0, loc)
+	day2 := time.Date(2026, 12, 2, 0, 5, 0, 0, loc)
+
+	if _, err := svc.RecordDailyOrbitProgress("stu-2", tz, day1, 5); err != nil {
+		t.Fatal(err)
+	}
+	st := svc.ReconcileMidnight("stu-2", tz, day2)
+	if st.TodayCorrectCount != 0 || st.CurrentStreak != 4 {
+		t.Fatalf("expected stale count cleared and streak preserved, got %+v", st)
+	}
+
+	if _, err := svc.RecordDailyOrbitProgress("stu-2", tz, day2, 2); err != nil {
+		t.Fatal(err)
+	}
+	st = svc.ReconcileMidnight("stu-2", tz, time.Date(2026, 12, 2, 23, 0, 0, 0, loc))
+	if st.TodayCorrectCount != 2 {
+		t.Fatalf("same-day reconcile must keep today's answers, got %d", st.TodayCorrectCount)
+	}
+}

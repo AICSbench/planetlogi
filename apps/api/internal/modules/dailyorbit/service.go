@@ -11,6 +11,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
@@ -107,17 +108,15 @@ type SessionView struct {
 }
 
 type internalSlot struct {
-	index         int
-	stageName     string
-	nodeShape     string
-	rewardSP      int
-	templateCode  string
-	seed          int64
-	status        SlotStatus
-	earnedSP      int
-	submitted     map[string]string
-	pendingSkill  string
-	pendingStreak bool
+	index        int
+	stageName    string
+	nodeShape    string
+	rewardSP     int
+	templateCode string
+	seed         int64
+	status       SlotStatus
+	earnedSP     int
+	submitted    map[string]string
 }
 
 type studentPrefs struct {
@@ -142,12 +141,18 @@ type SkillAttemptRecorder interface {
 	RecordSkillAttempt(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool) error
 }
 
+// txSkillAttemptRecorder joins the attempt to the caller's session transaction.
+type txSkillAttemptRecorder interface {
+	RecordSkillAttemptTx(ctx context.Context, tx pgx.Tx, studentID, attemptID, skillCode string, isCorrect bool) error
+}
+
 type Service struct {
 	mu          sync.Mutex
 	ledger      economy.Ledger
 	streakSvc   *streak.Service
 	attemptRec  SkillAttemptRecorder
 	pool        *pgxpool.Pool
+	tx          pgx.Tx
 	subjectID   string
 	sessions    map[string]*internalSession // key: studentID + ":" + localDate
 	prefs       map[string]*studentPrefs
@@ -330,15 +335,20 @@ func (s *Service) GetToday(studentID string, grade int, tz, locale string) (Sess
 	defer s.mu.Unlock()
 	now := s.nowClock()
 	eval := timewindow.Evaluate(now, tz, timewindow.DailyOrbitWindow)
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SessionView{}, err
-	}
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SessionView{}, err
-	}
-	return s.renderViewLocked(sess, prefs, eval, locale), nil
+	var view SessionView
+	err := s.withStudentTx(context.Background(), studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
+		}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		view = s.renderViewLocked(sess, prefs, eval, locale)
+		return nil
+	})
+	return view, err
 }
 
 func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int, tz, locale string, slotIndex int, submitted map[string]string, templateCode string, seed int64) (SlotView, SessionView, error) {
@@ -354,132 +364,138 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
 
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	slot := sess.slots[slotIndex-1]
-	needsRecording := slot.pendingStreak || slot.pendingSkill != ""
-	if slot.status != SlotPending && !needsRecording {
-		return SlotView{}, SessionView{}, ErrAlreadyAnswered
-	}
-	if templateCode == "" || seed == 0 || slot.templateCode != templateCode || slot.seed != seed {
-		return SlotView{}, SessionView{}, ErrQuestionReplaced
-	}
-	if needsRecording {
-		if err := s.finishSubmission(ctx, studentID, tz, now, sess, slot); err != nil {
-			return SlotView{}, SessionView{}, err
+	var slotView SlotView
+	var sessionView SessionView
+	err := s.withStudentTx(ctx, studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
 		}
-		view := s.renderViewLocked(sess, prefs, eval, locale)
-		return view.Slots[slotIndex-1], view, nil
-	}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		slot := sess.slots[slotIndex-1]
+		if slot.status != SlotPending {
+			return ErrAlreadyAnswered
+		}
+		if templateCode == "" || seed == 0 || slot.templateCode != templateCode || slot.seed != seed {
+			return ErrQuestionReplaced
+		}
 
-	prob, _ := mathengine.GenerateByCode(slot.templateCode, slot.seed, locale)
-	gradeRes := mathengine.Grade(prob, submitted)
+		prob, _ := mathengine.GenerateByCode(slot.templateCode, slot.seed, locale)
+		gradeRes := mathengine.Grade(prob, submitted)
 
-	xpDelta := int64(1)
-	if gradeRes.IsCorrect {
-		xpDelta = 3
-	}
-	awardCompletionBonus := sess.completedCount+1 == 10 && !sess.completionBonusAward
-
-	if s.ledger != nil {
-		ledgerReqs := make([]economy.MutationRequest, 0, 3)
+		xpDelta := int64(1)
 		if gradeRes.IsCorrect {
+			xpDelta = 3
+		}
+		awardCompletionBonus := sess.completedCount+1 == 10 && !sess.completionBonusAward
+
+		if s.ledger != nil {
+			ledgerReqs := make([]economy.MutationRequest, 0, 3)
+			if gradeRes.IsCorrect {
+				ledgerReqs = append(ledgerReqs, economy.MutationRequest{
+					StudentID:      studentID,
+					Currency:       economy.CurrencySP,
+					Delta:          int64(slot.rewardSP),
+					SourceType:     "DAILY_ORBIT",
+					SourceID:       fmt.Sprintf("%s:q%d", sess.localDate, slot.index),
+					IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:sp", sess.localDate, studentID, slot.index),
+				})
+			}
 			ledgerReqs = append(ledgerReqs, economy.MutationRequest{
 				StudentID:      studentID,
-				Currency:       economy.CurrencySP,
-				Delta:          int64(slot.rewardSP),
+				Currency:       economy.CurrencyXP,
+				Delta:          xpDelta,
 				SourceType:     "DAILY_ORBIT",
 				SourceID:       fmt.Sprintf("%s:q%d", sess.localDate, slot.index),
-				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:sp", sess.localDate, studentID, slot.index),
+				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:xp", sess.localDate, studentID, slot.index),
 			})
+			if awardCompletionBonus {
+				ledgerReqs = append(ledgerReqs, economy.MutationRequest{
+					StudentID:      studentID,
+					Currency:       economy.CurrencyAC,
+					Delta:          CompletionBonusAC,
+					SourceType:     "DAILY_ORBIT_BONUS",
+					SourceID:       sess.localDate,
+					IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
+				})
+			}
+			if err := s.applyLedgerLocked(ctx, ledgerReqs); err != nil {
+				return fmt.Errorf("award daily orbit rewards: %w", err)
+			}
 		}
-		ledgerReqs = append(ledgerReqs, economy.MutationRequest{
-			StudentID:      studentID,
-			Currency:       economy.CurrencyXP,
-			Delta:          xpDelta,
-			SourceType:     "DAILY_ORBIT",
-			SourceID:       fmt.Sprintf("%s:q%d", sess.localDate, slot.index),
-			IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:q%d:xp", sess.localDate, studentID, slot.index),
-		})
 		if awardCompletionBonus {
-			ledgerReqs = append(ledgerReqs, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencyAC,
-				Delta:          CompletionBonusAC,
-				SourceType:     "DAILY_ORBIT_BONUS",
-				SourceID:       sess.localDate,
-				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
-			})
+			sess.completionBonusAward = true
 		}
-		if _, err := s.ledger.ApplyBatch(ctx, ledgerReqs); err != nil {
-			return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit rewards: %w", err)
-		}
-	}
-	if awardCompletionBonus {
-		sess.completionBonusAward = true
-	}
 
-	slot.submitted = submitted
-	sess.completedCount++
-	if gradeRes.IsCorrect {
-		slot.status = SlotCorrect
-		slot.earnedSP = slot.rewardSP
-		sess.correctCount++
-		sess.totalSPEarned += slot.rewardSP
-		prefs.totalSP += int64(slot.rewardSP)
-		slot.pendingStreak = s.streakSvc != nil
-	} else {
-		slot.status = SlotWrong
-	}
-	if s.attemptRec != nil {
-		slot.pendingSkill = prob.Question.SkillCode
-	}
-	if err := s.saveSubmissionPG(ctx, studentID, sess, prefs); err != nil {
-		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit submission: %w", err)
-	}
-	if err := s.finishSubmission(ctx, studentID, tz, now, sess, slot); err != nil {
+		slot.submitted = submitted
+		sess.completedCount++
+		if gradeRes.IsCorrect {
+			slot.status = SlotCorrect
+			slot.earnedSP = slot.rewardSP
+			sess.correctCount++
+			sess.totalSPEarned += slot.rewardSP
+			prefs.totalSP += int64(slot.rewardSP)
+			if s.streakSvc != nil {
+				if _, err := s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount); err != nil {
+					return fmt.Errorf("record streak progress: %w", err)
+				}
+			}
+		} else {
+			slot.status = SlotWrong
+		}
+		if s.attemptRec != nil && prob.Question.SkillCode != "" {
+			attemptID := fmt.Sprintf("daily_orbit:%s:q%d", sess.localDate, slot.index)
+			var err error
+			if txRec, ok := s.attemptRec.(txSkillAttemptRecorder); ok && s.tx != nil {
+				err = txRec.RecordSkillAttemptTx(ctx, s.tx, studentID, attemptID, prob.Question.SkillCode, gradeRes.IsCorrect)
+			} else {
+				err = s.attemptRec.RecordSkillAttempt(ctx, studentID, attemptID, prob.Question.SkillCode, gradeRes.IsCorrect)
+			}
+			if err != nil {
+				return fmt.Errorf("record skill attempt: %w", err)
+			}
+		}
+		if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
+			return fmt.Errorf("persist daily orbit session: %w", err)
+		}
+		if err := s.savePrefsPG(ctx, studentID, prefs); err != nil {
+			return fmt.Errorf("persist daily orbit prefs: %w", err)
+		}
+
+		sessionView = s.renderViewLocked(sess, prefs, eval, locale)
+		slotView = sessionView.Slots[slotIndex-1]
+		return nil
+	})
+	if err != nil {
 		return SlotView{}, SessionView{}, err
 	}
-
-	view := s.renderViewLocked(sess, prefs, eval, locale)
-	return view.Slots[slotIndex-1], view, nil
+	return slotView, sessionView, nil
 }
 
-func (s *Service) finishSubmission(ctx context.Context, studentID, tz string, now time.Time, sess *internalSession, slot *internalSlot) error {
-	if slot.pendingStreak {
-		if s.streakSvc == nil {
-			return errors.New("daily orbit streak service unavailable")
-		}
-		if _, err := s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount); err != nil {
-			return fmt.Errorf("record streak progress: %w", err)
-		}
-		if err := s.clearPendingEffectPG(ctx, studentID, sess.localDate, slot.index, "pendingStreak"); err != nil {
-			return fmt.Errorf("confirm streak progress: %w", err)
-		}
-		slot.pendingStreak = false
-	}
-	skill := slot.pendingSkill
-	if skill == "" {
+func (s *Service) applyLedgerLocked(ctx context.Context, reqs []economy.MutationRequest) error {
+	if len(reqs) == 0 {
 		return nil
 	}
-	if s.attemptRec == nil {
-		return errors.New("daily orbit skill attempt recorder unavailable")
+	if pgLedger, ok := s.ledger.(*economy.PGLedger); ok && s.tx != nil {
+		_, err := pgLedger.ApplyBatchTx(ctx, s.tx, reqs)
+		return err
 	}
-	attemptID := fmt.Sprintf("daily_orbit:%s:q%d", sess.localDate, slot.index)
-	if err := s.attemptRec.RecordSkillAttempt(ctx, studentID, attemptID, skill, slot.status == SlotCorrect); err != nil {
-		return fmt.Errorf("record skill attempt: %w", err)
+	_, err := s.ledger.ApplyBatch(ctx, reqs)
+	return err
+}
+
+func (s *Service) withStudentTx(ctx context.Context, studentID string, fn func() error) error {
+	if err := s.beginStudentPG(ctx, studentID); err != nil {
+		return err
 	}
-	if err := s.clearPendingEffectPG(ctx, studentID, sess.localDate, slot.index, "pendingSkill"); err != nil {
-		return fmt.Errorf("confirm skill attempt: %w", err)
+	defer s.rollbackPG()
+	if err := fn(); err != nil {
+		return err
 	}
-	slot.pendingSkill = ""
-	return nil
+	return s.commitPG(ctx)
 }
 
 func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz, locale string, slotIndex int) (SlotView, SessionView, error) {
@@ -494,43 +510,52 @@ func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz,
 	if slotIndex < 1 || slotIndex > 10 {
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	slot := sess.slots[slotIndex-1]
-	if slot.status != SlotPending {
-		return SlotView{}, SessionView{}, ErrAlreadyAnswered
-	}
-
-	if sess.completedCount+1 == 10 && !sess.completionBonusAward {
-		if s.ledger != nil {
-			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencyAC,
-				Delta:          CompletionBonusAC,
-				SourceType:     "DAILY_ORBIT_BONUS",
-				SourceID:       sess.localDate,
-				IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
-			}); err != nil {
-				return SlotView{}, SessionView{}, fmt.Errorf("award daily orbit bonus: %w", err)
-			}
+	var slotView SlotView
+	var sessionView SessionView
+	err := s.withStudentTx(ctx, studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
 		}
-		sess.completionBonusAward = true
-	}
-	slot.status = SlotSkipped
-	slot.earnedSP = 0
-	sess.completedCount++
-	if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
-		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
-	}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		slot := sess.slots[slotIndex-1]
+		if slot.status != SlotPending {
+			return ErrAlreadyAnswered
+		}
 
-	view := s.renderViewLocked(sess, prefs, eval, locale)
-	return view.Slots[slotIndex-1], view, nil
+		if sess.completedCount+1 == 10 && !sess.completionBonusAward {
+			if s.ledger != nil {
+				if err := s.applyLedgerLocked(ctx, []economy.MutationRequest{{
+					StudentID:      studentID,
+					Currency:       economy.CurrencyAC,
+					Delta:          CompletionBonusAC,
+					SourceType:     "DAILY_ORBIT_BONUS",
+					SourceID:       sess.localDate,
+					IdempotencyKey: fmt.Sprintf("daily_orbit:%s:%s:bonus_ac", sess.localDate, studentID),
+				}}); err != nil {
+					return fmt.Errorf("award daily orbit bonus: %w", err)
+				}
+			}
+			sess.completionBonusAward = true
+		}
+		slot.status = SlotSkipped
+		slot.earnedSP = 0
+		sess.completedCount++
+		if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
+			return fmt.Errorf("persist daily orbit session: %w", err)
+		}
+
+		sessionView = s.renderViewLocked(sess, prefs, eval, locale)
+		slotView = sessionView.Slots[slotIndex-1]
+		return nil
+	})
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
+	return slotView, sessionView, nil
 }
 
 func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string, slotIndex int, mode string) (SlotView, SessionView, error) {
@@ -545,99 +570,113 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 	if slotIndex < 1 || slotIndex > 10 {
 		return SlotView{}, SessionView{}, ErrInvalidSlot
 	}
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SlotView{}, SessionView{}, err
-	}
-	if sess.changeQuestionUsed >= MaxChangeQuestionsPerDay {
-		return SlotView{}, SessionView{}, ErrChangeLimitReached
-	}
-	slot := sess.slots[slotIndex-1]
-	if slot.status != SlotPending {
-		return SlotView{}, SessionView{}, ErrAlreadyAnswered
-	}
+	var slotView SlotView
+	var sessionView SessionView
+	err := s.withStudentTx(context.Background(), studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
+		}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		if sess.changeQuestionUsed >= MaxChangeQuestionsPerDay {
+			return ErrChangeLimitReached
+		}
+		slot := sess.slots[slotIndex-1]
+		if slot.status != SlotPending {
+			return ErrAlreadyAnswered
+		}
 
-	gradePool := mathengine.TemplatesForGrade(prefs.grade)
-	var picked *mathengine.TemplateMeta
-	for i := range gradePool {
-		tmpl := gradePool[i]
-		if tmpl.Code == slot.templateCode {
-			continue
-		}
-		if mode == "easier" && tmpl.Difficulty <= 2 {
-			picked = &tmpl
-			break
-		}
-		if mode == "harder" && tmpl.Difficulty >= 3 {
-			picked = &tmpl
-			break
-		}
-		if mode == "topic" {
-			picked = &tmpl
-			break
-		}
-	}
-	if picked == nil {
+		gradePool := mathengine.TemplatesForGrade(prefs.grade)
+		var picked *mathengine.TemplateMeta
 		for i := range gradePool {
 			tmpl := gradePool[i]
-			if tmpl.Code != slot.templateCode {
+			if tmpl.Code == slot.templateCode {
+				continue
+			}
+			if mode == "easier" && tmpl.Difficulty <= 2 {
+				picked = &tmpl
+				break
+			}
+			if mode == "harder" && tmpl.Difficulty >= 3 {
+				picked = &tmpl
+				break
+			}
+			if mode == "topic" {
 				picked = &tmpl
 				break
 			}
 		}
-	}
-	if picked == nil {
-		return SlotView{}, SessionView{}, ErrNoReplacementAvailable
-	}
-	slot.templateCode = picked.Code
-	slot.seed += 313
-	sess.changeQuestionUsed++
-	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
-		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
-	}
+		if picked == nil {
+			for i := range gradePool {
+				tmpl := gradePool[i]
+				if tmpl.Code != slot.templateCode {
+					picked = &tmpl
+					break
+				}
+			}
+		}
+		if picked == nil {
+			return ErrNoReplacementAvailable
+		}
+		slot.templateCode = picked.Code
+		slot.seed += 313
+		sess.changeQuestionUsed++
+		if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+			return fmt.Errorf("persist daily orbit session: %w", err)
+		}
 
-	view := s.renderViewLocked(sess, prefs, eval, locale)
-	return view.Slots[slotIndex-1], view, nil
+		sessionView = s.renderViewLocked(sess, prefs, eval, locale)
+		slotView = sessionView.Slots[slotIndex-1]
+		return nil
+	})
+	if err != nil {
+		return SlotView{}, SessionView{}, err
+	}
+	return slotView, sessionView, nil
 }
 
 func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier Tier) (SessionView, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SessionView{}, err
-	}
-	reqSP, ok := TierUnlockSP[tier]
-	if !ok || prefs.totalSP < reqSP {
-		return SessionView{}, ErrTierLocked
-	}
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SessionView{}, err
-	}
-	prefs.tier = tier
-	sess.tier = tier
-	gradePool := mathengine.TemplatesForGrade(prefs.grade)
-	if len(gradePool) > 0 {
-		filtered := filterTemplatesByTierAndCurricula(gradePool, tier, prefs.activeCurricula)
-		for i, sl := range sess.slots {
-			if sl.status == SlotPending {
-				sl.templateCode = filtered[i%len(filtered)].Code
+	var view SessionView
+	err := s.withStudentTx(context.Background(), studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
+		}
+		reqSP, ok := TierUnlockSP[tier]
+		if !ok || prefs.totalSP < reqSP {
+			return ErrTierLocked
+		}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		prefs.tier = tier
+		sess.tier = tier
+		gradePool := mathengine.TemplatesForGrade(prefs.grade)
+		if len(gradePool) > 0 {
+			filtered := filterTemplatesByTierAndCurricula(gradePool, tier, prefs.activeCurricula)
+			for i, sl := range sess.slots {
+				if sl.status == SlotPending {
+					sl.templateCode = filtered[i%len(filtered)].Code
+				}
 			}
 		}
-	}
-	if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
-		return SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
-	}
-	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
-		return SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
-	}
-	return s.renderViewLocked(sess, prefs, eval, locale), nil
+		if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
+			return fmt.Errorf("persist daily orbit prefs: %w", err)
+		}
+		if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+			return fmt.Errorf("persist daily orbit session: %w", err)
+		}
+		view = s.renderViewLocked(sess, prefs, eval, locale)
+		return nil
+	})
+	return view, err
 }
 
 func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, curricula []string) (SessionView, error) {
@@ -652,32 +691,37 @@ func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, c
 	if len(valid) == 0 {
 		return SessionView{}, ErrInvalidCurricula
 	}
-	prefs, err := s.getPrefsLocked(studentID, grade)
-	if err != nil {
-		return SessionView{}, err
-	}
 	eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.DailyOrbitWindow)
-	sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
-	if err != nil {
-		return SessionView{}, err
-	}
-	prefs.activeCurricula = valid
-	gradePool := mathengine.TemplatesForGrade(prefs.grade)
-	if len(gradePool) > 0 {
-		filtered := filterTemplatesByTierAndCurricula(gradePool, prefs.tier, prefs.activeCurricula)
-		for i, sl := range sess.slots {
-			if sl.status == SlotPending {
-				sl.templateCode = filtered[i%len(filtered)].Code
+	var view SessionView
+	err := s.withStudentTx(context.Background(), studentID, func() error {
+		prefs, err := s.getPrefsLocked(studentID, grade)
+		if err != nil {
+			return err
+		}
+		sess, err := s.getOrCreateSessionLocked(studentID, prefs, eval.LocalDate)
+		if err != nil {
+			return err
+		}
+		prefs.activeCurricula = valid
+		gradePool := mathengine.TemplatesForGrade(prefs.grade)
+		if len(gradePool) > 0 {
+			filtered := filterTemplatesByTierAndCurricula(gradePool, prefs.tier, prefs.activeCurricula)
+			for i, sl := range sess.slots {
+				if sl.status == SlotPending {
+					sl.templateCode = filtered[i%len(filtered)].Code
+				}
 			}
 		}
-	}
-	if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
-		return SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
-	}
-	if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
-		return SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
-	}
-	return s.renderViewLocked(sess, prefs, eval, locale), nil
+		if err := s.savePrefsPG(context.Background(), studentID, prefs); err != nil {
+			return fmt.Errorf("persist daily orbit prefs: %w", err)
+		}
+		if err := s.saveSessionPG(context.Background(), studentID, sess); err != nil {
+			return fmt.Errorf("persist daily orbit session: %w", err)
+		}
+		view = s.renderViewLocked(sess, prefs, eval, locale)
+		return nil
+	})
+	return view, err
 }
 
 func (s *Service) renderViewLocked(sess *internalSession, prefs *studentPrefs, eval timewindow.Evaluation, locale string) SessionView {

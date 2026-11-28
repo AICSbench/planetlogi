@@ -74,6 +74,17 @@ func (l *PGLedger) Apply(ctx context.Context, req MutationRequest) (MutationResu
 }
 
 func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]MutationResult, error) {
+	var results []MutationResult
+	err := pgx.BeginFunc(ctx, l.pool, func(tx pgx.Tx) error {
+		var err error
+		results, err = l.ApplyBatchTx(ctx, tx, reqs)
+		return err
+	})
+	return results, err
+}
+
+// ApplyBatchTx includes wallet mutations in the caller's transaction.
+func (l *PGLedger) ApplyBatchTx(ctx context.Context, tx pgx.Tx, reqs []MutationRequest) ([]MutationResult, error) {
 	if len(reqs) == 0 {
 		return nil, nil
 	}
@@ -86,12 +97,6 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 		}
 	}
 
-	tx, err := l.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
-	if err != nil {
-		return nil, fmt.Errorf("begin ledger tx: %w", err)
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
 	studentID := reqs[0].StudentID
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO student_wallets (student_id)
@@ -102,7 +107,7 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 	}
 
 	var w Wallet
-	err = tx.QueryRow(ctx, `
+	err := tx.QueryRow(ctx, `
 		SELECT student_id::text, total_sp, astro_coins, pilot_xp, pilot_level, total_star_scrolls
 		FROM student_wallets
 		WHERE student_id::text = $1
@@ -166,10 +171,6 @@ func (l *PGLedger) ApplyBatch(ctx context.Context, reqs []MutationRequest) ([]Mu
 				return nil, fmt.Errorf("insert ledger tx: %w", err)
 			}
 		}
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("commit ledger tx: %w", err)
 	}
 
 	for i := range results {

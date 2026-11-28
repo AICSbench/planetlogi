@@ -420,6 +420,11 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR3-SESSION-RECOVERY** — Serialize persisted learning-session writes and recover accepted Daily Orbit effects after rollover. *(Owner: agent-pr3-integrity | Done: 2026-11-28T02:35Z)*
+  - **Depends On**: `PR3-STREAK-RETRY`
+  - **Spec**: `docs/02-features-student-portal.md` §3–4; `docs/04-curriculum-and-pedagogy.md` §4.1
+  - **Acceptance Criteria**: Parallel requests preserve answers; Training stats and answers commit together; accepted Daily Orbit effects survive the operating window and date rollover.
+
 - [x] **PR3-STREAK-RETRY** — Preserve accepted Daily Orbit answers when streak recording fails and correct Question Player E2E mock routing. *(Owner: agent-pr3-integrity | Done: 2026-11-28T01:16Z)*
   - **Depends On**: `PR3-LEARNING-INTEGRITY`
   - **Spec**: `docs/02-features-student-portal.md` §3–4
@@ -434,6 +439,7 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
+| 2026-11-28T02:35Z | `agent-pr3-integrity` | `PR3-SESSION-RECOVERY` | `[x]` | Daily Orbit mutations now hold a per-student advisory lock and commit session, prefs, wallet, and proficiency together; no partially accepted answer survives a rollover. Training loads sessions with `FOR UPDATE` and commits XP, stats, and the answered slot atomically. Streak midnight reconciliation clears only a stale date's count. Verified with PostgreSQL restart and concurrent-instance regressions (both fail with the locks removed), full race suite, vet, build, and unchanged OpenAPI. |
 | 2026-11-28T01:16Z | `agent-pr3-integrity` | `PR3-STREAK-RETRY` | `[x]` | Daily Orbit stores the accepted answer before streak recording; the streak counter and calendar now write atomically. Playwright matches three mock endpoints by pathname. PostgreSQL milestone failure/restart regression, Go race suite/vet/build, and both targeted Chromium desktop E2E scenarios passed. No additional migration or API change. |
 | 2026-11-28T01:10Z | `agent-pr3-integrity` | `PR3-LEARNING-INTEGRITY` | `[x]` | Fixed fraction grading, elapsed times, triangle choices, and skill attribution in `mathengine`, Training catalog, and seed. Daily Orbit persists pending Proficiency work and deduplicates attempts with migration `202611280002`; reseed existing template links, no API or env changes. Race suite, vet, build, OpenAPI comparison, PostgreSQL reseed and repeated restart/retry regression passed. |
 | 2026-11-28T00:52Z | `agent-pr3-integrity` | `PR3-INTEGRITY` | `[x]` | Daily Orbit, Streak, and Training now reject failed PostgreSQL reads instead of writing default state; the final skip stays retryable if its bonus fails. Verified with Go race tests, vet, build, OpenAPI comparison, and a disposable PostgreSQL read-failure and restart probe. No migrations or environment changes. |

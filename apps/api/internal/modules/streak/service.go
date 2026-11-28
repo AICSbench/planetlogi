@@ -184,9 +184,20 @@ func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string
 		return Status{}, err
 	}
 	loc := timewindow.LoadLocationSafe(tz)
+	localToday := timewindow.LocalDateString(now, tz)
 	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
 
+	resetToday := r.todayDate != localToday
+	if resetToday {
+		r.status.TodayCorrectCount = 0
+		r.todayDate = localToday
+	}
 	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen || r.calendar[yesterday] == DayMissed {
+		if resetToday {
+			if err := s.saveRecordPG(ctx, studentID, r, ""); err != nil {
+				return Status{}, err
+			}
+		}
 		return r.status, nil
 	}
 	if r.status.CurrentStreak > 0 {
@@ -199,8 +210,6 @@ func (s *Service) reconcileMidnightErr(ctx context.Context, studentID, tz string
 			r.calendar[yesterday] = DayMissed
 		}
 	}
-	r.status.TodayCorrectCount = 0
-	r.todayDate = timewindow.LocalDateString(now, tz)
 	if err := s.saveRecordPG(ctx, studentID, r, yesterday); err != nil {
 		return Status{}, err
 	}
