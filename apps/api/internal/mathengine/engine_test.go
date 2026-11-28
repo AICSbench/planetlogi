@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestAllProceduralTemplatesDeterministicBilingual(t *testing.T) {
@@ -22,6 +25,9 @@ func TestAllProceduralTemplatesDeterministicBilingual(t *testing.T) {
 			p2, ok2 := GenerateByCode(meta.Code, 42, locale)
 			if !ok1 || !ok2 {
 				t.Fatalf("failed to generate template %s", meta.Code)
+			}
+			if p1.Question.SkillCode != meta.SkillCode || p1.Question.SkillName == "" {
+				t.Fatalf("template %s (%s) has inconsistent skill metadata", meta.Code, locale)
 			}
 			if p1.Question.Stem == "" || p1.Question.TTSText == "" {
 				t.Fatalf("empty stem or ttsText for %s (%s)", meta.Code, locale)
@@ -81,6 +87,60 @@ func TestGraderLocaleDecimalsAndFractions(t *testing.T) {
 	}
 	if Grade(fracProb, map[string]string{"answer": "3/4"}).IsCorrect {
 		t.Fatalf("expected 3/4 to fail against 1/2")
+	}
+}
+
+func TestFractionFieldsGradeAsOneRational(t *testing.T) {
+	problem := buildFraction("fraction-test", 1, 4, "fraction-test", LocaleText{}, "", 1, "en", "", 5, 2, nil, nil)
+	for _, tc := range []struct {
+		num, den string
+		correct  bool
+	}{
+		{"10", "4", true},
+		{"10", "2", false},
+		{"10", "0", false},
+		{"10", "", false},
+		{"2.5", "1", false},
+		{"2500000000000000001", "1000000000000000000", false},
+	} {
+		if got := Grade(problem, map[string]string{"numerator": tc.num, "denominator": tc.den}).IsCorrect; got != tc.correct {
+			t.Errorf("grading %s/%s against 5/2: got %t, want %t", tc.num, tc.den, got, tc.correct)
+		}
+	}
+}
+
+func TestGeneratedClockAndTriangleQuestions(t *testing.T) {
+	clock := regexp.MustCompile(`\d\d:\d\d`)
+	for _, locale := range []string{"en", "id"} {
+		rolledOver := false
+		for seed := int64(1); seed <= 256; seed++ {
+			p, _ := GenerateByCode("g2_clock_minutes", seed, locale)
+			times := clock.FindAllString(p.Question.Stem, -1)
+			if len(times) != 2 {
+				t.Fatalf("seed %d (%s) did not generate two clock times: %q", seed, locale, p.Question.Stem)
+			}
+			start, startErr := time.Parse("15:04", times[0])
+			end, endErr := time.Parse("15:04", times[1])
+			if startErr != nil || endErr != nil || end.Before(start) {
+				t.Fatalf("invalid clock times at seed %d (%s): %v", seed, locale, times)
+			}
+			rolledOver = rolledOver || start.Hour() != end.Hour()
+			if got, want := p.Solution.CorrectAnswers["answer"], strconv.Itoa(int(end.Sub(start).Minutes())); got != want {
+				t.Fatalf("seed %d (%s): duration %s, want %s", seed, locale, got, want)
+			}
+
+			p, _ = GenerateByCode("g4_angles_triangle_mcq", seed, locale)
+			seen := make(map[string]bool)
+			for _, opt := range p.Question.Options {
+				if seen[opt.Label] {
+					t.Fatalf("seed %d (%s) repeats angle option %s", seed, locale, opt.Label)
+				}
+				seen[opt.Label] = true
+			}
+		}
+		if !rolledOver {
+			t.Fatalf("no clock fixture crossed an hour (%s)", locale)
+		}
 	}
 }
 

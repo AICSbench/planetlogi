@@ -55,3 +55,27 @@ func TestTrainingCurriculaProficiencyAndStars(t *testing.T) {
 		t.Fatalf("expected 90%% Mastery 3 stars, got %+v", found)
 	}
 }
+
+func TestRemappedSkillsArePlayableInTraining(t *testing.T) {
+	svc := NewService(nil)
+	for code, template := range map[string]string{
+		"num-add-4digit":      "g3_add_sub_4digit",
+		"geo-triangle-angles": "g4_angles_triangle_mcq",
+		"geo-triangle-area":   "g5_triangle_area",
+		"frac-divide":         "g6_fraction_divide",
+	} {
+		for _, locale := range []string{"en", "id"} {
+			practice, err := svc.StartPracticeSession("stu-1", code, locale)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(practice.Questions) == 0 || practice.SkillName == "" {
+				t.Fatalf("skill %s (%s): missing questions or translation", code, locale)
+			}
+			q := practice.Questions[0]
+			if q.TemplateCode != template || q.SkillCode != code {
+				t.Errorf("skill %s (%s): got template %s with skill %s, want %s", code, locale, q.TemplateCode, q.SkillCode, template)
+			}
+		}
+	}
+}

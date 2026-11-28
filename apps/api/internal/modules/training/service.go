@@ -111,6 +111,7 @@ type Service struct {
 	pool     *pgxpool.Pool
 	catalog  []skillCatalogEntry
 	stats    map[string]map[string]*skillStat // studentID -> skillCode -> stat
+	receipts map[[2]string]struct{}           // (studentID, attemptID), for in-memory students
 	sessions map[string]*activePractice
 	nextSeq  int64
 }
@@ -120,6 +121,7 @@ func NewService(ledger economy.Ledger) *Service {
 		ledger:   ledger,
 		catalog:  buildDefaultCatalog(),
 		stats:    make(map[string]map[string]*skillStat),
+		receipts: make(map[[2]string]struct{}),
 		sessions: make(map[string]*activePractice),
 		nextSeq:  1000,
 	}
@@ -387,7 +389,7 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 		if gradeRes.IsCorrect {
 			correct++
 		}
-		if err := s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, correct); err != nil {
+		if err := s.recordSkillAttemptLocked(ctx, studentID, "", sess.skillCode, gradeRes.IsCorrect, correct); err != nil {
 			return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("persist skill stats: %w", err)
 		}
 		sess.answered[questionIndex] = true
@@ -407,16 +409,22 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 	return gradeRes, view, nil
 }
 
-// RecordSkillAttempt records a single skill attempt from Daily Orbit or other modes
-// so Proficiency % reports aggregate cross-mode performance.
-func (s *Service) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error {
+// RecordSkillAttempt adds an external attempt to Proficiency once per student and attempt ID.
+func (s *Service) RecordSkillAttempt(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.recordSkillAttemptLocked(studentID, skillCode, isCorrect, 0)
+	return s.recordSkillAttemptLocked(ctx, studentID, attemptID, skillCode, isCorrect, 0)
 }
 
-func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrect bool, sessionScore int) error {
-	stMap, err := s.ensureStatsLoadedPG(context.Background(), studentID)
+func (s *Service) recordSkillAttemptLocked(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool, sessionScore int) error {
+	if s.pool != nil && isUUID(studentID) {
+		return s.recordSkillAttemptPG(ctx, studentID, attemptID, skillCode, isCorrect, sessionScore)
+	}
+	key := [2]string{studentID, attemptID}
+	if _, seen := s.receipts[key]; attemptID != "" && seen {
+		return nil
+	}
+	stMap, err := s.ensureStatsLoadedPG(ctx, studentID)
 	if err != nil {
 		return err
 	}
@@ -425,6 +433,14 @@ func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrec
 		st = &skillStat{}
 		stMap[skillCode] = st
 	}
+	st.record(isCorrect, sessionScore)
+	if attemptID != "" {
+		s.receipts[key] = struct{}{}
+	}
+	return nil
+}
+
+func (st *skillStat) record(isCorrect bool, sessionScore int) {
 	st.recentWindow = append(st.recentWindow, isCorrect)
 	if len(st.recentWindow) > 20 {
 		st.recentWindow = st.recentWindow[len(st.recentWindow)-20:]
@@ -433,7 +449,6 @@ func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrec
 		st.bestSessionScore = sessionScore
 		st.bestStars = StarsForScore(sessionScore)
 	}
-	return s.saveSkillStatPG(context.Background(), studentID, skillCode, st)
 }
 
 func (s *Service) toSkillView(entry skillCatalogEntry, stMap map[string]*skillStat, locale string) SkillView {
@@ -482,7 +497,7 @@ func containsStr(slice []string, target string) bool {
 }
 
 func buildDefaultCatalog() []skillCatalogEntry {
-	return []skillCatalogEntry{
+	catalog := []skillCatalogEntry{
 		{code: "num-add-within-20", grade: 1, curricula: []string{"SINGAPORE_MOE", "KURIKULUM_MERDEKA", "CAMBRIDGE_0096"}, category: "CORE", difficulty: 1, nationalAvgPct: 82, templateCode: "g1_add_within_20", name: mathengine.LocaleText{EN: "Addition within 20", ID: "Penjumlahan sampai 20"}},
 		{code: "num-sub-within-20", grade: 1, curricula: []string{"KURIKULUM_MERDEKA", "SINGAPORE_MOE"}, category: "CORE", difficulty: 1, nationalAvgPct: 78, templateCode: "g1_sub_within_20", name: mathengine.LocaleText{EN: "Subtraction within 20", ID: "Pengurangan sampai 20"}},
 		{code: "num-place-value-100", grade: 1, curricula: []string{"SINGAPORE_MOE", "CAMBRIDGE_0096", "KURIKULUM_MERDEKA"}, category: "CORE", difficulty: 2, nationalAvgPct: 74, templateCode: "g1_place_value_tens_ones", name: mathengine.LocaleText{EN: "Place Value (Tens & Ones)", ID: "Nilai Tempat (Puluhan & Satuan)"}},
@@ -513,6 +528,37 @@ func buildDefaultCatalog() []skillCatalogEntry {
 		{code: "geo-circles", grade: 6, curricula: []string{"KURIKULUM_MERDEKA", "SINGAPORE_MOE"}, category: "CORE", difficulty: 4, nationalAvgPct: 63, templateCode: "g6_circle_circumference", name: mathengine.LocaleText{EN: "Circumference of Circles", ID: "Keliling Lingkaran"}},
 		{code: "hots-make-supposition", grade: 6, curricula: []string{"HOTS_WHEEL", "CHALLENGING_MATHS", "EXPLORER_SERIES"}, category: "CHALLENGING", difficulty: 5, heuristicCode: "MAKE_SUPPOSITION", ageBand: "10-13", nationalAvgPct: 52, templateCode: "g6_supposition_hots", name: mathengine.LocaleText{EN: "Supposition Method", ID: "Metode Pengandaian"}},
 	}
+	knownSkills := make(map[string]bool)
+	for _, entry := range catalog {
+		knownSkills[entry.code] = true
+	}
+	for _, tmpl := range mathengine.Registry() {
+		if knownSkills[tmpl.SkillCode] {
+			continue
+		}
+		entry := skillCatalogEntry{
+			code: tmpl.SkillCode, grade: tmpl.Grade, curricula: []string{tmpl.CurriculumCode},
+			category: "CORE", difficulty: tmpl.Difficulty, templateCode: tmpl.Code,
+			name: tmpl.SkillName, heuristicCode: tmpl.HeuristicCode,
+		}
+		switch tmpl.CurriculumCode {
+		case "HOTS_WHEEL":
+			entry.category = "HOTS"
+			entry.ageBand = "8-11"
+			if tmpl.Grade >= 5 {
+				entry.ageBand = "10-13"
+			} else if tmpl.Grade <= 2 {
+				entry.ageBand = "6-9"
+			}
+		case "CHALLENGING_MATHS":
+			entry.category = "CHALLENGING"
+		case "EXPLORER_SERIES":
+			entry.category = "EXPLORER"
+		}
+		catalog = append(catalog, entry)
+		knownSkills[entry.code] = true
+	}
+	return catalog
 }
 
 type Handler struct {

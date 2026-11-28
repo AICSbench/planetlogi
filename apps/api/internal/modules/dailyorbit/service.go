@@ -107,15 +107,17 @@ type SessionView struct {
 }
 
 type internalSlot struct {
-	index        int
-	stageName    string
-	nodeShape    string
-	rewardSP     int
-	templateCode string
-	seed         int64
-	status       SlotStatus
-	earnedSP     int
-	submitted    map[string]string
+	index         int
+	stageName     string
+	nodeShape     string
+	rewardSP      int
+	templateCode  string
+	seed          int64
+	status        SlotStatus
+	earnedSP      int
+	submitted     map[string]string
+	pendingSkill  string
+	pendingStreak bool
 }
 
 type studentPrefs struct {
@@ -137,7 +139,7 @@ type internalSession struct {
 }
 
 type SkillAttemptRecorder interface {
-	RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error
+	RecordSkillAttempt(ctx context.Context, studentID, attemptID, skillCode string, isCorrect bool) error
 }
 
 type Service struct {
@@ -361,11 +363,19 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 		return SlotView{}, SessionView{}, err
 	}
 	slot := sess.slots[slotIndex-1]
-	if slot.status != SlotPending {
+	needsRecording := slot.pendingStreak || slot.pendingSkill != ""
+	if slot.status != SlotPending && !needsRecording {
 		return SlotView{}, SessionView{}, ErrAlreadyAnswered
 	}
 	if templateCode == "" || seed == 0 || slot.templateCode != templateCode || slot.seed != seed {
 		return SlotView{}, SessionView{}, ErrQuestionReplaced
+	}
+	if needsRecording {
+		if err := s.finishSubmission(ctx, studentID, tz, now, sess, slot); err != nil {
+			return SlotView{}, SessionView{}, err
+		}
+		view := s.renderViewLocked(sess, prefs, eval, locale)
+		return view.Slots[slotIndex-1], view, nil
 	}
 
 	prob, _ := mathengine.GenerateByCode(slot.templateCode, slot.seed, locale)
@@ -423,28 +433,53 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 		sess.correctCount++
 		sess.totalSPEarned += slot.rewardSP
 		prefs.totalSP += int64(slot.rewardSP)
-		if s.streakSvc != nil {
-			if _, err := s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount); err != nil {
-				return SlotView{}, SessionView{}, fmt.Errorf("record streak progress: %w", err)
-			}
-		}
+		slot.pendingStreak = s.streakSvc != nil
 	} else {
 		slot.status = SlotWrong
 	}
-	if err := s.saveSessionPG(ctx, studentID, sess); err != nil {
-		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit session: %w", err)
+	if s.attemptRec != nil {
+		slot.pendingSkill = prob.Question.SkillCode
 	}
-	if err := s.savePrefsPG(ctx, studentID, prefs); err != nil {
-		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit prefs: %w", err)
+	if err := s.saveSubmissionPG(ctx, studentID, sess, prefs); err != nil {
+		return SlotView{}, SessionView{}, fmt.Errorf("persist daily orbit submission: %w", err)
 	}
-	if s.attemptRec != nil && prob.Question.SkillCode != "" {
-		if err := s.attemptRec.RecordSkillAttempt(studentID, prob.Question.SkillCode, gradeRes.IsCorrect); err != nil {
-			return SlotView{}, SessionView{}, fmt.Errorf("record skill attempt: %w", err)
-		}
+	if err := s.finishSubmission(ctx, studentID, tz, now, sess, slot); err != nil {
+		return SlotView{}, SessionView{}, err
 	}
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
+}
+
+func (s *Service) finishSubmission(ctx context.Context, studentID, tz string, now time.Time, sess *internalSession, slot *internalSlot) error {
+	if slot.pendingStreak {
+		if s.streakSvc == nil {
+			return errors.New("daily orbit streak service unavailable")
+		}
+		if _, err := s.streakSvc.RecordDailyOrbitProgress(studentID, tz, now, sess.correctCount); err != nil {
+			return fmt.Errorf("record streak progress: %w", err)
+		}
+		if err := s.clearPendingEffectPG(ctx, studentID, sess.localDate, slot.index, "pendingStreak"); err != nil {
+			return fmt.Errorf("confirm streak progress: %w", err)
+		}
+		slot.pendingStreak = false
+	}
+	skill := slot.pendingSkill
+	if skill == "" {
+		return nil
+	}
+	if s.attemptRec == nil {
+		return errors.New("daily orbit skill attempt recorder unavailable")
+	}
+	attemptID := fmt.Sprintf("daily_orbit:%s:q%d", sess.localDate, slot.index)
+	if err := s.attemptRec.RecordSkillAttempt(ctx, studentID, attemptID, skill, slot.status == SlotCorrect); err != nil {
+		return fmt.Errorf("record skill attempt: %w", err)
+	}
+	if err := s.clearPendingEffectPG(ctx, studentID, sess.localDate, slot.index, "pendingSkill"); err != nil {
+		return fmt.Errorf("confirm skill attempt: %w", err)
+	}
+	slot.pendingSkill = ""
+	return nil
 }
 
 func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz, locale string, slotIndex int) (SlotView, SessionView, error) {

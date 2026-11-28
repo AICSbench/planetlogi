@@ -138,7 +138,7 @@ test.describe("Question Player 4 Modes & 4 Input Types", () => {
       await route.fulfill({ json: baseSession });
     });
 
-    await page.route("**/api/v1/daily-orbit/submit", async (route) => {
+    await page.route((url) => url.pathname === "/api/v1/daily-orbit/submit", async (route) => {
       const updated = structuredClone(baseSession);
       updated.slots[0].status = "CORRECT";
       updated.slots[0].earnedSp = 1;
@@ -162,16 +162,16 @@ test.describe("Question Player 4 Modes & 4 Input Types", () => {
     await expect(page.getByText("5 + 4 = 9")).toBeVisible();
 
     // 2. multi_numeric slot
-    await page.getByRole("button", { name: "2" }).click();
+    await page.getByRole("button", { name: /\bQ2\b/ }).click();
     await expect(page.locator("#ans-m")).toBeVisible();
     await expect(page.locator("#ans-cm")).toBeVisible();
 
     // 3. mcq slot
-    await page.getByRole("button", { name: "3" }).click();
+    await page.getByRole("button", { name: /\bQ3\b/ }).click();
     await expect(page.getByRole("button", { name: /42/ })).toBeVisible();
 
     // 4. fraction slot
-    await page.getByRole("button", { name: "4" }).click();
+    await page.getByRole("button", { name: /\bQ4\b/ }).click();
     await expect(page.locator("#ans-numerator")).toBeVisible();
     await expect(page.locator("#ans-denominator")).toBeVisible();
   });
@@ -212,7 +212,7 @@ test.describe("Question Player 4 Modes & 4 Input Types", () => {
       });
     });
 
-    await page.route("**/api/v1/training/sessions", async (route) => {
+    await page.route((url) => url.pathname === "/api/v1/training/sessions", async (route) => {
       await route.fulfill({
         json: {
           sessionId: "trn-e2e-1",
@@ -240,7 +240,7 @@ test.describe("Question Player 4 Modes & 4 Input Types", () => {
       });
     });
 
-    await page.route("**/api/v1/training/sessions/submit", async (route) => {
+    await page.route((url) => url.pathname === "/api/v1/training/sessions/submit", async (route) => {
       await route.fulfill({
         json: {
           result: {

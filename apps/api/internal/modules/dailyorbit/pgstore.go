@@ -7,18 +7,25 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
+type pgExecutor interface {
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+}
+
 type pgSlotPayload struct {
-	Index        int               `json:"index"`
-	StageName    string            `json:"stageName"`
-	NodeShape    string            `json:"nodeShape"`
-	RewardSP     int               `json:"rewardSp"`
-	TemplateCode string            `json:"templateCode"`
-	Seed         int64             `json:"seed"`
-	Status       SlotStatus        `json:"status"`
-	EarnedSP     int               `json:"earnedSp"`
-	Submitted    map[string]string `json:"submitted,omitempty"`
+	Index         int               `json:"index"`
+	StageName     string            `json:"stageName"`
+	NodeShape     string            `json:"nodeShape"`
+	RewardSP      int               `json:"rewardSp"`
+	TemplateCode  string            `json:"templateCode"`
+	Seed          int64             `json:"seed"`
+	Status        SlotStatus        `json:"status"`
+	EarnedSP      int               `json:"earnedSp"`
+	Submitted     map[string]string `json:"submitted,omitempty"`
+	PendingSkill  string            `json:"pendingSkill,omitempty"`
+	PendingStreak bool              `json:"pendingStreak,omitempty"`
 }
 
 type pgSessionPayload struct {
@@ -95,6 +102,10 @@ func (s *Service) loadPrefsPG(ctx context.Context, studentID string) (*studentPr
 }
 
 func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentPrefs) error {
+	return s.writePrefsPG(ctx, s.pool, studentID, p)
+}
+
+func (s *Service) writePrefsPG(ctx context.Context, db pgExecutor, studentID string, p *studentPrefs) error {
 	if s.pool == nil || !isUUID(studentID) || p == nil {
 		return nil
 	}
@@ -102,7 +113,7 @@ func (s *Service) savePrefsPG(ctx context.Context, studentID string, p *studentP
 	if err != nil {
 		return err
 	}
-	_, err = s.pool.Exec(ctx, `
+	_, err = db.Exec(ctx, `
 		INSERT INTO daily_orbit_prefs (student_id, grade, tier, active_curricula, total_sp, updated_at)
 		VALUES ($1::uuid, $2, $3, $4::jsonb, $5, NOW())
 		ON CONFLICT (student_id) DO UPDATE SET
@@ -149,15 +160,17 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 	slots := make([]*internalSlot, 10)
 	for i, ps := range payload.Slots {
 		slots[i] = &internalSlot{
-			index:        ps.Index,
-			stageName:    ps.StageName,
-			nodeShape:    ps.NodeShape,
-			rewardSP:     ps.RewardSP,
-			templateCode: ps.TemplateCode,
-			seed:         ps.Seed,
-			status:       ps.Status,
-			earnedSP:     ps.EarnedSP,
-			submitted:    ps.Submitted,
+			index:         ps.Index,
+			stageName:     ps.StageName,
+			nodeShape:     ps.NodeShape,
+			rewardSP:      ps.RewardSP,
+			templateCode:  ps.TemplateCode,
+			seed:          ps.Seed,
+			status:        ps.Status,
+			earnedSP:      ps.EarnedSP,
+			submitted:     ps.Submitted,
+			pendingSkill:  ps.PendingSkill,
+			pendingStreak: ps.PendingStreak,
 		}
 	}
 	return &internalSession{
@@ -173,6 +186,38 @@ func (s *Service) loadSessionPG(ctx context.Context, studentID, localDate string
 }
 
 func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *internalSession) error {
+	return s.writeSessionPG(ctx, s.pool, studentID, sess)
+}
+
+func (s *Service) clearPendingEffectPG(ctx context.Context, studentID, localDate string, slotIndex int, field string) error {
+	if s.pool == nil || !isUUID(studentID) {
+		return nil
+	}
+	subjectID, err := s.subjectIDPG(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = s.pool.Exec(ctx, `
+		UPDATE daily_orbit_sessions
+		SET questions_json = questions_json #- $4::text[]
+		WHERE student_id = $1::uuid AND subject_id = $2::uuid AND local_date = $3::date
+	`, studentID, subjectID, localDate, []string{"slots", fmt.Sprint(slotIndex - 1), field})
+	return err
+}
+
+func (s *Service) saveSubmissionPG(ctx context.Context, studentID string, sess *internalSession, prefs *studentPrefs) error {
+	if s.pool == nil || !isUUID(studentID) {
+		return nil
+	}
+	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		if err := s.writeSessionPG(ctx, tx, studentID, sess); err != nil {
+			return err
+		}
+		return s.writePrefsPG(ctx, tx, studentID, prefs)
+	})
+}
+
+func (s *Service) writeSessionPG(ctx context.Context, db pgExecutor, studentID string, sess *internalSession) error {
 	if s.pool == nil || !isUUID(studentID) || sess == nil {
 		return nil
 	}
@@ -188,15 +233,17 @@ func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *int
 	}
 	for i, sl := range sess.slots {
 		payload.Slots[i] = pgSlotPayload{
-			Index:        sl.index,
-			StageName:    sl.stageName,
-			NodeShape:    sl.nodeShape,
-			RewardSP:     sl.rewardSP,
-			TemplateCode: sl.templateCode,
-			Seed:         sl.seed,
-			Status:       sl.status,
-			EarnedSP:     sl.earnedSP,
-			Submitted:    sl.submitted,
+			Index:         sl.index,
+			StageName:     sl.stageName,
+			NodeShape:     sl.nodeShape,
+			RewardSP:      sl.rewardSP,
+			TemplateCode:  sl.templateCode,
+			Seed:          sl.seed,
+			Status:        sl.status,
+			EarnedSP:      sl.earnedSP,
+			Submitted:     sl.submitted,
+			PendingSkill:  sl.pendingSkill,
+			PendingStreak: sl.pendingStreak,
 		}
 	}
 	raw, err := json.Marshal(payload)
@@ -204,7 +251,7 @@ func (s *Service) saveSessionPG(ctx context.Context, studentID string, sess *int
 		return err
 	}
 
-	_, err = s.pool.Exec(ctx, `
+	_, err = db.Exec(ctx, `
 		INSERT INTO daily_orbit_sessions
 			(student_id, subject_id, local_date, tier, questions_json, change_question_used, correct_count, total_sp_earned, completed_at)
 		VALUES ($1::uuid, $2::uuid, $3::date, $4, $5::jsonb, $6, $7, $8, CASE WHEN $9 >= 10 THEN NOW() ELSE NULL END)

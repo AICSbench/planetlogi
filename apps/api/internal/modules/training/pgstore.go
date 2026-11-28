@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
@@ -72,10 +73,35 @@ func (s *Service) ensureStatsLoadedPG(ctx context.Context, studentID string) (ma
 	return stMap, nil
 }
 
-func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode string, st *skillStat) error {
-	if s.pool == nil || !isUUID(studentID) || st == nil {
-		return nil
-	}
+func (s *Service) recordSkillAttemptPG(ctx context.Context, studentID, attemptID, skillCode string, correct bool, sessionScore int) error {
+	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		if attemptID != "" {
+			tag, err := tx.Exec(ctx, `INSERT INTO training_attempt_receipts (student_id, attempt_id)
+				VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, attemptID)
+			if err != nil || tag.RowsAffected() == 0 {
+				return err
+			}
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO training_skill_stats (student_id, skill_code)
+			VALUES ($1::uuid, $2) ON CONFLICT DO NOTHING`, studentID, skillCode); err != nil {
+			return err
+		}
+		var st skillStat
+		var results []byte
+		if err := tx.QueryRow(ctx, `SELECT recent_results, best_session_score, best_stars
+			FROM training_skill_stats WHERE student_id = $1::uuid AND skill_code = $2 FOR UPDATE`,
+			studentID, skillCode).Scan(&results, &st.bestSessionScore, &st.bestStars); err != nil {
+			return err
+		}
+		if err := json.Unmarshal(results, &st.recentWindow); err != nil {
+			return err
+		}
+		st.record(correct, sessionScore)
+		return saveSkillStatPG(ctx, tx, studentID, skillCode, &st)
+	})
+}
+
+func saveSkillStatPG(ctx context.Context, tx pgx.Tx, studentID, skillCode string, st *skillStat) error {
 	resultsRaw, err := json.Marshal(st.recentWindow)
 	if err != nil {
 		return err
@@ -87,20 +113,12 @@ func (s *Service) saveSkillStatPG(ctx context.Context, studentID, skillCode stri
 		}
 	}
 	pct, tier := ComputeProficiency(st.recentWindow)
-	_, err = s.pool.Exec(ctx, `
-		INSERT INTO training_skill_stats
-			(student_id, skill_code, recent_results, recent_window_count, recent_correct_count,
-			 proficiency_pct, proficiency_tier, best_session_score, best_stars, updated_at)
-		VALUES ($1::uuid, $2, $3::jsonb, $4, $5, $6, $7, $8, $9, NOW())
-		ON CONFLICT (student_id, skill_code) DO UPDATE SET
-			recent_results = EXCLUDED.recent_results,
-			recent_window_count = EXCLUDED.recent_window_count,
-			recent_correct_count = EXCLUDED.recent_correct_count,
-			proficiency_pct = EXCLUDED.proficiency_pct,
-			proficiency_tier = EXCLUDED.proficiency_tier,
-			best_session_score = EXCLUDED.best_session_score,
-			best_stars = EXCLUDED.best_stars,
+	_, err = tx.Exec(ctx, `
+		UPDATE training_skill_stats SET
+			recent_results = $3::jsonb, recent_window_count = $4, recent_correct_count = $5,
+			proficiency_pct = $6, proficiency_tier = $7, best_session_score = $8, best_stars = $9,
 			updated_at = NOW()
+		WHERE student_id = $1::uuid AND skill_code = $2
 	`, studentID, skillCode, resultsRaw, len(st.recentWindow), correct, pct, string(tier), st.bestSessionScore, st.bestStars)
 	return err
 }

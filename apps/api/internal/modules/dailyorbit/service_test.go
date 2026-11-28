@@ -7,10 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
+	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
@@ -85,7 +88,7 @@ type mockAttemptRecorder struct {
 	err   error
 }
 
-func (m *mockAttemptRecorder) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) error {
+func (m *mockAttemptRecorder) RecordSkillAttempt(_ context.Context, studentID, _, skillCode string, isCorrect bool) error {
 	if m.err != nil {
 		return m.err
 	}
@@ -124,6 +127,17 @@ func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
 	}
 }
 
+type lostAttemptAck struct{ SkillAttemptRecorder }
+
+var errLostAttemptAck = errors.New("lost acknowledgement after recording skill attempt")
+
+func (r lostAttemptAck) RecordSkillAttempt(ctx context.Context, studentID, attemptID, skillCode string, correct bool) error {
+	if err := r.SkillAttemptRecorder.RecordSkillAttempt(ctx, studentID, attemptID, skillCode, correct); err != nil {
+		return err
+	}
+	return errLostAttemptAck
+}
+
 func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	dsn := os.Getenv("TEST_DATABASE_URL")
 	if dsn == "" {
@@ -134,32 +148,112 @@ func TestDailyOrbitPGPersistenceRestart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("pgxpool.New: %v", err)
 	}
-	defer pool.Close()
+	t.Cleanup(pool.Close)
 
 	var studentID string
-	if err := pool.QueryRow(ctx, `SELECT id::text FROM student_profiles LIMIT 1`).Scan(&studentID); err != nil {
-		t.Fatalf("seed student missing: %v", err)
+	if err := pool.QueryRow(ctx, `
+		INSERT INTO student_profiles (parent_account_id, login_id, password_hash, first_name, masked_display_name, grade, crew_code)
+		SELECT parent_account_id, 'test-' || gen_random_uuid(), password_hash, 'Test Pilot', 'Test Pilot', 1,
+			left(replace(gen_random_uuid()::text, '-', ''), 9)
+		FROM student_profiles WHERE login_id = 'pilot1'
+		RETURNING id::text
+	`).Scan(&studentID); err != nil {
+		t.Fatalf("create isolated test student (seed pilot1 first): %v", err)
 	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(ctx, `DELETE FROM student_profiles WHERE id = $1::uuid`, studentID); err != nil {
+			t.Error(err)
+		}
+	})
 
 	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
 	fixedNow := time.Date(2099, 1, 2, 10, 0, 0, 0, loc)
 
 	svc1 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
 	svc1.nowClock = func() time.Time { return fixedNow }
+	recorder := &mockAttemptRecorder{err: errors.New("recorder unavailable")}
 	today := getToday(t, svc1, studentID)
-	sl := today.Slots[0]
+	for _, earlier := range today.Slots[:4] {
+		p, _ := mathengine.GenerateByCode(earlier.Question.TemplateCode, earlier.Question.Seed, "en")
+		if _, _, err := svc1.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", earlier.Index, p.Solution.CorrectAnswers, earlier.Question.TemplateCode, earlier.Question.Seed); err != nil {
+			t.Fatal(err)
+		}
+	}
+	svc1.SetAttemptRecorder(recorder)
+	sl := today.Slots[4]
 	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
-	if _, _, err := svc1.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed); err != nil && !errors.Is(err, ErrAlreadyAnswered) {
-		t.Fatalf("submit PG error: %v", err)
+	submit := func(svc *Service, answers map[string]string) (SlotView, SessionView, error) {
+		return svc.SubmitAnswer(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index, answers, sl.Question.TemplateCode, sl.Question.Seed)
+	}
+	constraint := "test_streak_" + studentID
+	name := pgx.Identifier{constraint}.Sanitize()
+	if _, err := pool.Exec(ctx, `ALTER TABLE streak_calendar_days ADD CONSTRAINT `+name+
+		` CHECK (student_id <> '`+studentID+`'::uuid)`); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if _, err := pool.Exec(ctx, `ALTER TABLE streak_calendar_days DROP CONSTRAINT IF EXISTS `+name); err != nil {
+			t.Error(err)
+		}
+	})
+	var pgErr *pgconn.PgError
+	if _, _, err := submit(svc1, prob.Solution.CorrectAnswers); !errors.As(err, &pgErr) || pgErr.ConstraintName != constraint {
+		t.Fatalf("expected streak write failure, got %v", err)
 	}
 
-	// Simulate fresh server restart with empty in-memory maps
-	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
-	svc2.nowClock = func() time.Time { return fixedNow }
-	reloaded := getToday(t, svc2, studentID)
-	if reloaded.CompletedCount < 1 || reloaded.Slots[0].Status == SlotPending {
-		t.Fatalf("expected persisted slot 1 after restart, got completed=%d status=%s", reloaded.CompletedCount, reloaded.Slots[0].Status)
+	if _, err := pool.Exec(ctx, `ALTER TABLE streak_calendar_days DROP CONSTRAINT `+name); err != nil {
+		t.Fatal(err)
 	}
+	streaks := streak.NewServiceWithPG(pool)
+	svc2 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streaks)
+	svc2.nowClock = func() time.Time { return fixedNow }
+	if _, _, err := svc2.SkipSlot(ctx, studentID, 1, "Asia/Jakarta", "en", sl.Index); !errors.Is(err, ErrAlreadyAnswered) {
+		t.Fatalf("skip after a streak write failure must not replace the accepted answer, got %v", err)
+	}
+	svc2.SetAttemptRecorder(recorder)
+	if _, _, err := submit(svc2, nil); !errors.Is(err, recorder.err) {
+		t.Fatalf("expected proficiency failure after recovering streak, got %v", err)
+	}
+	if st, err := streaks.GetStatus(studentID, "Asia/Jakarta"); err != nil || st.TodayCorrectCount != 5 || st.CurrentStreak != 4 {
+		t.Fatalf("expected streak to reach milestone once, got %+v: %v", st, err)
+	}
+	if days, err := streaks.GetCalendar(studentID, "2099-01"); err != nil || len(days) != 1 || days[0].Status != streak.DayCompleted {
+		t.Fatalf("expected a completed calendar day after retry, got %v: %v", days, err)
+	}
+
+	svc2.SetAttemptRecorder(lostAttemptAck{training.NewServiceWithPG(pool, nil)})
+	if _, _, err := submit(svc2, nil); !errors.Is(err, errLostAttemptAck) {
+		t.Fatalf("retry after restart should reach recorder and lose its acknowledgement, got %v", err)
+	}
+
+	svc3 := NewServiceWithPG(pool, economy.NewPGLedger(pool), streak.NewServiceWithPG(pool))
+	svc3.nowClock = func() time.Time { return fixedNow }
+	stats := training.NewServiceWithPG(pool, nil)
+	svc3.SetAttemptRecorder(stats)
+	got, reloaded, err := submit(svc3, nil)
+	if err != nil || got.Status != SlotCorrect || reloaded.CompletedCount != 5 || reloaded.TotalSPEarned != 5 {
+		t.Fatalf("expected original correct answer and five completions after retry, got %s, completed=%d SP=%d: %v", got.Status, reloaded.CompletedCount, reloaded.TotalSPEarned, err)
+	}
+	if _, _, err := submit(svc3, nil); !errors.Is(err, ErrAlreadyAnswered) {
+		t.Fatalf("expected completed submission to remain locked, got %v", err)
+	}
+	var sp, xp int
+	if err := pool.QueryRow(ctx, `SELECT total_sp, pilot_xp FROM student_wallets WHERE student_id = $1::uuid`, studentID).Scan(&sp, &xp); err != nil || sp != 5 || xp != 15 {
+		t.Fatalf("expected exactly 5 SP + 15 XP, got SP=%d XP=%d: %v", sp, xp, err)
+	}
+	skills, err := stats.ListSkills(studentID, "ALL", 1, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, skill := range skills {
+		if skill.Code == prob.Question.SkillCode {
+			if skill.AttemptsCount != 1 || skill.CorrectCount != 1 {
+				t.Fatalf("expected exactly one correct proficiency attempt, got %d/%d", skill.CorrectCount, skill.AttemptsCount)
+			}
+			return
+		}
+	}
+	t.Fatalf("skill %s not found in proficiency", prob.Question.SkillCode)
 }
 
 func getToday(t *testing.T, svc *Service, studentID string) SessionView {

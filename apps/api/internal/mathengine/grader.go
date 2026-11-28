@@ -22,6 +22,16 @@ func Grade(problem GeneratedProblem, submitted map[string]string) GradeResult {
 		}
 	}
 
+	if problem.GradingStrategy == "equivalent_fraction" {
+		want, okWant := fractionFields(expected)
+		got, okGot := fractionFields(submitted)
+		return GradeResult{
+			IsCorrect:      okWant && okGot && want.Cmp(got) == 0,
+			CorrectAnswers: expected,
+			WorkedSolution: problem.Solution,
+		}
+	}
+
 	if problem.OrderIndep && len(expected) > 1 {
 		expVals := make([]string, 0, len(expected))
 		subVals := make([]string, 0, len(expected))
@@ -59,6 +69,15 @@ func Grade(problem GeneratedProblem, submitted map[string]string) GradeResult {
 		CorrectAnswers: expected,
 		WorkedSolution: problem.Solution,
 	}
+}
+
+func fractionFields(fields map[string]string) (*big.Rat, bool) {
+	num, okNum := new(big.Int).SetString(strings.TrimSpace(fields["numerator"]), 10)
+	den, okDen := new(big.Int).SetString(strings.TrimSpace(fields["denominator"]), 10)
+	if !okNum || !okDen || den.Sign() == 0 {
+		return nil, false
+	}
+	return new(big.Rat).SetFrac(num, den), true
 }
 
 func valuesEqual(strategy, expected, submitted string, tolerance float64) bool {

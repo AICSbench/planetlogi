@@ -233,20 +233,37 @@ func seedContentPacks(ctx context.Context, pool *pgxpool.Pool, mathSubjectID str
 		return fmt.Errorf("read curricula pack: %w", err)
 	}
 
+	type seedSkill struct {
+		Code          string            `json:"code"`
+		Grade         int               `json:"grade"`
+		Curricula     []string          `json:"curricula"`
+		Category      string            `json:"category"`
+		HeuristicCode string            `json:"heuristicCode"`
+		AgeBand       string            `json:"ageBand"`
+		Difficulty    int               `json:"difficulty"`
+		Translations  map[string]string `json:"translations"`
+	}
 	var currDoc struct {
-		Skills []struct {
-			Code          string            `json:"code"`
-			Grade         int               `json:"grade"`
-			Curricula     []string          `json:"curricula"`
-			Category      string            `json:"category"`
-			HeuristicCode string            `json:"heuristicCode"`
-			AgeBand       string            `json:"ageBand"`
-			Difficulty    int               `json:"difficulty"`
-			Translations  map[string]string `json:"translations"`
-		} `json:"skills"`
+		Skills []seedSkill `json:"skills"`
 	}
 	if err := json.Unmarshal(currBytes, &currDoc); err != nil {
 		return fmt.Errorf("parse curricula pack: %w", err)
+	}
+	templates := mathengine.Registry()
+	knownSkills := make(map[string]bool)
+	for _, sk := range currDoc.Skills {
+		knownSkills[sk.Code] = true
+	}
+	for _, tmpl := range templates {
+		if knownSkills[tmpl.SkillCode] {
+			continue
+		}
+		currDoc.Skills = append(currDoc.Skills, seedSkill{
+			Code: tmpl.SkillCode, Grade: tmpl.Grade, Curricula: []string{tmpl.CurriculumCode},
+			Difficulty: tmpl.Difficulty, HeuristicCode: tmpl.HeuristicCode,
+			Translations: map[string]string{"en": tmpl.SkillName.EN, "id": tmpl.SkillName.ID},
+		})
+		knownSkills[tmpl.SkillCode] = true
 	}
 
 	// Map curriculum code -> id
@@ -367,10 +384,10 @@ func seedContentPacks(ctx context.Context, pool *pgxpool.Pool, mathSubjectID str
 	}
 
 	// Import 60 procedural template descriptors
-	for _, tmpl := range mathengine.Registry() {
+	for _, tmpl := range templates {
 		skID := skillIDs[tmpl.SkillCode]
 		if skID == "" {
-			continue
+			return fmt.Errorf("missing skill %s for template %s", tmpl.SkillCode, tmpl.Code)
 		}
 		trRaw, _ := json.Marshal(map[string]any{"skillName": map[string]string{"en": tmpl.SkillName.EN, "id": tmpl.SkillName.ID}})
 		cfgRaw, _ := json.Marshal(map[string]any{"templateCode": tmpl.Code, "curriculumCode": tmpl.CurriculumCode})
@@ -383,6 +400,7 @@ func seedContentPacks(ctx context.Context, pool *pgxpool.Pool, mathSubjectID str
 			INSERT INTO questions (code, subject_id, skill_id, kind, grade, difficulty, input_type, heuristic_code, template_config, translations, grading_rule, status)
 			VALUES ($1, $2::uuid, $3::uuid, 'PROCEDURAL', $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, 'PUBLISHED')
 			ON CONFLICT (code) DO UPDATE SET
+				skill_id = EXCLUDED.skill_id,
 				template_config = EXCLUDED.template_config,
 				translations = EXCLUDED.translations,
 				status = 'PUBLISHED',
@@ -391,7 +409,7 @@ func seedContentPacks(ctx context.Context, pool *pgxpool.Pool, mathSubjectID str
 			return fmt.Errorf("upsert procedural template %s: %w", tmpl.Code, err)
 		}
 	}
-	logger.Info("imported procedural templates", "count", len(mathengine.Registry()))
+	logger.Info("imported procedural templates", "count", len(templates))
 
 	return nil
 }
