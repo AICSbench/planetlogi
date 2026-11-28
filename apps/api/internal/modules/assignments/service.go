@@ -706,12 +706,15 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	var res mathengine.GradeResult
 	var rewardAC int
 	var rewardID string
+	var rewardRequestID string
+	var assignmentRequestID string
 	var needsReward bool
 	detail, err := func() (AssignmentDetail, error) {
 		rec, ok := s.records[assignmentID]
 		if !ok || rec.studentID != studentID {
 			return AssignmentDetail{}, ErrAssignmentNotFound
 		}
+		assignmentRequestID = rec.requestID
 		if qIndex < 1 || qIndex > len(rec.items) {
 			return AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 		}
@@ -723,6 +726,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 					needsReward = true
 					rewardAC = rec.rewardAC
 					rewardID = rec.id
+					rewardRequestID = rec.requestID
 				}
 			}
 			// Re-submitting an answered question is idempotent: the stored answer and its result
@@ -747,6 +751,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 				needsReward = true
 				rewardAC = rec.rewardAC
 				rewardID = rec.id
+				rewardRequestID = rec.requestID
 			} else if s.ledger == nil {
 				rec.rewarded = true
 			}
@@ -758,6 +763,28 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		return res, detail, err
 	}
 
+	resolveAliases := func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if assignmentRequestID != "" {
+			for id, rec := range s.records {
+				if rec.studentID == studentID && rec.requestID == assignmentRequestID {
+					assignmentID = id
+					detail = renderDetail(rec, locale)
+					break
+				}
+			}
+		}
+		if rewardRequestID != "" {
+			for id, rec := range s.records {
+				if rec.studentID == studentID && rec.requestID == rewardRequestID {
+					rewardID = id
+					break
+				}
+			}
+		}
+	}
+
 	var rewardErr error
 	if needsReward {
 		// Make the completing answer durable before crediting: a crash after the credit must
@@ -766,6 +793,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		if err := s.persistStudent(ctx, studentID); err != nil {
 			return res, detail, err
 		}
+		resolveAliases()
 		// The ledger can block on its own transaction; never hold the service
 		// mutex across it. The idempotency key makes a retry safe.
 		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
@@ -792,6 +820,7 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 	if err := s.persistStudent(ctx, studentID); err != nil {
 		return res, detail, err
 	}
+	resolveAliases()
 	if rewardErr != nil {
 		return res, detail, rewardErr
 	}

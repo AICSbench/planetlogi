@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
@@ -81,6 +83,28 @@ func (l *storeCheckingLedger) Apply(ctx context.Context, req economy.MutationReq
 
 func (l *storeCheckingLedger) ApplyBatch(ctx context.Context, reqs []economy.MutationRequest) ([]economy.MutationResult, error) {
 	return l.recordingLedger.ApplyBatch(ctx, reqs)
+}
+
+type blockingAssignmentStore struct {
+	*assignmentMemoryStore
+	mu      sync.Mutex
+	armed   bool
+	blocked bool
+	entered chan struct{}
+	release chan struct{}
+}
+
+func (b *blockingAssignmentStore) SaveMerged(ctx context.Context, studentID, module string, merge func([]byte) (any, error)) error {
+	b.mu.Lock()
+	if b.armed && !b.blocked {
+		b.blocked = true
+		b.mu.Unlock()
+		close(b.entered)
+		<-b.release
+	} else {
+		b.mu.Unlock()
+	}
+	return b.assignmentMemoryStore.SaveMerged(ctx, studentID, module, merge)
 }
 
 // Load-time reconciliation must also persist completion before crediting.
@@ -191,6 +215,66 @@ func TestFailedCreateAliasPreservesProgressWithoutDoubleReward(t *testing.T) {
 	if _, err := a.GetDetail(ctx, stuUUID, localID, "en"); !errors.Is(err, ErrAssignmentNotFound) {
 		t.Fatalf("local duplicate is still visible: %v", err)
 	}
+}
+
+func TestSubmitQuestionUsesDurableIDWhenAliasCreatedDuringPersist(t *testing.T) {
+	ctx := context.Background()
+	base := newAssignmentMemoryStore()
+	store := &blockingAssignmentStore{assignmentMemoryStore: base, entered: make(chan struct{}), release: make(chan struct{})}
+	ledger := &recordingLedger{}
+	a := NewServiceWithDeps(nil, store, ledger)
+	b := NewServiceWithDeps(nil, store, ledger)
+	for _, svc := range []*Service{a, b} {
+		svc.LinkParentChild("par-1", stuUUID)
+	}
+
+	store.failNext = true
+	if _, err := a.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-race-alias"); err == nil {
+		t.Fatal("expected create to fail")
+	}
+	var localID string
+	a.mu.Lock()
+	for id, rec := range a.records {
+		if rec.requestID == "req-race-alias" {
+			localID = id
+		}
+	}
+	a.mu.Unlock()
+	store.mu.Lock()
+	store.armed = true
+	store.mu.Unlock()
+	local, err := a.GetDetail(ctx, stuUUID, localID, "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prob, _ := mathengine.GenerateByCode(local.Questions[0].Question.TemplateCode, local.Questions[0].Question.Seed, "en")
+
+	result := make(chan error, 1)
+	go func() {
+		_, _, err := a.SubmitQuestion(ctx, stuUUID, localID, 1, prob.Solution.CorrectAnswers, "en")
+		result <- err
+	}()
+	select {
+	case <-store.entered:
+	case <-time.After(2 * time.Second):
+		t.Fatal("SubmitQuestion did not reach persistence")
+	}
+	durable, err := b.CreateParentCustomAssignment(ctx, "par-1", "Budi", stuUUID, "Drill", "", []string{"g1_add_within_20"}, "req-race-alias")
+	if err != nil {
+		t.Fatal(err)
+	}
+	close(store.release)
+	if err := <-result; err != nil {
+		t.Fatal(err)
+	}
+	if got := acCredited(ledger); got != 5 {
+		t.Fatalf("expected one credit, got %d", got)
+	}
+	ledger.mu.Lock()
+	if len(ledger.applied) != 1 || ledger.applied[0].SourceID != durable.ID {
+		t.Fatalf("reward used a non-durable assignment ID: %+v", ledger.applied)
+	}
+	ledger.mu.Unlock()
 }
 
 func TestMergeAssignmentStateAliasKeepsDurableIdentity(t *testing.T) {
