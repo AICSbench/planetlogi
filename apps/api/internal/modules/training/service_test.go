@@ -155,3 +155,15 @@ func TestTrainingPGConcurrentAnswers(t *testing.T) {
 		t.Fatalf("expected exactly 4 XP, got %d: %v", xp, err)
 	}
 }
+
+func TestIsParentLinkedDemoFallback(t *testing.T) {
+	svc := NewService(nil)
+	ok, err := svc.IsParentLinked(context.Background(), "demo-parent", "demo-pilot1")
+	if err != nil || !ok {
+		t.Fatalf("expected demo parent link, got ok=%v err=%v", ok, err)
+	}
+	ok, err = svc.IsParentLinked(context.Background(), "other-parent", "demo-pilot1")
+	if err != nil || ok {
+		t.Fatalf("expected unrelated parent to be rejected, got ok=%v err=%v", ok, err)
+	}
+}

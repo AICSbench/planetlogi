@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
@@ -158,11 +159,13 @@ type topicDef struct {
 }
 
 type lessonProgress struct {
-	drafts       map[int]map[string]string
-	solved       map[int]bool
-	lastWrong    map[int]bool
-	selfChecked  map[string]bool
-	scrollEarned bool
+	drafts             map[int]map[string]string
+	draftUpdatedAt     map[int]int64
+	solved             map[int]bool
+	lastWrong          map[int]bool
+	selfChecked        map[string]bool
+	selfCheckUpdatedAt map[string]int64
+	scrollEarned       bool
 }
 
 type Service struct {
@@ -197,11 +200,13 @@ type academyState struct {
 }
 
 type lessonProgressDTO struct {
-	Drafts       map[int]map[string]string `json:"drafts"`
-	Solved       map[int]bool              `json:"solved"`
-	LastWrong    map[int]bool              `json:"lastWrong"`
-	SelfChecked  map[string]bool           `json:"selfChecked"`
-	ScrollEarned bool                      `json:"scrollEarned"`
+	Drafts             map[int]map[string]string `json:"drafts"`
+	DraftUpdatedAt     map[int]int64             `json:"draftUpdatedAt,omitempty"`
+	Solved             map[int]bool              `json:"solved"`
+	LastWrong          map[int]bool              `json:"lastWrong"`
+	SelfChecked        map[string]bool           `json:"selfChecked"`
+	SelfCheckUpdatedAt map[string]int64          `json:"selfCheckUpdatedAt,omitempty"`
+	ScrollEarned       bool                      `json:"scrollEarned"`
 }
 
 func (p *lessonProgress) toDTO() lessonProgressDTO {
@@ -225,16 +230,24 @@ func (p *lessonProgress) toDTO() lessonProgressDTO {
 	for key, checked := range p.selfChecked {
 		selfChecked[key] = checked
 	}
+	draftUpdatedAt := make(map[int]int64, len(p.draftUpdatedAt))
+	for idx, at := range p.draftUpdatedAt {
+		draftUpdatedAt[idx] = at
+	}
+	selfCheckUpdatedAt := make(map[string]int64, len(p.selfCheckUpdatedAt))
+	for key, at := range p.selfCheckUpdatedAt {
+		selfCheckUpdatedAt[key] = at
+	}
 	return lessonProgressDTO{
-		Drafts: drafts, Solved: solved, LastWrong: lastWrong,
-		SelfChecked: selfChecked, ScrollEarned: p.scrollEarned,
+		Drafts: drafts, DraftUpdatedAt: draftUpdatedAt, Solved: solved, LastWrong: lastWrong,
+		SelfChecked: selfChecked, SelfCheckUpdatedAt: selfCheckUpdatedAt, ScrollEarned: p.scrollEarned,
 	}
 }
 
 func (d lessonProgressDTO) toProgress() *lessonProgress {
 	p := &lessonProgress{
-		drafts: d.Drafts, solved: d.Solved, lastWrong: d.LastWrong,
-		selfChecked: d.SelfChecked, scrollEarned: d.ScrollEarned,
+		drafts: d.Drafts, draftUpdatedAt: d.DraftUpdatedAt, solved: d.Solved, lastWrong: d.LastWrong,
+		selfChecked: d.SelfChecked, selfCheckUpdatedAt: d.SelfCheckUpdatedAt, scrollEarned: d.ScrollEarned,
 	}
 	if p.drafts == nil {
 		p.drafts = make(map[int]map[string]string)
@@ -247,6 +260,12 @@ func (d lessonProgressDTO) toProgress() *lessonProgress {
 	}
 	if p.selfChecked == nil {
 		p.selfChecked = make(map[string]bool)
+	}
+	if p.draftUpdatedAt == nil {
+		p.draftUpdatedAt = make(map[int]int64)
+	}
+	if p.selfCheckUpdatedAt == nil {
+		p.selfCheckUpdatedAt = make(map[string]int64)
 	}
 	return p
 }
@@ -315,8 +334,18 @@ func mergeLessonProgress(current, snapshot lessonProgressDTO) lessonProgressDTO 
 	if out.SelfChecked == nil {
 		out.SelfChecked = make(map[string]bool)
 	}
+	if out.DraftUpdatedAt == nil {
+		out.DraftUpdatedAt = make(map[int]int64)
+	}
+	if out.SelfCheckUpdatedAt == nil {
+		out.SelfCheckUpdatedAt = make(map[string]int64)
+	}
 	for idx, answers := range snapshot.Drafts {
-		out.Drafts[idx] = answers
+		at, ok := out.DraftUpdatedAt[idx]
+		if !ok || snapshot.DraftUpdatedAt[idx] >= at {
+			out.Drafts[idx] = answers
+			out.DraftUpdatedAt[idx] = snapshot.DraftUpdatedAt[idx]
+		}
 	}
 	for idx, ok := range snapshot.Solved {
 		out.Solved[idx] = out.Solved[idx] || ok
@@ -325,7 +354,19 @@ func mergeLessonProgress(current, snapshot lessonProgressDTO) lessonProgressDTO 
 		out.LastWrong[idx] = wrong
 	}
 	for key, checked := range snapshot.SelfChecked {
-		out.SelfChecked[key] = checked
+		at, ok := out.SelfCheckUpdatedAt[key]
+		snapAt := snapshot.SelfCheckUpdatedAt[key]
+		switch {
+		case !ok:
+			// Legacy/current records have no timestamp; never erase a checkmark.
+			out.SelfChecked[key] = out.SelfChecked[key] || checked
+			out.SelfCheckUpdatedAt[key] = snapAt
+		case snapAt > 0 && snapAt >= at:
+			out.SelfChecked[key] = checked
+			out.SelfCheckUpdatedAt[key] = snapAt
+		case snapAt == 0:
+			out.SelfChecked[key] = out.SelfChecked[key] || checked
+		}
 	}
 	out.ScrollEarned = out.ScrollEarned || snapshot.ScrollEarned
 	return out
@@ -376,10 +417,12 @@ func (s *Service) getProgLocked(studentID, lessonCode string) *lessonProgress {
 	p := s.progress[studentID][lessonCode]
 	if p == nil {
 		p = &lessonProgress{
-			drafts:      make(map[int]map[string]string),
-			solved:      make(map[int]bool),
-			lastWrong:   make(map[int]bool),
-			selfChecked: make(map[string]bool),
+			drafts:             make(map[int]map[string]string),
+			draftUpdatedAt:     make(map[int]int64),
+			solved:             make(map[int]bool),
+			lastWrong:          make(map[int]bool),
+			selfChecked:        make(map[string]bool),
+			selfCheckUpdatedAt: make(map[string]int64),
 		}
 		s.progress[studentID][lessonCode] = p
 	}
@@ -504,6 +547,7 @@ func (s *Service) SaveDraft(ctx context.Context, studentID, lessonCode, locale s
 			copied[k] = v
 		}
 		p.drafts[questionIndex] = copied
+		p.draftUpdatedAt[questionIndex] = time.Now().UnixNano()
 		return s.buildLessonDetailLocked(l, p, locale), nil
 	}()
 	s.mu.Unlock()
@@ -541,6 +585,7 @@ func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale
 			copied[k] = v
 		}
 		p.drafts[questionIndex] = copied
+		p.draftUpdatedAt[questionIndex] = time.Now().UnixNano()
 
 		seed := seedForLessonQuestion(l.code, questionIndex)
 		prob, _ := mathengine.GenerateByCode(l.templateCode, seed, locale)
@@ -623,6 +668,11 @@ func (s *Service) RetryScrollAward(ctx context.Context, studentID, lessonCode, l
 	if p.scrollEarned {
 		detail := s.buildLessonDetailLocked(l, p, locale)
 		s.mu.Unlock()
+		// A prior retry may have credited the ledger but failed to persist;
+		// flush before reporting success so a reload cannot lose the scroll.
+		if err := s.persistStudent(ctx, studentID); err != nil {
+			return detail, err
+		}
 		return detail, nil
 	}
 	detail := s.buildLessonDetailLocked(l, p, locale)
@@ -681,6 +731,7 @@ func (s *Service) ToggleSelfCheck(ctx context.Context, studentID, lessonCode, it
 		}
 		p := s.getProgLocked(studentID, lessonCode)
 		p.selfChecked[itemKey] = checked
+		p.selfCheckUpdatedAt[itemKey] = time.Now().UnixNano()
 		return s.buildLessonDetailLocked(l, p, locale), nil
 	}()
 	s.mu.Unlock()
@@ -732,8 +783,8 @@ func (s *Service) buildLessonDetailLocked(l lessonDef, p *lessonProgress, locale
 		ConceptVideoTitle:  l.conceptVideo.For(locale),
 		StoryVideoURL:      l.storyVideoURL.For(locale),
 		ConceptVideoURL:    l.conceptVideoURL.For(locale),
-		StoryCaptionsURL:   l.storyCaptionsURL.For(locale),
-		ConceptCaptionsURL: l.conceptCaptionsURL.For(locale),
+		StoryCaptionsURL:   captionURLFor(l.storyCaptionsURL, locale),
+		ConceptCaptionsURL: captionURLFor(l.conceptCaptionsURL, locale),
 		StoryYouTubeID:     l.storyYouTubeID.For(locale),
 		ConceptYouTubeID:   l.conceptYouTubeID.For(locale),
 		CompletionPct:      completionPctFor(l, p),
@@ -741,6 +792,15 @@ func (s *Service) buildLessonDetailLocked(l lessonDef, p *lessonProgress, locale
 		DoAndLearn:         qs,
 		SelfCheck:          checks,
 	}
+}
+
+// captionURLFor never falls back across languages, because the page labels
+// the track with the requested locale.
+func captionURLFor(text mathengine.LocaleText, locale string) string {
+	if locale == "id" {
+		return text.ID
+	}
+	return text.EN
 }
 
 func buildCatalog() ([]topicDef, []lessonDef) {

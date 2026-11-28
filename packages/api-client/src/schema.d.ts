@@ -3207,6 +3207,7 @@ export interface operations {
                 locale?: string;
                 curriculum?: string;
                 grade?: number;
+                studentId?: string;
             };
             header?: {
                 Authorization?: string;

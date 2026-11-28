@@ -48,8 +48,8 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   });
 
   const skillsQuery = useQuery({
-    queryKey: ["training-skills", account, "ALL", grade, locale],
-    queryFn: () => apiClient.getSkills("ALL", grade, locale),
+    queryKey: ["training-skills", account, "ALL", grade, locale, linkedChild?.studentId],
+    queryFn: () => apiClient.getSkills("ALL", grade, locale, linkedChild!.studentId),
     enabled: showBuilder && Boolean(linkedChild?.studentId),
   });
 

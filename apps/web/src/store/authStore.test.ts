@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, type Principal } from "@planetlogi/api-client";
-import { apiClient, useAuthStore } from "./authStore";
+import { apiClient, currentSessionGeneration, useAuthStore } from "./authStore";
 
 const demoStudent: Principal = {
   id: "stu-1",
@@ -15,6 +15,12 @@ describe("useAuthStore session resilience", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useAuthStore.setState({ user: null, hydrated: false });
+  });
+
+  it("advances the session generation when the account changes", () => {
+    const before = currentSessionGeneration();
+    useAuthStore.getState().setUser(demoStudent);
+    expect(currentSessionGeneration()).toBeGreaterThan(before);
   });
 
   it("preserves a known session when me() fails with a transport error", async () => {

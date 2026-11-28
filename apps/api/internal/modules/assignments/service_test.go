@@ -148,6 +148,8 @@ type assignmentMemoryStore struct {
 	mu       sync.Mutex
 	data     map[string][]byte
 	failNext bool
+	entered  chan struct{}
+	release  chan struct{}
 }
 
 func newAssignmentMemoryStore() *assignmentMemoryStore {
@@ -178,6 +180,10 @@ func (m *assignmentMemoryStore) Save(_ context.Context, studentID, module string
 }
 
 func (m *assignmentMemoryStore) SaveMerged(_ context.Context, studentID, module string, merge func([]byte) (any, error)) error {
+	if m.entered != nil {
+		close(m.entered)
+		<-m.release
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.failNext {
@@ -239,5 +245,92 @@ func TestAssignmentFinalSubmissionPersistsAfterRetry(t *testing.T) {
 	}
 	if len(list) != 1 || list[0].Status != "COMPLETE" {
 		t.Fatalf("completed assignment was not durable: %+v", list)
+	}
+}
+
+func TestMergeAssignmentStateDerivesCompletion(t *testing.T) {
+	current := assignmentState{Records: map[string]assignmentRecordDTO{
+		"asgn-x": {
+			ID: "asgn-x", Items: []itemSpecDTO{{TemplateCode: "g1_add_within_20"}, {TemplateCode: "g1_sub_within_20"}},
+			Submitted: map[int]map[string]string{1: {"answer": "1"}},
+			Correct:   map[int]bool{1: true},
+		},
+	}}
+	raw, _ := json.Marshal(current)
+	snapshot := assignmentState{Records: map[string]assignmentRecordDTO{
+		"asgn-x": {
+			ID: "asgn-x", Items: current.Records["asgn-x"].Items,
+			Submitted: map[int]map[string]string{2: {"answer": "2"}},
+			Correct:   map[int]bool{2: true},
+		},
+	}}
+	merged, err := mergeAssignmentState(raw, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := merged.(assignmentState).Records["asgn-x"]
+	if !rec.Completed {
+		t.Fatal("merged answers covering every item must mark the assignment complete")
+	}
+	if len(rec.Submitted) != 2 || !rec.Correct[1] || !rec.Correct[2] {
+		t.Fatalf("merged answers lost: %+v", rec)
+	}
+}
+
+func TestMergeAssignmentStateDeduplicatesRequestID(t *testing.T) {
+	items := []itemSpecDTO{{TemplateCode: "g1_add_within_20"}}
+	current := assignmentState{Records: map[string]assignmentRecordDTO{
+		"asgn-a": {ID: "asgn-a", StudentID: "stu-1", RequestID: "req-1", Items: items},
+	}}
+	raw, _ := json.Marshal(current)
+	snapshot := assignmentState{Records: map[string]assignmentRecordDTO{
+		"asgn-b": {
+			ID: "asgn-b", StudentID: "stu-1", RequestID: "req-1", Items: items,
+			Submitted: map[int]map[string]string{1: {"answer": "9"}},
+		},
+	}}
+	merged, err := mergeAssignmentState(raw, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	records := merged.(assignmentState).Records
+	if len(records) != 1 {
+		t.Fatalf("request ID created a duplicate assignment: %+v", records)
+	}
+	if records["asgn-a"].Submitted[1]["answer"] != "9" {
+		t.Fatal("deduplicated record lost the newer submission")
+	}
+}
+
+func TestPersistAcknowledgesOnlySavedRevision(t *testing.T) {
+	const studentID = "55555555-5555-5555-5555-555555555555"
+	store := newAssignmentMemoryStore()
+	svc := NewServiceWithDeps(nil, store, nil)
+	svc.LinkParentChild("par-1", studentID)
+	ctx := context.Background()
+	created, err := svc.CreateParentCustomAssignment(ctx, "par-1", "Budi", studentID, "Revision", "2026-12-01", []string{"g1_add_within_20"}, "req-rev")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	store.entered = make(chan struct{})
+	store.release = make(chan struct{})
+	done := make(chan error, 1)
+	go func() { done <- svc.persistStudent(ctx, studentID) }()
+	<-store.entered
+	// A newer change lands after the snapshot but before the old save acks.
+	svc.mu.Lock()
+	rec := svc.records[created.ID]
+	rec.revision++
+	rec.persisted = false
+	svc.mu.Unlock()
+	close(store.release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+	if svc.records[created.ID].persisted {
+		t.Fatal("an older save acknowledged a newer revision as persisted")
 	}
 }

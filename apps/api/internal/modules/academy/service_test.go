@@ -325,4 +325,84 @@ func TestApplyLessonMediaSelectsLocale(t *testing.T) {
 	if plain[0].storyVideoURL.EN != "" || plain[0].conceptVideoURL.ID != "" {
 		t.Fatalf("unexpected media for lesson without an entry: %+v", plain[0])
 	}
+
+	// A missing Indonesian caption must not be labelled as Indonesian while
+	// serving the English track.
+	englishOnly := mathengine.LocaleText{EN: "https://cdn.example/story-en.vtt"}
+	if got := captionURLFor(englishOnly, "id"); got != "" {
+		t.Fatalf("missing Indonesian captions fell back to English: %q", got)
+	}
+	if got := captionURLFor(englishOnly, "en"); got != englishOnly.EN {
+		t.Fatalf("English captions missing: %q", got)
+	}
+}
+
+func TestMergeLessonProgressKeepsCompletedSelfCheck(t *testing.T) {
+	current := lessonProgressDTO{
+		SelfChecked: map[string]bool{"count_20": true},
+		Solved:      map[int]bool{1: true},
+	}
+	stale := lessonProgressDTO{
+		SelfChecked: map[string]bool{"count_20": false},
+		Solved:      map[int]bool{},
+		Drafts:      map[int]map[string]string{1: {"answer": "9"}},
+	}
+	merged := mergeLessonProgress(current, stale)
+	if !merged.SelfChecked["count_20"] {
+		t.Fatal("stale snapshot erased a completed self-check")
+	}
+	if !merged.Solved[1] {
+		t.Fatal("stale snapshot erased a solved question")
+	}
+	if merged.Drafts[1]["answer"] != "9" {
+		t.Fatal("snapshot draft was not merged")
+	}
+}
+
+func TestMergeLessonProgressKeepsNewerDraft(t *testing.T) {
+	current := lessonProgressDTO{
+		Drafts:         map[int]map[string]string{1: {"answer": "new"}},
+		DraftUpdatedAt: map[int]int64{1: 200},
+	}
+	stale := lessonProgressDTO{
+		Drafts:         map[int]map[string]string{1: {"answer": "old"}},
+		DraftUpdatedAt: map[int]int64{1: 100},
+	}
+	merged := mergeLessonProgress(current, stale)
+	if merged.Drafts[1]["answer"] != "new" {
+		t.Fatalf("older snapshot overwrote a newer draft: %+v", merged.Drafts)
+	}
+}
+
+func TestAcademyTwoInstanceDraftMerge(t *testing.T) {
+	const studentID = "66666666-6666-6666-6666-666666666666"
+	store := newMemoryStore()
+	a := NewServiceWithStore(store, nil)
+	b := NewServiceWithStore(store, nil)
+	ctx := context.Background()
+
+	if _, err := a.SaveDraft(ctx, studentID, "g1-wn-l1", "en", 1, map[string]string{"answer": "old"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := b.GetLesson(ctx, studentID, "g1-wn-l1", "en"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.SaveDraft(ctx, studentID, "g1-wn-l1", "en", 1, map[string]string{"answer": "new"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := b.SaveDraft(ctx, studentID, "g1-wn-l1", "en", 2, map[string]string{"answer": "q2"}); err != nil {
+		t.Fatal(err)
+	}
+
+	reloaded := NewServiceWithStore(store, nil)
+	lesson, err := reloaded.GetLesson(ctx, studentID, "g1-wn-l1", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lesson.DoAndLearn[0].DraftAnswer["answer"] != "new" {
+		t.Fatalf("stale instance overwrote the newer Q1 draft: %+v", lesson.DoAndLearn[0].DraftAnswer)
+	}
+	if lesson.DoAndLearn[1].DraftAnswer["answer"] != "q2" {
+		t.Fatalf("second instance's Q2 draft was lost: %+v", lesson.DoAndLearn[1].DraftAnswer)
+	}
 }

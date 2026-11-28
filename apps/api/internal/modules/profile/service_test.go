@@ -2,6 +2,8 @@ package profile
 
 import (
 	"context"
+	"errors"
+	"sync"
 	"testing"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/config"
@@ -94,5 +96,47 @@ func TestUpdateSettingsRejectsStudentRole(t *testing.T) {
 	student := auth.Principal{ID: "stu-1", Role: auth.RoleStudent}
 	if _, err := svc.UpdateSettings(context.Background(), student, UpdateSettingsInput{Language: "id"}); err != ErrParentOnly {
 		t.Fatalf("expected ErrParentOnly, got %v", err)
+	}
+}
+
+func TestUpdateSettingsOverlappingPatches(t *testing.T) {
+	svc := NewService(nil, nil, nil, false)
+	parent := auth.Principal{ID: "demo-parent", Role: auth.RoleParent}
+	ctx := context.Background()
+	capMin := 10
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{Language: "id"}); err != nil {
+			t.Errorf("language patch: %v", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		if _, err := svc.UpdateSettings(ctx, parent, UpdateSettingsInput{BrainGalaxyDailyCapMin: &capMin}); err != nil {
+			t.Errorf("cap patch: %v", err)
+		}
+	}()
+	wg.Wait()
+
+	bundle, err := svc.GetBundle(ctx, parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bundle.Settings.Language != "id" || bundle.Settings.BrainGalaxyDailyCapMin != 10 {
+		t.Fatalf("overlapping patches overwrote each other: %+v", bundle.Settings)
+	}
+}
+
+func TestListChildrenDemoFallbackIsRestricted(t *testing.T) {
+	svc := NewService(nil, nil, nil, false)
+	children, err := svc.ListChildren(context.Background(), auth.Principal{ID: "demo-parent", Role: auth.RoleParent})
+	if err != nil || len(children) != 1 || children[0].StudentID != "demo-pilot1" {
+		t.Fatalf("demo parent children: %+v err=%v", children, err)
+	}
+	if _, err := svc.ListChildren(context.Background(), auth.Principal{ID: "other-parent", Role: auth.RoleParent}); !errors.Is(err, ErrNoLinkedChild) {
+		t.Fatalf("unrelated parent should have no children, got %v", err)
 	}
 }

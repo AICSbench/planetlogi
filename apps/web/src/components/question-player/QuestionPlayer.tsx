@@ -56,9 +56,9 @@ function QuestionPlayerInner({
   const [savedNotice, setSavedNotice] = useState(false);
   const [retryUnlocked, setRetryUnlocked] = useState(false);
 
-  const answers = draftAnswers ?? submittedAnswer ?? {};
   const effectiveLocked =
-    (locked && !(mode === "SPACE_ACADEMY" && retryUnlocked)) || submitting;
+    (locked && !(mode === "SPACE_ACADEMY" && retryUnlocked && isCorrect === false)) || submitting;
+  const answers = (effectiveLocked ? submittedAnswer : draftAnswers ?? submittedAnswer) ?? {};
 
   function speakQuestion() {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;

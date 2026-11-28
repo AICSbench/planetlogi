@@ -500,9 +500,10 @@ export function createApiClient(baseUrl: string) {
     getCurricula(locale: string) {
       return request<{ curricula: CurriculumSummary[] }>(`/api/v1/training/curricula?locale=${locale}`);
     },
-    getSkills(curriculum: string, grade: number, locale: string) {
+    getSkills(curriculum: string, grade: number, locale: string, studentId?: string) {
+      const child = studentId ? `&studentId=${encodeURIComponent(studentId)}` : "";
       return request<{ skills: SkillView[] }>(
-        `/api/v1/training/skills?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}`
+        `/api/v1/training/skills?curriculum=${encodeURIComponent(curriculum)}&grade=${grade}&locale=${locale}${child}`
       );
     },
     getHotsWheel(ageBand: string, locale: string) {

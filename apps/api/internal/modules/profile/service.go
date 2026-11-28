@@ -518,7 +518,10 @@ func (s *Service) ListChildren(ctx context.Context, actor auth.Principal) ([]Chi
 		return []ChildProfile{bundle.Child}, nil
 	}
 	if s.pool == nil || !isUUID(actor.ID) {
-		return []ChildProfile{{StudentID: "demo-pilot1", FirstName: "Demo Pilot", Grade: 1}}, nil
+		if actor.ID == "demo-parent" {
+			return []ChildProfile{{StudentID: "demo-pilot1", FirstName: "Demo Pilot", Grade: 1}}, nil
+		}
+		return nil, ErrNoLinkedChild
 	}
 	rows, err := s.pool.Query(ctx, `
 		SELECT id::text FROM student_profiles

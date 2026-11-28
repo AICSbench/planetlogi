@@ -39,6 +39,11 @@ export function useAccountScope(): string {
   return useAuthStore((s) => accountScope(s.user));
 }
 
+export function currentSessionGeneration(): number {
+  return sessionGeneration;
+}
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   hydrated: false,

@@ -123,6 +123,7 @@ type attemptState struct {
 	elapsedSec       int       // server-measured, see tickLocked
 	lastTick         time.Time // last open/save/submit while IN_PROGRESS
 	drafts           map[int]map[string]string
+	draftUpdatedAt   map[int]int64
 	score            int
 	supplyPodAwarded bool
 	rewardClaimed    bool
@@ -167,6 +168,7 @@ type attemptStateDTO struct {
 	ElapsedSec       int                       `json:"elapsedSec"`
 	LastTick         time.Time                 `json:"lastTick,omitempty"`
 	Drafts           map[int]map[string]string `json:"drafts"`
+	DraftUpdatedAt   map[int]int64             `json:"draftUpdatedAt,omitempty"`
 	Score            int                       `json:"score"`
 	SupplyPodAwarded bool                      `json:"supplyPodAwarded"`
 	RewardClaimed    bool                      `json:"rewardClaimed"`
@@ -182,9 +184,14 @@ func (st *attemptState) toDTO() attemptStateDTO {
 		}
 		drafts[idx] = copied
 	}
+	draftUpdatedAt := make(map[int]int64, len(st.draftUpdatedAt))
+	for idx, at := range st.draftUpdatedAt {
+		draftUpdatedAt[idx] = at
+	}
 	return attemptStateDTO{
 		Status: st.status, ElapsedSec: st.elapsedSec, LastTick: st.lastTick, Drafts: drafts,
-		Score: st.score, SupplyPodAwarded: st.supplyPodAwarded, RewardClaimed: st.rewardClaimed,
+		DraftUpdatedAt: draftUpdatedAt,
+		Score:          st.score, SupplyPodAwarded: st.supplyPodAwarded, RewardClaimed: st.rewardClaimed,
 		ClaimWeek: st.claimWeek,
 	}
 }
@@ -192,7 +199,8 @@ func (st *attemptState) toDTO() attemptStateDTO {
 func (d attemptStateDTO) toState() *attemptState {
 	st := &attemptState{
 		status: d.Status, elapsedSec: d.ElapsedSec, lastTick: d.LastTick, drafts: d.Drafts,
-		score: d.Score, supplyPodAwarded: d.SupplyPodAwarded, rewardClaimed: d.RewardClaimed,
+		draftUpdatedAt: d.DraftUpdatedAt,
+		score:          d.Score, supplyPodAwarded: d.SupplyPodAwarded, rewardClaimed: d.RewardClaimed,
 		claimWeek: d.ClaimWeek,
 	}
 	if st.status == "" {
@@ -200,6 +208,9 @@ func (d attemptStateDTO) toState() *attemptState {
 	}
 	if st.drafts == nil {
 		st.drafts = make(map[int]map[string]string)
+	}
+	if st.draftUpdatedAt == nil {
+		st.draftUpdatedAt = make(map[int]int64)
 	}
 	return st
 }
@@ -283,34 +294,62 @@ func mergeQuizState(currentRaw []byte, snapshot quizState) (any, error) {
 		}
 		merged := snap
 		if existing.Status == "SUBMITTED" {
+			// A submitted attempt is one immutable unit: keep its answers,
+			// score, and status together even if the snapshot is stale.
 			merged.Status = "SUBMITTED"
 			merged.Score = existing.Score
-		}
-		if snap.Score > merged.Score {
-			merged.Score = snap.Score
-		}
-		if existing.ElapsedSec > merged.ElapsedSec {
-			merged.ElapsedSec = existing.ElapsedSec
+			merged.Drafts = existing.Drafts
+			if existing.ElapsedSec > merged.ElapsedSec {
+				merged.ElapsedSec = existing.ElapsedSec
+			}
+		} else {
+			if snap.Score > merged.Score {
+				merged.Score = snap.Score
+			}
+			if existing.ElapsedSec > merged.ElapsedSec {
+				merged.ElapsedSec = existing.ElapsedSec
+			}
+			drafts := make(map[int]map[string]string, len(existing.Drafts)+len(snap.Drafts))
+			draftUpdatedAt := make(map[int]int64, len(existing.DraftUpdatedAt)+len(snap.DraftUpdatedAt))
+			for idx, answers := range existing.Drafts {
+				drafts[idx] = answers
+				draftUpdatedAt[idx] = existing.DraftUpdatedAt[idx]
+			}
+			for idx, answers := range snap.Drafts {
+				if at, ok := existing.DraftUpdatedAt[idx]; !ok || snap.DraftUpdatedAt[idx] >= at {
+					drafts[idx] = answers
+					draftUpdatedAt[idx] = snap.DraftUpdatedAt[idx]
+				}
+			}
+			merged.Drafts = drafts
+			merged.DraftUpdatedAt = draftUpdatedAt
 		}
 		merged.SupplyPodAwarded = existing.SupplyPodAwarded || snap.SupplyPodAwarded
 		merged.RewardClaimed = existing.RewardClaimed || snap.RewardClaimed
 		if existing.ClaimWeek != "" {
 			merged.ClaimWeek = existing.ClaimWeek
 		}
-		drafts := make(map[int]map[string]string, len(existing.Drafts)+len(snap.Drafts))
-		for idx, answers := range existing.Drafts {
-			drafts[idx] = answers
-		}
-		for idx, answers := range snap.Drafts {
-			drafts[idx] = answers
-		}
-		merged.Drafts = drafts
 		current.Attempts[code] = merged
 	}
 	for key, claimed := range snapshot.Weekly {
 		current.Weekly[key] = current.Weekly[key] || claimed
 	}
 	return current, nil
+}
+
+func (s *Service) persistedClaimWeek(ctx context.Context, studentID, paperCode string) (string, error) {
+	if s.store == nil || !isUUID(studentID) {
+		return "", nil
+	}
+	var st quizState
+	found, err := s.store.Load(ctx, studentID, "astroquiz", &st)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return "", nil
+	}
+	return st.Attempts[paperCode].ClaimWeek, nil
 }
 
 func (s *Service) persistStudent(ctx context.Context, studentID string) error {
@@ -362,7 +401,7 @@ func (s *Service) findPaper(code string) (paperDef, bool) {
 
 // mergeDrafts copies client answers into the attempt and drops keys outside
 // the 1..10 question range so ungraded data never accumulates.
-func mergeDrafts(dst map[int]map[string]string, drafts map[int]map[string]string) {
+func mergeDrafts(dst map[int]map[string]string, updatedAt map[int]int64, drafts map[int]map[string]string) {
 	for k, v := range drafts {
 		if k < 1 || k > 10 {
 			continue
@@ -372,6 +411,7 @@ func mergeDrafts(dst map[int]map[string]string, drafts map[int]map[string]string
 			copied[key] = val
 		}
 		dst[k] = copied
+		updatedAt[k] = time.Now().UnixNano()
 	}
 }
 
@@ -470,7 +510,7 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 		return view, nil
 	}
 	s.tickLocked(st)
-	mergeDrafts(st.drafts, drafts)
+	mergeDrafts(st.drafts, st.draftUpdatedAt, drafts)
 	view := s.renderAttemptLocked(ctx, studentID, p, st, locale)
 	s.mu.Unlock()
 	if err := s.persistStudent(ctx, studentID); err != nil {
@@ -502,7 +542,7 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 		st := s.getOrCreateAttemptLocked(studentID, paperCode)
 		if st.status != "SUBMITTED" {
 			s.tickLocked(st)
-			mergeDrafts(st.drafts, drafts)
+			mergeDrafts(st.drafts, st.draftUpdatedAt, drafts)
 			score := 0
 			for i := 0; i < 10; i++ {
 				idx := i + 1
@@ -547,6 +587,16 @@ func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale 
 		// key even after a restart or a week boundary.
 		if err := s.persistStudent(ctx, studentID); err != nil {
 			return PaperAttemptView{}, err
+		}
+		canonical, err := s.persistedClaimWeek(ctx, studentID, paperCode)
+		if err != nil {
+			return PaperAttemptView{}, err
+		}
+		if canonical != "" && canonical != claimWeek {
+			claimWeek = canonical
+			s.mu.Lock()
+			s.getOrCreateAttemptLocked(studentID, paperCode).claimWeek = canonical
+			s.mu.Unlock()
 		}
 		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
@@ -626,8 +676,9 @@ func (s *Service) getOrCreateAttemptLocked(studentID, paperCode string) *attempt
 	st := s.attempts[studentID][paperCode]
 	if st == nil {
 		st = &attemptState{
-			status: "IN_PROGRESS",
-			drafts: make(map[int]map[string]string),
+			status:         "IN_PROGRESS",
+			drafts:         make(map[int]map[string]string),
+			draftUpdatedAt: make(map[int]int64),
 		}
 		s.attempts[studentID][paperCode] = st
 	}

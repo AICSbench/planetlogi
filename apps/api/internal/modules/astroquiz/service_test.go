@@ -337,3 +337,96 @@ func TestConcurrentPrintAndSubmit(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestMergeQuizStateKeepsSubmittedAnswers(t *testing.T) {
+	current := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status: "SUBMITTED", Score: 9,
+			Drafts: map[int]map[string]string{1: {"answer": "A"}},
+		},
+	}}
+	raw, _ := json.Marshal(current)
+	snapshot := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status: "IN_PROGRESS",
+			Drafts: map[int]map[string]string{1: {"answer": "B"}},
+		},
+	}}
+	merged, err := mergeQuizState(raw, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := merged.(quizState).Attempts["G1-ESS-01"]
+	if rec.Status != "SUBMITTED" || rec.Score != 9 || rec.Drafts[1]["answer"] != "A" {
+		t.Fatalf("stale snapshot replaced submitted answers/score: %+v", rec)
+	}
+}
+
+func TestStaleInstanceUsesPersistedClaimWeek(t *testing.T) {
+	const studentID = "44444444-4444-4444-4444-444444444444"
+	store := newQuizMemoryStore()
+	ledger := &recordingLedger{failNext: true}
+	week1 := time.Date(2026, 11, 23, 10, 0, 0, 0, time.UTC)
+	week2 := week1.AddDate(0, 0, 8)
+
+	a := NewServiceWithStore(store, ledger)
+	a.nowClock = func() time.Time { return week1 }
+	b := NewServiceWithStore(store, ledger)
+	b.nowClock = func() time.Time { return week2 }
+
+	opened, err := a.OpenPaper(context.Background(), studentID, "G1-ESS-01", "en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Load B's cache before A persists the original claim week.
+	if _, err := b.OpenPaper(context.Background(), studentID, "G1-ESS-01", "en"); err != nil {
+		t.Fatal(err)
+	}
+	drafts := map[int]map[string]string{}
+	for _, pq := range opened.Questions {
+		prob, _ := mathengine.GenerateByCode(pq.Question.TemplateCode, pq.Question.Seed, "en")
+		drafts[pq.Index] = prob.Solution.CorrectAnswers
+	}
+	if _, err := a.SubmitPaper(context.Background(), studentID, "G1-ESS-01", "en", 60, drafts); err == nil {
+		t.Fatal("expected A's ledger attempt to fail")
+	}
+	if _, err := b.SubmitPaper(context.Background(), studentID, "G1-ESS-01", "en", 60, drafts); err != nil {
+		t.Fatalf("B retry: %v", err)
+	}
+	ledger.mu.Lock()
+	defer ledger.mu.Unlock()
+	if len(ledger.applied) != 1 {
+		t.Fatalf("expected one credit, got %d", len(ledger.applied))
+	}
+	year, week := week1.ISOWeek()
+	want := fmt.Sprintf("supply_pod:%s:%04d-W%02d", studentID, year, week)
+	if ledger.applied[0].IdempotencyKey != want {
+		t.Fatalf("stale instance used a different claim week: got %q want %q", ledger.applied[0].IdempotencyKey, want)
+	}
+}
+
+func TestMergeQuizStateKeepsNewerDraft(t *testing.T) {
+	current := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status:         "IN_PROGRESS",
+			Drafts:         map[int]map[string]string{1: {"answer": "new"}},
+			DraftUpdatedAt: map[int]int64{1: 200},
+		},
+	}}
+	raw, _ := json.Marshal(current)
+	snapshot := quizState{Attempts: map[string]attemptStateDTO{
+		"G1-ESS-01": {
+			Status:         "IN_PROGRESS",
+			Drafts:         map[int]map[string]string{1: {"answer": "old"}},
+			DraftUpdatedAt: map[int]int64{1: 100},
+		},
+	}}
+	merged, err := mergeQuizState(raw, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := merged.(quizState).Attempts["G1-ESS-01"]
+	if rec.Drafts[1]["answer"] != "new" {
+		t.Fatalf("older snapshot overwrote a newer draft: %+v", rec.Drafts)
+	}
+}

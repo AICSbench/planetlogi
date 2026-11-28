@@ -89,10 +89,12 @@ type assignmentRecord struct {
 	rewardAC       int
 	items          []itemSpec
 	submitted      map[int]map[string]string
+	submittedAt    map[int]int64
 	correct        map[int]bool
 	completed      bool
 	rewarded       bool
 	persisted      bool
+	revision       uint64
 	requestID      string
 }
 
@@ -141,6 +143,7 @@ type assignmentRecordDTO struct {
 	RewardAC       int                       `json:"rewardAc"`
 	Items          []itemSpecDTO             `json:"items"`
 	Submitted      map[int]map[string]string `json:"submitted"`
+	SubmittedAt    map[int]int64             `json:"submittedAt,omitempty"`
 	Correct        map[int]bool              `json:"correct"`
 	Completed      bool                      `json:"completed"`
 	Rewarded       bool                      `json:"rewarded"`
@@ -165,6 +168,10 @@ func toRecordDTO(r *assignmentRecord) assignmentRecordDTO {
 		}
 		submitted[q] = copied
 	}
+	submittedAt := make(map[int]int64, len(r.submittedAt))
+	for q, at := range r.submittedAt {
+		submittedAt[q] = at
+	}
 	correct := make(map[int]bool, len(r.correct))
 	for q, ok := range r.correct {
 		correct[q] = ok
@@ -173,7 +180,7 @@ func toRecordDTO(r *assignmentRecord) assignmentRecordDTO {
 		ID: r.id, StudentID: r.studentID, Title: r.title,
 		AssignedByRole: r.assignedByRole, AssignedByName: r.assignedByName,
 		AcademicYear: r.academicYear, DueDate: r.dueDate, RewardAC: r.rewardAC,
-		Items: items, Submitted: submitted, Correct: correct,
+		Items: items, Submitted: submitted, SubmittedAt: submittedAt, Correct: correct,
 		Completed: r.completed, Rewarded: r.rewarded, RequestID: r.requestID,
 	}
 }
@@ -187,6 +194,10 @@ func (d assignmentRecordDTO) toRecord() *assignmentRecord {
 	if submitted == nil {
 		submitted = make(map[int]map[string]string)
 	}
+	submittedAt := d.SubmittedAt
+	if submittedAt == nil {
+		submittedAt = make(map[int]int64)
+	}
 	correct := d.Correct
 	if correct == nil {
 		correct = make(map[int]bool)
@@ -195,9 +206,9 @@ func (d assignmentRecordDTO) toRecord() *assignmentRecord {
 		id: d.ID, studentID: d.StudentID, title: d.Title,
 		assignedByRole: d.AssignedByRole, assignedByName: d.AssignedByName,
 		academicYear: d.AcademicYear, dueDate: d.DueDate, rewardAC: d.RewardAC,
-		items: items, submitted: submitted, correct: correct,
+		items: items, submitted: submitted, submittedAt: submittedAt, correct: correct,
 		completed: d.Completed, rewarded: d.Rewarded,
-		persisted: true, requestID: d.RequestID,
+		persisted: true, revision: 1, requestID: d.RequestID,
 	}
 }
 
@@ -227,7 +238,73 @@ func (s *Service) ensureStudentLoaded(ctx context.Context, studentID string) err
 	}
 	s.loaded[studentID] = true
 	s.mu.Unlock()
+
+	// A merge may have completed an assignment while this instance was
+	// offline; award any pending completion reward once on load.
+	if s.ledger != nil {
+		s.mu.Lock()
+		pending := make([]*assignmentRecord, 0)
+		for _, rec := range s.records {
+			if rec.studentID == studentID && rec.completed && !rec.rewarded {
+				pending = append(pending, rec)
+			}
+		}
+		s.mu.Unlock()
+		awarded := false
+		for _, rec := range pending {
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+				StudentID:      studentID,
+				Currency:       economy.CurrencyAC,
+				Delta:          int64(rec.rewardAC),
+				SourceType:     "ASSIGNMENT_COMPLETE",
+				SourceID:       rec.id,
+				IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rec.id, studentID),
+			}); err != nil {
+				return err
+			}
+			s.mu.Lock()
+			rec.rewarded = true
+			rec.revision++
+			s.mu.Unlock()
+			awarded = true
+		}
+		if awarded {
+			if err := s.persistStudent(ctx, studentID); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
+}
+
+func mergeAssignmentRecord(existing, snap assignmentRecordDTO) assignmentRecordDTO {
+	merged := snap
+	merged.Completed = existing.Completed || snap.Completed
+	merged.Rewarded = existing.Rewarded || snap.Rewarded
+	submitted := make(map[int]map[string]string, len(existing.Submitted)+len(snap.Submitted))
+	submittedAt := make(map[int]int64, len(existing.SubmittedAt)+len(snap.SubmittedAt))
+	for q, answers := range existing.Submitted {
+		submitted[q] = answers
+		submittedAt[q] = existing.SubmittedAt[q]
+	}
+	for q, answers := range snap.Submitted {
+		if at, ok := existing.SubmittedAt[q]; !ok || snap.SubmittedAt[q] >= at {
+			submitted[q] = answers
+			submittedAt[q] = snap.SubmittedAt[q]
+		}
+	}
+	correct := make(map[int]bool, len(existing.Correct)+len(snap.Correct))
+	for q, ok := range existing.Correct {
+		correct[q] = ok
+	}
+	for q, ok := range snap.Correct {
+		correct[q] = ok
+	}
+	merged.Submitted = submitted
+	merged.SubmittedAt = submittedAt
+	merged.Correct = correct
+	merged.Completed = merged.Completed || len(submitted) == len(merged.Items)
+	return merged
 }
 
 func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, error) {
@@ -240,28 +317,21 @@ func mergeAssignmentState(currentRaw []byte, snapshot assignmentState) (any, err
 	if current.Records == nil {
 		current.Records = make(map[string]assignmentRecordDTO)
 	}
+	requestIDs := make(map[string]string)
+	for id, rec := range current.Records {
+		if rec.RequestID != "" {
+			requestIDs[rec.StudentID+"\x00"+rec.RequestID] = id
+		}
+	}
 	for id, snap := range snapshot.Records {
+		if snap.RequestID != "" {
+			if existingID, ok := requestIDs[snap.StudentID+"\x00"+snap.RequestID]; ok {
+				current.Records[existingID] = mergeAssignmentRecord(current.Records[existingID], snap)
+				continue
+			}
+		}
 		if existing, ok := current.Records[id]; ok {
-			merged := snap
-			merged.Completed = existing.Completed || snap.Completed
-			merged.Rewarded = existing.Rewarded || snap.Rewarded
-			submitted := make(map[int]map[string]string, len(existing.Submitted)+len(snap.Submitted))
-			for q, answers := range existing.Submitted {
-				submitted[q] = answers
-			}
-			for q, answers := range snap.Submitted {
-				submitted[q] = answers
-			}
-			correct := make(map[int]bool, len(existing.Correct)+len(snap.Correct))
-			for q, ok := range existing.Correct {
-				correct[q] = ok
-			}
-			for q, ok := range snap.Correct {
-				correct[q] = ok
-			}
-			merged.Submitted = submitted
-			merged.Correct = correct
-			current.Records[id] = merged
+			current.Records[id] = mergeAssignmentRecord(existing, snap)
 		} else {
 			current.Records[id] = snap
 		}
@@ -282,9 +352,11 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 	}
 	s.mu.Lock()
 	st := assignmentState{Records: make(map[string]assignmentRecordDTO)}
+	revisions := make(map[string]uint64)
 	for id, rec := range s.records {
 		if rec.studentID == studentID {
 			st.Records[id] = toRecordDTO(rec)
+			revisions[id] = rec.revision
 		}
 	}
 	s.mu.Unlock()
@@ -300,8 +372,8 @@ func (s *Service) persistStudent(ctx context.Context, studentID string) error {
 		return err
 	}
 	s.mu.Lock()
-	for _, rec := range s.records {
-		if rec.studentID == studentID {
+	for id, rec := range s.records {
+		if rec.studentID == studentID && rec.revision == revisions[id] {
 			rec.persisted = true
 		}
 	}
@@ -325,8 +397,9 @@ func (s *Service) seedDefaults(studentID string) {
 			{templateCode: "g1_place_value_tens_ones", seed: 703},
 			{templateCode: "g1_pattern_hots", seed: 704},
 		},
-		submitted: make(map[int]map[string]string),
-		correct:   make(map[int]bool),
+		submitted:   make(map[int]map[string]string),
+		submittedAt: make(map[int]int64),
+		correct:     make(map[int]bool),
 	}
 }
 
@@ -474,7 +547,9 @@ func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, pa
 			rewardAC:       5,
 			items:          items,
 			submitted:      make(map[int]map[string]string),
+			submittedAt:    make(map[int]int64),
 			correct:        make(map[int]bool),
+			revision:       1,
 			requestID:      requestID,
 		}
 		s.records[id] = rec
@@ -540,8 +615,10 @@ func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID st
 		prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
 		res = mathengine.Grade(prob, answers)
 		rec.submitted[qIndex] = answers
+		rec.submittedAt[qIndex] = time.Now().UnixNano()
 		rec.correct[qIndex] = res.IsCorrect
 		rec.completed = len(rec.submitted) == len(rec.items)
+		rec.revision++
 		rec.persisted = false
 		if rec.completed {
 			if !rec.rewarded && s.ledger != nil {

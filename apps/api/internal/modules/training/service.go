@@ -19,6 +19,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 type ProficiencyTier string
@@ -197,6 +198,24 @@ func (s *Service) ListCurricula(locale string) []CurriculumSummary {
 		})
 	}
 	return out
+}
+
+// IsParentLinked authorizes a parent's read of one linked child's proficiency.
+func (s *Service) IsParentLinked(ctx context.Context, parentID, studentID string) (bool, error) {
+	if s.pool == nil {
+		return parentID == "demo-parent" && studentID == "demo-pilot1", nil
+	}
+	if len(parentID) != 36 || len(studentID) != 36 {
+		return false, nil
+	}
+	var ok bool
+	err := s.pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM student_profiles
+			WHERE id = $1::uuid AND parent_account_id = $2::uuid
+		)
+	`, studentID, parentID).Scan(&ok)
+	return ok, err
 }
 
 func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale string) ([]SkillView, error) {
@@ -683,6 +702,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		AuthQuery
 		Curriculum string `query:"curriculum" default:"SINGAPORE_MOE"`
 		Grade      int    `query:"grade" default:"1"`
+		StudentID  string `query:"studentId,omitempty"`
 	}) (*struct {
 		Body struct {
 			Skills []SkillView `json:"skills"`
@@ -691,6 +711,27 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		studentID, locale, err := h.resolveStudent(ctx, in.AuthQuery, false)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("unauthenticated")
+		}
+		if in.StudentID != "" && in.StudentID != studentID {
+			if h.authSvc == nil {
+				return nil, huma.Error403Forbidden("parent access required")
+			}
+			tok := reqguard.Token(in.CookieAccess, in.Authorization)
+			principal, err := h.authSvc.ResolvePrincipal(ctx, tok)
+			if err != nil {
+				return nil, huma.Error401Unauthorized("authentication required")
+			}
+			if principal.Role != auth.RoleParent {
+				return nil, huma.Error403Forbidden("parent access required")
+			}
+			linked, err := h.svc.IsParentLinked(ctx, principal.ID, in.StudentID)
+			if err != nil {
+				return nil, huma.Error503ServiceUnavailable("training statistics unavailable")
+			}
+			if !linked {
+				return nil, huma.Error403Forbidden("child is not linked to this parent")
+			}
+			studentID = in.StudentID
 		}
 		out := &struct {
 			Body struct {

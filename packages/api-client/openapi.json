@@ -5753,6 +5753,14 @@
               "format": "int64",
               "type": "integer"
             }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "studentId",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

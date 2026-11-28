@@ -6,10 +6,11 @@ import { CheckCircle2, PlayCircle, ScrollText } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
 import { CurrencyPill, GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { QuestionPlayer } from "../../../components/question-player/QuestionPlayer";
-import { apiClient, useAuthStore } from "../../../store/authStore";
+import { apiClient, currentSessionGeneration, useAuthStore } from "../../../store/authStore";
 
 type LessonMutationVars = {
   sessionKey: string;
+  generation: number;
   lessonCode: string;
   locale: string;
   questionIndex: number;
@@ -103,6 +104,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
     mutationFn: (vars: LessonMutationVars) =>
       apiClient.saveAcademyDraft(vars.lessonCode, vars.questionIndex, vars.answers, vars.locale),
     onSuccess: (lesson, vars) => {
+      if (currentSessionGeneration() !== vars.generation) return;
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], lesson);
       setActionError(null);
     },
@@ -113,6 +115,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
     mutationFn: (vars: LessonMutationVars) =>
       apiClient.checkAcademyAnswer(vars.lessonCode, vars.questionIndex, vars.answers, vars.locale),
     onSuccess: (data, vars) => {
+      if (currentSessionGeneration() !== vars.generation) return;
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], data.lesson);
       void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
@@ -123,12 +126,14 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
   const selfCheckMutation = useMutation({
     mutationFn: (vars: {
       sessionKey: string;
+      generation: number;
       lessonCode: string;
       locale: string;
       itemKey: string;
       checked: boolean;
     }) => apiClient.toggleAcademySelfCheck(vars.lessonCode, vars.itemKey, vars.checked, vars.locale),
     onSuccess: (lesson, vars) => {
+      if (currentSessionGeneration() !== vars.generation) return;
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], lesson);
       void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
@@ -137,9 +142,14 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
   });
 
   const retryMutation = useMutation({
-    mutationFn: (vars: { sessionKey: string; lessonCode: string; locale: string }) =>
-      apiClient.retryAcademyScroll(vars.lessonCode, vars.locale),
+    mutationFn: (vars: {
+      sessionKey: string;
+      generation: number;
+      lessonCode: string;
+      locale: string;
+    }) => apiClient.retryAcademyScroll(vars.lessonCode, vars.locale),
     onSuccess: (lesson, vars) => {
+      if (currentSessionGeneration() !== vars.generation) return;
       queryClient.setQueryData(["academy-lesson", vars.sessionKey, vars.lessonCode, vars.locale], lesson);
       void queryClient.invalidateQueries({ queryKey: ["academy-topics", vars.sessionKey] });
       setActionError(null);
@@ -258,7 +268,12 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
                 variant="gold"
                 disabled={retryMutation.isPending}
                 onClick={() =>
-                  retryMutation.mutate({ sessionKey, lessonCode: lesson.code, locale })
+                  retryMutation.mutate({
+                    sessionKey,
+                    generation: currentSessionGeneration(),
+                    lessonCode: lesson.code,
+                    locale,
+                  })
                 }
               >
                 {t("academy:retryScroll")}
@@ -278,6 +293,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             onSaveDraft={(answers) =>
               saveMutation.mutateAsync({
                 sessionKey,
+                generation: currentSessionGeneration(),
                 lessonCode: lesson.code,
                 locale,
                 questionIndex: activeQ.index,
@@ -287,6 +303,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
             onSubmit={async (answers) => {
               await checkMutation.mutateAsync({
                 sessionKey,
+                generation: currentSessionGeneration(),
                 lessonCode: lesson.code,
                 locale,
                 questionIndex: activeQ.index,
@@ -327,6 +344,7 @@ export function SpaceAcademyPage({ locale }: { locale: Locale }) {
                   onChange={(e) =>
                     selfCheckMutation.mutate({
                       sessionKey,
+                      generation: currentSessionGeneration(),
                       lessonCode: lesson.code,
                       locale,
                       itemKey: item.key,

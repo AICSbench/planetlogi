@@ -255,7 +255,12 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
           question={activeQ.question}
           locked={submitted}
           isCorrect={submitted ? (activeQ.isCorrect ?? false) : null}
-          submittedAnswer={drafts[activeQ.index] ?? activeQ.draftAnswer}
+          submittedAnswer={
+            submitted
+              ? (activeQ.draftAnswer ?? drafts[activeQ.index])
+              : (drafts[activeQ.index] ?? activeQ.draftAnswer)
+          }
+          submitting={submitMutation.isPending}
           workedSolution={submitted ? (activeQ.workedSolution ?? null) : null}
           onDraftChange={(answers) => {
             setDraftEdits((prev) => ({ ...prev, [activeQ.index]: answers }));
