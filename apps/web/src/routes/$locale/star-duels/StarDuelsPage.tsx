@@ -171,6 +171,11 @@ export function StarDuelsPage({ locale }: { locale: Locale }) {
                           id={`duel-ans-${idx}-${part.key}`}
                           type="text"
                           inputMode={q.inputType === "fraction" ? "text" : "decimal"}
+                          aria-label={
+                            part.label
+                              ? `${part.label} — ${t("duels.questionProgress", { current: idx + 1, total: activeDuel.questions!.length })}`
+                              : t("duels.answerInput", { n: idx + 1 })
+                          }
                           value={answers[idx]?.[part.key] ?? ""}
                           onChange={(e) =>
                             setAnswers((a) => ({ ...a, [idx]: { ...a[idx], [part.key]: e.target.value } }))
