@@ -17,7 +17,14 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
+)
+
+// Bounds for parent-built assignments; each item is rendered on every read.
+const (
+	MaxTitleLen  = 120
+	MaxTemplates = 20
 )
 
 var (
@@ -318,6 +325,12 @@ func (s *Service) ListForStudent(ctx context.Context, studentID, statusFilter, a
 }
 
 func (s *Service) CreateParentCustomAssignment(ctx context.Context, parentID, parentName, studentID, title, dueDate string, templateCodes []string) (AssignmentSummary, error) {
+	if title == "" || len(title) > MaxTitleLen {
+		return AssignmentSummary{}, fmt.Errorf("title must be 1..%d characters", MaxTitleLen)
+	}
+	if len(templateCodes) == 0 || len(templateCodes) > MaxTemplates {
+		return AssignmentSummary{}, fmt.Errorf("between 1 and %d question templates are required", MaxTemplates)
+	}
 	linked, err := s.isLinked(ctx, parentID, studentID)
 	if err != nil {
 		return AssignmentSummary{}, err
@@ -388,6 +401,9 @@ func (s *Service) GetDetail(ctx context.Context, studentID, assignmentID, locale
 }
 
 func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID string, qIndex int, answers map[string]string, locale string) (mathengine.GradeResult, AssignmentDetail, error) {
+	if err := reqguard.ValidateAnswers(answers); err != nil {
+		return mathengine.GradeResult{}, AssignmentDetail{}, err
+	}
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return mathengine.GradeResult{}, AssignmentDetail{}, err
 	}
@@ -541,10 +557,7 @@ func (h *Handler) resolveUser(ctx context.Context, in AuthIn) (string, string, a
 	if h.authSvc == nil {
 		return "demo-pilot1", "Budi Santoso", auth.RoleParent, locale, nil
 	}
-	tok := in.CookieAccess
-	if tok == "" && len(in.Authorization) > 7 {
-		tok = in.Authorization[7:]
-	}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
 	if tok != "" {
 		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
 			return p.ID, p.DisplayName, p.Role, locale, nil
@@ -596,10 +609,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 	}, func(ctx context.Context, in *struct {
 		AuthIn
 		Body struct {
-			StudentID     string   `json:"studentId" minLength:"1"`
-			Title         string   `json:"title" minLength:"1"`
+			StudentID     string   `json:"studentId" minLength:"1" maxLength:"64"`
+			Title         string   `json:"title" minLength:"1" maxLength:"120"`
 			DueDate       string   `json:"dueDate,omitempty"`
-			TemplateCodes []string `json:"templateCodes" minItems:"1"`
+			TemplateCodes []string `json:"templateCodes" minItems:"1" maxItems:"20"`
 		}
 	}) (*struct{ Body AssignmentSummary }, error) {
 		uid, name, role, _, err := h.resolveUser(ctx, in.AuthIn)

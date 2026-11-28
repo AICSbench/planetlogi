@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -19,12 +21,14 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
 var (
 	ErrOTPRequired     = errors.New("parent OTP verification is required to update protected settings")
 	ErrNoLinkedChild   = errors.New("no linked child found for this parent")
 	ErrProfileNotFound = errors.New("student profile not found")
+	ErrInvalidInput    = errors.New("invalid settings")
 )
 
 type ParentProfile struct {
@@ -285,7 +289,39 @@ type UpdateSettingsInput struct {
 	BrainGalaxyWindowEnd   string   `json:"brainGalaxyWindowEnd,omitempty"`
 }
 
+const (
+	maxCurricula      = 8
+	maxCurriculumCode = 32
+)
+
+var hhmmPattern = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
+
+func validateSettingsInput(in UpdateSettingsInput) error {
+	if in.Language != "" && in.Language != "en" && in.Language != "id" {
+		return fmt.Errorf("%w: language must be en or id", ErrInvalidInput)
+	}
+	for _, list := range [][]string{in.DailyOrbitCurricula, in.StarDuelCurricula} {
+		if len(list) > maxCurricula {
+			return fmt.Errorf("%w: at most %d curricula", ErrInvalidInput, maxCurricula)
+		}
+		for _, c := range list {
+			if c == "" || len(c) > maxCurriculumCode {
+				return fmt.Errorf("%w: curriculum code must be 1..%d characters", ErrInvalidInput, maxCurriculumCode)
+			}
+		}
+	}
+	for _, t := range []string{in.BrainGalaxyWindowStart, in.BrainGalaxyWindowEnd} {
+		if t != "" && !hhmmPattern.MatchString(t) {
+			return fmt.Errorf("%w: Brain Galaxy window times must be HH:MM", ErrInvalidInput)
+		}
+	}
+	return nil
+}
+
 func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in UpdateSettingsInput) (ProfileBundle, error) {
+	if err := validateSettingsInput(in); err != nil {
+		return ProfileBundle{}, err
+	}
 	childID, err := s.resolveChildID(ctx, actor)
 	if err != nil {
 		return ProfileBundle{}, err
@@ -303,14 +339,13 @@ func (s *Service) UpdateSettings(ctx context.Context, actor auth.Principal, in U
 	}
 
 	// Enforce Parent OTP gate when OTP security is enabled
+	// Fail closed: without an OTP verifier no code can be accepted.
 	if b.Settings.OTPEnabled {
-		if in.OTPCode == "" {
+		if in.OTPCode == "" || s.authSvc == nil {
 			return ProfileBundle{}, ErrOTPRequired
 		}
-		if s.authSvc != nil {
-			if err := s.authSvc.VerifyParentOTP(ctx, actor, in.OTPCode); err != nil {
-				return ProfileBundle{}, ErrOTPRequired
-			}
+		if err := s.authSvc.VerifyParentOTP(ctx, actor, in.OTPCode); err != nil {
+			return ProfileBundle{}, ErrOTPRequired
 		}
 	}
 
@@ -442,10 +477,7 @@ func (h *Handler) resolvePrincipal(ctx context.Context, in AuthIn) (auth.Princip
 	if h.authSvc == nil {
 		return auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi Santoso"}, locale, nil
 	}
-	tok := in.CookieAccess
-	if tok == "" && len(in.Authorization) > 7 {
-		tok = in.Authorization[7:]
-	}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
 	if tok != "" {
 		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
 			return *p, locale, nil
@@ -487,12 +519,23 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
+		// Family settings are parent-sensitive (AGENTS.md guardrail #6).
+		if actor.Role != auth.RoleParent {
+			return nil, huma.Error403Forbidden("parent account required")
+		}
 		updated, err := h.svc.UpdateSettings(ctx, actor, in.Body)
 		if err != nil {
-			if errors.Is(err, ErrOTPRequired) {
+			switch {
+			case errors.Is(err, ErrOTPRequired):
 				return nil, huma.Error403Forbidden(err.Error())
+			case errors.Is(err, ErrInvalidInput):
+				return nil, huma.Error400BadRequest(err.Error())
+			case errors.Is(err, ErrNoLinkedChild), errors.Is(err, ErrProfileNotFound):
+				return nil, huma.Error404NotFound(err.Error())
+			default:
+				slog.ErrorContext(ctx, "update family settings failed", "err", err)
+				return nil, huma.Error500InternalServerError("internal error")
 			}
-			return nil, huma.Error400BadRequest(err.Error())
 		}
 		return &struct{ Body ProfileBundle }{Body: updated}, nil
 	})
@@ -508,9 +551,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, huma.Error401Unauthorized("authentication required")
 		}
+		if actor.Role != auth.RoleParent {
+			return nil, huma.Error403Forbidden("parent account required")
+		}
 		ov, err := h.svc.GetParentOverview(ctx, actor, locale)
 		if err != nil {
-			return nil, huma.Error500InternalServerError(err.Error())
+			if errors.Is(err, ErrNoLinkedChild) || errors.Is(err, ErrProfileNotFound) {
+				return nil, huma.Error404NotFound(err.Error())
+			}
+			slog.ErrorContext(ctx, "parent overview failed", "err", err)
+			return nil, huma.Error500InternalServerError("internal error")
 		}
 		return &struct{ Body ParentChildOverview }{Body: ov}, nil
 	})

@@ -6,11 +6,13 @@ import { ShieldCheck } from "lucide-react";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard } from "@planetlogi/ui";
 import { setAppLocale } from "../../../i18n/init";
-import { apiClient } from "../../../store/authStore";
+import { apiClient, useAuthStore } from "../../../store/authStore";
 
 export function ProfileSettingsPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common"]);
   const queryClient = useQueryClient();
+  // Saving family settings is parent-only on the API (students get 403).
+  const isParent = useAuthStore((s) => s.user?.role === "PARENT");
 
   const bundleQuery = useQuery({
     queryKey: ["profile-bundle"],
@@ -209,10 +211,15 @@ export function ProfileSettingsPage({ locale }: { locale: Locale }) {
             {saveError}
           </p>
         ) : null}
+        {!isParent ? (
+          <p className="text-sm font-semibold text-amber-200">{t("portals:parentOnlyNotice")}</p>
+        ) : null}
 
         <GalaxyButton
           onClick={() => updateMutation.mutate()}
-          disabled={!bundle || updateMutation.isPending || (otpRequired && otpCode.length !== 6)}
+          disabled={
+            !isParent || !bundle || updateMutation.isPending || (otpRequired && otpCode.length !== 6)
+          }
         >
           {t("portals:profile.saveSettings")}
         </GalaxyButton>

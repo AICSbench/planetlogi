@@ -14,10 +14,14 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 )
 
 const WeeklySupplyPodRewardAC = 5
+
+// maxElapsedSec bounds the client-reported paper timer (24h).
+const maxElapsedSec = 24 * 60 * 60
 
 type Category string
 
@@ -328,8 +332,11 @@ func (s *Service) OpenPaper(ctx context.Context, studentID, paperCode, locale st
 }
 
 func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale string, elapsedSec int, drafts map[int]map[string]string) (PaperAttemptView, error) {
-	if elapsedSec < 0 {
-		return PaperAttemptView{}, fmt.Errorf("elapsedSec cannot be negative")
+	if elapsedSec < 0 || elapsedSec > maxElapsedSec {
+		return PaperAttemptView{}, fmt.Errorf("elapsedSec must be 0..%d", maxElapsedSec)
+	}
+	if err := reqguard.ValidateDrafts(drafts); err != nil {
+		return PaperAttemptView{}, err
 	}
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return PaperAttemptView{}, err
@@ -359,8 +366,11 @@ func (s *Service) SavePaper(ctx context.Context, studentID, paperCode, locale st
 // SubmitPaper grades all 10 questions at once, reveals worked solutions, and awards
 // 1 Weekly Supply Pod (+5 AC) max once per ISO week.
 func (s *Service) SubmitPaper(ctx context.Context, studentID, paperCode, locale string, elapsedSec int, drafts map[int]map[string]string) (PaperAttemptView, error) {
-	if elapsedSec < 0 {
-		return PaperAttemptView{}, fmt.Errorf("elapsedSec cannot be negative")
+	if elapsedSec < 0 || elapsedSec > maxElapsedSec {
+		return PaperAttemptView{}, fmt.Errorf("elapsedSec must be 0..%d", maxElapsedSec)
+	}
+	if err := reqguard.ValidateDrafts(drafts); err != nil {
+		return PaperAttemptView{}, err
 	}
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return PaperAttemptView{}, err
@@ -581,10 +591,7 @@ func (h *Handler) resolveStudent(ctx context.Context, in AuthIn) (string, string
 	if h.authSvc == nil {
 		return "demo-pilot1", locale, nil
 	}
-	tok := in.CookieAccess
-	if tok == "" && len(in.Authorization) > 7 {
-		tok = in.Authorization[7:]
-	}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
 	if tok != "" {
 		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
 			return p.ID, locale, nil

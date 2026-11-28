@@ -12,6 +12,7 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 )
 
@@ -343,6 +344,9 @@ func (s *Service) GetLesson(ctx context.Context, studentID, lessonCode, locale s
 }
 
 func (s *Service) SaveDraft(ctx context.Context, studentID, lessonCode, locale string, questionIndex int, answers map[string]string) (LessonDetail, error) {
+	if err := reqguard.ValidateAnswers(answers); err != nil {
+		return LessonDetail{}, err
+	}
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return LessonDetail{}, err
 	}
@@ -376,6 +380,9 @@ func (s *Service) SaveDraft(ctx context.Context, studentID, lessonCode, locale s
 // CheckAnswer evaluates a Do & Learn answer; wrong answers allow unlimited Try Again retries
 // while solving all 4 questions atomically awards 1 Star Scroll.
 func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale string, questionIndex int, answers map[string]string) (mathengine.GradeResult, LessonDetail, error) {
+	if err := reqguard.ValidateAnswers(answers); err != nil {
+		return mathengine.GradeResult{}, LessonDetail{}, err
+	}
 	if err := s.ensureStudentLoaded(ctx, studentID); err != nil {
 		return mathengine.GradeResult{}, LessonDetail{}, err
 	}
@@ -753,10 +760,7 @@ func (h *Handler) resolveStudent(ctx context.Context, in AuthIn) (string, string
 	if h.authSvc == nil {
 		return "demo-pilot1", locale, nil
 	}
-	tok := in.CookieAccess
-	if tok == "" && len(in.Authorization) > 7 {
-		tok = in.Authorization[7:]
-	}
+	tok := reqguard.Token(in.CookieAccess, in.Authorization)
 	if tok != "" {
 		if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
 			return p.ID, locale, nil

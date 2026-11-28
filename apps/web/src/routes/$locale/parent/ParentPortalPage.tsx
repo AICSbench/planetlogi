@@ -3,14 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
-import { apiClient } from "../../../store/authStore";
+import { apiClient, useAuthStore } from "../../../store/authStore";
 
 export function ParentPortalPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common", "dashboard"]);
 
+  // The overview API is parent-only; don't fire a request that can only 403 for students.
+  const isParent = useAuthStore((s) => s.user?.role === "PARENT");
+
   const overviewQuery = useQuery({
     queryKey: ["parent-overview", locale],
     queryFn: () => apiClient.getParentOverview(locale),
+    enabled: isParent,
   });
 
   const ov = overviewQuery.data;
@@ -27,7 +31,11 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
         </Link>
       </GalaxyCard>
 
-      {overviewQuery.isError ? (
+      {!isParent ? (
+        <GalaxyCard>
+          <p className="text-sm font-semibold text-amber-200">{t("portals:parentOnlyNotice")}</p>
+        </GalaxyCard>
+      ) : overviewQuery.isError ? (
         <GalaxyCard className="space-y-3 text-center">
           <p role="alert" className="text-sm font-bold text-red-300">
             {t("portals:parentPortal.loadError")}

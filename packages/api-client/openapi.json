@@ -294,6 +294,7 @@
             "type": "string"
           },
           "studentId": {
+            "maxLength": 64,
             "minLength": 1,
             "type": "string"
           },
@@ -301,6 +302,7 @@
             "items": {
               "type": "string"
             },
+            "maxItems": 20,
             "minItems": 1,
             "type": [
               "array",
@@ -308,6 +310,7 @@
             ]
           },
           "title": {
+            "maxLength": 120,
             "minLength": 1,
             "type": "string"
           }

@@ -76,5 +76,6 @@
     "a2": "You can hold up to 3 Cryo Shields. If a day is missed, 1 shield automatically activates at midnight so your streak stays safe.",
     "q3": "Can we switch between English and Bahasa Indonesia anytime?",
     "a3": "Yes! Both UI and math questions support English and Indonesian side-by-side from the top bar or Parent Settings."
-  }
+  },
+  "parentOnlyNotice": "Only a parent account can view or change these family settings."
 }

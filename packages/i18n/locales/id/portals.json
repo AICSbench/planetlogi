@@ -76,5 +76,6 @@
     "a2": "Kamu dapat menyimpan hingga 3 Perisai Krio. Jika terlewat 1 hari, 1 perisai aktif otomatis saat tengah malam agar streak tetap aman.",
     "q3": "Apakah bahasa Inggris dan Indonesia bisa diganti kapan saja?",
     "a3": "Ya! Baik antarmuka maupun soal matematika mendukung Bahasa Inggris dan Bahasa Indonesia secara penuh."
-  }
+  },
+  "parentOnlyNotice": "Hanya akun orang tua yang dapat melihat atau mengubah pengaturan keluarga ini."
 }
