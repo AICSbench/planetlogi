@@ -12,12 +12,13 @@ import (
 func TestStarDuelsEnergyLimitAndReset(t *testing.T) {
 	ledger := economy.NewMemoryLedger()
 	svc := NewService(ledger)
+	ctx := context.Background()
 
 	day1 := time.Date(2026, 11, 27, 10, 0, 0, 0, time.UTC)
 	svc.SetClockForTest(func() time.Time { return day1 })
 
 	for i := 1; i <= DailyEnergyMax; i++ {
-		duel, left, err := svc.StartDuel("stu-1", 1, "Asia/Jakarta", "en", "RANDOM", "")
+		duel, left, err := svc.StartDuel(ctx, "stu-1", 1, "Asia/Jakarta", "en", "RANDOM", "")
 		if err != nil {
 			t.Fatalf("expected duel %d to start, got err: %v", i, err)
 		}
@@ -32,13 +33,13 @@ func TestStarDuelsEnergyLimitAndReset(t *testing.T) {
 		}
 	}
 
-	if _, _, err := svc.StartDuel("stu-1", 1, "Asia/Jakarta", "en", "RANDOM", ""); err != ErrNoEnergy {
+	if _, _, err := svc.StartDuel(ctx, "stu-1", 1, "Asia/Jakarta", "en", "RANDOM", ""); err != ErrNoEnergy {
 		t.Fatalf("expected ErrNoEnergy on 4th duel, got %v", err)
 	}
 
 	day2 := day1.Add(24 * time.Hour)
 	svc.SetClockForTest(func() time.Time { return day2 })
-	_, left, err := svc.StartDuel("stu-1", 1, "Asia/Jakarta", "en", "CLASSMATE", "")
+	_, left, err := svc.StartDuel(ctx, "stu-1", 1, "Asia/Jakarta", "en", "CLASSMATE", "")
 	if err != nil || left != 2 {
 		t.Fatalf("expected energy reset on next day, err=%v left=%d", err, left)
 	}
@@ -49,7 +50,7 @@ func TestStarDuelGradingAndIdempotentSP(t *testing.T) {
 	ledger := economy.NewMemoryLedger(economy.Wallet{StudentID: "stu-2", TotalSP: 10})
 	svc := NewService(ledger)
 
-	duel, _, err := svc.StartDuel("stu-2", 2, "Asia/Jakarta", "id", "CLASSMATE", "")
+	duel, _, err := svc.StartDuel(ctx, "stu-2", 2, "Asia/Jakarta", "id", "CLASSMATE", "")
 	if err != nil {
 		t.Fatalf("StartDuel: %v", err)
 	}

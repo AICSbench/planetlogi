@@ -70,6 +70,17 @@ func (s *PGStore) SaveMerged(ctx context.Context, studentID, module string, merg
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
+	if err := s.SaveMergedTx(ctx, tx, studentID, module, merge); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// SaveMergedTx performs the same locked read-merge-write inside the caller's
+// transaction so Phase 3 state can commit atomically with ledger mutations
+// (wallet debits) applied through ApplyBatchTx on the same tx. Merge errors
+// (for example a failed quota check) abort the whole transaction.
+func (s *PGStore) SaveMergedTx(ctx context.Context, tx pgx.Tx, studentID, module string, merge func(current []byte) (any, error)) error {
 	// Ensure the row exists before locking it, so two first writers serialize
 	// instead of both merging an absent document.
 	if _, err := tx.Exec(ctx, `
@@ -101,5 +112,5 @@ func (s *PGStore) SaveMerged(ctx context.Context, studentID, module string, merg
 	`, studentID, module, raw); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	return nil
 }

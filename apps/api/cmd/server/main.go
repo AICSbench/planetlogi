@@ -77,10 +77,10 @@ func main() {
 	assignSvc := assignments.NewServiceWithDeps(pool, stateStore, ledger)
 	profileSvc := profile.NewServiceWithPG(pool, reportsH, streakSvc, authSvc, cfg.BillingEnabled)
 	supernovaSvc := supernova.NewService(ledger)
-	storiesSvc := stories.NewService(ledger)
-	customSvc := customization.NewService(ledger)
-	socialSvc := social.NewService(ledger)
-	lbSvc := leaderboards.NewService(ledger)
+	storiesSvc := stories.NewServiceWithPG(pool, ledger)
+	customSvc := customization.NewServiceWithPG(pool, ledger)
+	socialSvc := social.NewServiceWithPG(pool, ledger)
+	lbSvc := leaderboards.NewServiceWithPG(pool, ledger)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,

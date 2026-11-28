@@ -2,20 +2,25 @@ package customization
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
 const MissedBadgeRecoverCostAC = 20
@@ -57,12 +62,25 @@ type DailyBadgeCard struct {
 	RecoverCost int    `json:"recoverCostAc"`
 }
 
+// customizationProgressDoc is the durable per-student document (Astro Buddy
+// config + earned Daily Star Badge tiers). Stored in the shared phase2_state
+// store so it survives restarts and is visible to every API instance.
+type customizationProgressDoc struct {
+	Buddy  *AstroBuddyConfig  `json:"buddy,omitempty"`
+	Badges map[string]int     `json:"badges,omitempty"` // YYYY-MM-DD -> tier (1..4)
+}
+
+const customizationProgressModule = "customization_progress_v1"
+
 type Service struct {
 	mu       sync.Mutex
 	ledger   economy.Ledger
+	pool     *pgxpool.Pool
+	store    *state.PGStore // nil in in-memory (test) mode
 	buddies  map[string]AstroBuddyConfig
-	badges   map[string]map[string]int // studentID -> YYYY-MM-DD -> tier (1..4)
+	badges   map[string]map[string]int // studentID -> YYYY-MM-DD -> tier (1..4) (memory mode only)
 	showcase []ShowcaseEntry
+	nowClock func() time.Time
 }
 
 var CosmicColors = []string{
@@ -81,11 +99,13 @@ var CosmicAdjectives = []string{
 	"Snappy", "Spunky",
 }
 
+// NewService creates an in-memory service for unit tests.
 func NewService(ledger economy.Ledger) *Service {
 	s := &Service{
-		ledger:  ledger,
-		buddies: make(map[string]AstroBuddyConfig),
-		badges:  make(map[string]map[string]int),
+		ledger:   ledger,
+		buddies:  make(map[string]AstroBuddyConfig),
+		badges:   make(map[string]map[string]int),
+		nowClock: time.Now,
 	}
 	s.showcase = []ShowcaseEntry{
 		{MaskedName: "Maya K.", Grade: 1, StarPoints: 68, Buddy: AstroBuddyConfig{BodyShape: "star", ColorHex: "#22D3EE", HornsStyle: "halo", EyesStyle: "starry", MouthStyle: "smile", Adjective: "Cosmic", FullName: "Cosmic Maya"}},
@@ -95,6 +115,26 @@ func NewService(ledger economy.Ledger) *Service {
 		{MaskedName: "Zero S.", Grade: 1, StarPoints: 0, Buddy: AstroBuddyConfig{BodyShape: "cube", ColorHex: "#10B981", FullName: "Hidden Zero"}}, // MUST be filtered out (<1 SP)
 	}
 	return s
+}
+
+// NewServiceWithPG creates a production service whose Astro Buddy config and
+// earned Daily Star Badge tiers are stored durably in PostgreSQL.
+func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {
+	s := NewService(ledger)
+	s.pool = pool
+	s.store = state.NewPGStore(pool)
+	return s
+}
+
+func (s *Service) loadProgressPG(ctx context.Context, studentID string) customizationProgressDoc {
+	var doc customizationProgressDoc
+	if s.store == nil {
+		return doc
+	}
+	if found, err := s.store.Load(ctx, studentID, customizationProgressModule, &doc); err != nil || !found {
+		return customizationProgressDoc{}
+	}
+	return doc
 }
 
 func AvatarPacks(locale string) []AvatarPack {
@@ -110,10 +150,14 @@ func AvatarPacks(locale string) []AvatarPack {
 	}
 }
 
-func (s *Service) GetBuddy(studentID, firstName string) AstroBuddyConfig {
+func (s *Service) GetBuddy(ctx context.Context, studentID, firstName string) AstroBuddyConfig {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if b, ok := s.buddies[studentID]; ok {
+	if s.store != nil {
+		if b := s.loadProgressPG(ctx, studentID).Buddy; b != nil {
+			return *b
+		}
+	} else if b, ok := s.buddies[studentID]; ok {
 		return b
 	}
 	if firstName == "" {
@@ -132,7 +176,7 @@ func (s *Service) GetBuddy(studentID, firstName string) AstroBuddyConfig {
 	}
 }
 
-func (s *Service) SaveBuddy(studentID, firstName string, cfg AstroBuddyConfig) AstroBuddyConfig {
+func (s *Service) SaveBuddy(ctx context.Context, studentID, firstName string, cfg AstroBuddyConfig) AstroBuddyConfig {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if firstName == "" {
@@ -148,6 +192,17 @@ func (s *Service) SaveBuddy(studentID, firstName string, cfg AstroBuddyConfig) A
 	}
 	cfg.Adjective = adj
 	cfg.FullName = adj + " " + firstName
+	if s.store != nil {
+		if err := s.store.SaveMerged(ctx, studentID, customizationProgressModule, func(current []byte) (any, error) {
+			var doc customizationProgressDoc
+			_ = json.Unmarshal(current, &doc)
+			doc.Buddy = &cfg
+			return doc, nil
+		}); err != nil {
+			return cfg
+		}
+		return cfg
+	}
 	s.buddies[studentID] = cfg
 	return cfg
 }
@@ -188,19 +243,25 @@ func tierName(tier int) string {
 	}
 }
 
-func (s *Service) GetMonthlyBadges(studentID, monthPrefix, locale string) []DailyBadgeCard {
+func (s *Service) GetMonthlyBadges(ctx context.Context, studentID, monthPrefix, locale string) []DailyBadgeCard {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if monthPrefix == "" {
 		monthPrefix = "2026-11"
 	}
-	if s.badges[studentID] == nil {
+	badgeTiers := s.badges[studentID]
+	if s.store != nil {
+		badgeTiers = s.loadProgressPG(ctx, studentID).Badges
+	} else if badgeTiers == nil {
+		// In-memory (test) mode only: simulate the first four days so the
+		// calendar shows a mix of tiers.
 		s.badges[studentID] = map[string]int{
 			monthPrefix + "-01": 1,
 			monthPrefix + "-02": 2,
 			monthPrefix + "-03": 3,
 			monthPrefix + "-04": 4,
 		}
+		badgeTiers = s.badges[studentID]
 	}
 	facts := []struct {
 		cat string
@@ -216,7 +277,7 @@ func (s *Service) GetMonthlyBadges(studentID, monthPrefix, locale string) []Dail
 	cards := make([]DailyBadgeCard, 30)
 	for d := 1; d <= 30; d++ {
 		dt := fmt.Sprintf("%s-%02d", monthPrefix, d)
-		tier := s.badges[studentID][dt]
+		tier := badgeTiers[dt]
 		f := facts[(d-1)%len(facts)]
 		cards[d-1] = DailyBadgeCard{
 			Date:        dt,
@@ -232,10 +293,85 @@ func (s *Service) GetMonthlyBadges(studentID, monthPrefix, locale string) []Dail
 	return cards
 }
 
-// RecoverMissedBadge atomically deducts 20 AC to unlock a missed day at 1★ Bronze (idempotent).
-func (s *Service) RecoverMissedBadge(ctx context.Context, studentID, dateStr, locale string) (DailyBadgeCard, error) {
+// RecoverMissedBadge deducts 20 AC and persists the recovered tier in the same
+// database transaction (idempotent per student+date). Dates must be valid
+// calendar dates not in the future — recovering a day that has not happened
+// yet, or a malformed date string, is rejected without touching the wallet.
+func (s *Service) RecoverMissedBadge(ctx context.Context, studentID, tz, dateStr, locale string) (DailyBadgeCard, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	parsed, err := time.ParseInLocation("2006-01-02", dateStr, time.UTC)
+	if err != nil {
+		return DailyBadgeCard{}, fmt.Errorf("invalid badge date %q", dateStr)
+	}
+	localNow := timewindow.LocalDateString(s.nowClock(), tz)
+	today, err := time.ParseInLocation("2006-01-02", localNow, time.UTC)
+	if err != nil {
+		return DailyBadgeCard{}, fmt.Errorf("invalid server timezone %q", tz)
+	}
+	if parsed.After(today) {
+		return DailyBadgeCard{}, fmt.Errorf("cannot recover a future badge date")
+	}
+
+	if s.store != nil {
+		doc := s.loadProgressPG(ctx, studentID)
+		if doc.Badges[dateStr] == 0 {
+			if s.ledger != nil {
+				tx, err := s.pool.Begin(ctx)
+				if err != nil {
+					return DailyBadgeCard{}, err
+				}
+				defer func() { _ = tx.Rollback(ctx) }()
+				if _, err := economy.ApplyBatchInTx(ctx, tx, s.ledger, []economy.MutationRequest{
+					{
+						StudentID:      studentID,
+						Currency:       economy.CurrencyAC,
+						Delta:          -MissedBadgeRecoverCostAC,
+						SourceType:     "BADGE_RECOVERY",
+						SourceID:       dateStr,
+						IdempotencyKey: fmt.Sprintf("badge_recover:%s:%s", studentID, dateStr),
+					},
+				}); err != nil {
+					return DailyBadgeCard{}, err
+				}
+				if err := s.store.SaveMergedTx(ctx, tx, studentID, customizationProgressModule, func(current []byte) (any, error) {
+					var d customizationProgressDoc
+					_ = json.Unmarshal(current, &d)
+					if d.Badges == nil {
+						d.Badges = make(map[string]int)
+					}
+					d.Badges[dateStr] = 1
+					return d, nil
+				}); err != nil {
+					return DailyBadgeCard{}, err
+				}
+				if err := tx.Commit(ctx); err != nil {
+					return DailyBadgeCard{}, err
+				}
+			} else {
+				if err := s.store.SaveMerged(ctx, studentID, customizationProgressModule, func(current []byte) (any, error) {
+					var d customizationProgressDoc
+					_ = json.Unmarshal(current, &d)
+					if d.Badges == nil {
+						d.Badges = make(map[string]int)
+					}
+					d.Badges[dateStr] = 1
+					return d, nil
+				}); err != nil {
+					return DailyBadgeCard{}, err
+				}
+			}
+		}
+		tier := s.loadProgressPG(ctx, studentID).Badges[dateStr]
+		return DailyBadgeCard{
+			Date:        dateStr,
+			Tier:        tier,
+			TierName:    tierName(tier),
+			TriviaTitle: mathengine.LocaleText{EN: "Recovered Star Card", ID: "Kartu Bintang Terbuka"}.For(locale),
+			RecoverCost: MissedBadgeRecoverCostAC,
+		}, nil
+	}
+
 	if s.badges[studentID] == nil {
 		s.badges[studentID] = make(map[string]int)
 	}
@@ -278,9 +414,9 @@ type authIn struct {
 	Locale        string `query:"locale" default:"en"`
 }
 
-// resolve returns the authenticated student ID, first name, and locale. Missing
-// or invalid credentials map to HTTP 401 and non-students to HTTP 403.
-func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, string, error) {
+// resolve returns the authenticated student identity, first name, and locale.
+// Missing or invalid credentials map to HTTP 401 and non-students to HTTP 403.
+func (h *Handler) resolve(ctx context.Context, in authIn) (auth.StudentIdentity, string, string, error) {
 	locale := in.Locale
 	if locale != "id" {
 		locale = "en"
@@ -288,13 +424,13 @@ func (h *Handler) resolve(ctx context.Context, in authIn) (string, string, strin
 	tok := reqguard.Token(in.CookieAccess, in.Authorization)
 	ident, err := h.authSvc.ResolveStudent(ctx, tok)
 	if err != nil {
-		return "", "", locale, auth.StudentAuthHTTPError(err)
+		return auth.StudentIdentity{}, "", locale, auth.StudentAuthHTTPError(err)
 	}
 	firstName := ident.DisplayName
 	if fields := strings.Fields(firstName); len(fields) > 0 {
 		firstName = fields[0]
 	}
-	return ident.ID, firstName, locale, nil
+	return ident, firstName, locale, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -312,7 +448,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Adjectives  []string         `json:"adjectives"`
 		}
 	}, error) {
-		id, name, locale, err := h.resolve(ctx, *in)
+		ident, name, locale, err := h.resolve(ctx, *in)
 		if err != nil {
 			return nil, err
 		}
@@ -324,7 +460,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Adjectives  []string         `json:"adjectives"`
 			}
 		}{}
-		out.Body.Buddy = h.svc.GetBuddy(id, name)
+		out.Body.Buddy = h.svc.GetBuddy(ctx, ident.ID, name)
 		out.Body.AvatarPacks = AvatarPacks(locale)
 		out.Body.Colors = CosmicColors
 		out.Body.Adjectives = CosmicAdjectives
@@ -341,11 +477,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		authIn
 		Body AstroBuddyConfig
 	}) (*struct{ Body AstroBuddyConfig }, error) {
-		id, name, _, err := h.resolve(ctx, in.authIn)
+		ident, name, _, err := h.resolve(ctx, in.authIn)
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body AstroBuddyConfig }{Body: h.svc.SaveBuddy(id, name, in.Body)}, nil
+		return &struct{ Body AstroBuddyConfig }{Body: h.svc.SaveBuddy(ctx, ident.ID, name, in.Body)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -384,7 +520,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Cards []DailyBadgeCard `json:"cards"`
 		}
 	}, error) {
-		id, _, locale, err := h.resolve(ctx, in.authIn)
+		ident, _, locale, err := h.resolve(ctx, in.authIn)
 		if err != nil {
 			return nil, err
 		}
@@ -393,7 +529,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 				Cards []DailyBadgeCard `json:"cards"`
 			}
 		}{}
-		out.Body.Cards = h.svc.GetMonthlyBadges(id, in.Month, locale)
+		out.Body.Cards = h.svc.GetMonthlyBadges(ctx, ident.ID, in.Month, locale)
 		return out, nil
 	})
 
@@ -409,11 +545,11 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Date string `json:"date"`
 		}
 	}) (*struct{ Body DailyBadgeCard }, error) {
-		id, _, locale, err := h.resolve(ctx, in.authIn)
+		ident, _, locale, err := h.resolve(ctx, in.authIn)
 		if err != nil {
 			return nil, err
 		}
-		card, err := h.svc.RecoverMissedBadge(ctx, id, in.Body.Date, locale)
+		card, err := h.svc.RecoverMissedBadge(ctx, ident.ID, ident.Timezone, in.Body.Date, locale)
 		if err != nil {
 			if errors.Is(err, economy.ErrInsufficientFunds) {
 				return nil, huma.Error400BadRequest("insufficient Astro Coins (20 AC required)")

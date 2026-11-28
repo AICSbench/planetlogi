@@ -11,13 +11,13 @@ func TestPlanetStoriesOpeningFreeAndAtomic20ACUnlock(t *testing.T) {
 	ledger := economy.NewMemoryLedger(economy.Wallet{StudentID: "stu-1", AstroCoins: 25, PilotLevel: 1})
 	svc := NewService(ledger)
 
-	planets := svc.ListPlanets("stu-1", "en")
+	planets := svc.ListPlanets(context.Background(), "stu-1", "en")
 	if len(planets) != 6 {
 		t.Fatalf("expected 6 Grade Planets, got %d", len(planets))
 	}
 
 	// Opening chapter is free & has 20 pages
-	openCh, err := svc.OpenChapter("stu-1", "terra_pebble-ch0", "id")
+	openCh, err := svc.OpenChapter(context.Background(), "stu-1", "terra_pebble-ch0", "id")
 	if err != nil || len(openCh.Pages) != 20 {
 		t.Fatalf("expected 20-page free opening chapter, err=%v pages=%d", err, len(openCh.Pages))
 	}

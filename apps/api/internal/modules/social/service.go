@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -13,11 +14,13 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -33,10 +36,23 @@ var (
 	ErrNoEnergy      = errors.New("no Star Duel energy cells remaining today (resets at midnight)")
 	ErrDuelNotFound  = errors.New("star duel not found")
 	ErrDuelCompleted = errors.New("star duel already completed")
+	ErrDuelNotActive = errors.New("star duel is not in progress; accept it first")
 	ErrCrewNotFound  = errors.New("star crew code not found")
 	ErrAlreadyInCrew = errors.New("already a member of this star crew")
 	ErrInvalidCode   = errors.New("star crew code must be 9 digits")
+	// ErrRewardPending signals the Star Points ledger could not be reached, so
+	// the completion was not recorded; the client can safely retry.
+	ErrRewardPending = errors.New("star duel reward could not be recorded; try again")
 )
+
+// duelEnergyDoc is the durable per-student, per-local-date energy counter. It
+// lives in the shared phase2_state store, so the 3-cells/day quota is enforced
+// across restarts and API instances instead of per process.
+type duelEnergyDoc struct {
+	Used int `json:"used"`
+}
+
+func duelEnergyModule(localDate string) string { return "duel_energy_" + localDate }
 
 type OpponentProfile struct {
 	ID         string `json:"id"`
@@ -106,7 +122,9 @@ type crewInternal struct {
 type Service struct {
 	mu           sync.Mutex
 	ledger       economy.Ledger
-	energyUsed   map[string]int // studentID:YYYY-MM-DD -> used
+	pool         *pgxpool.Pool
+	store        *state.PGStore // nil in in-memory (test) mode
+	energyUsed   map[string]int // studentID:YYYY-MM-DD -> used (memory mode only)
 	duels        map[string]*duelInternal
 	studentDuels map[string][]string
 	crewsByCode  map[string]*crewInternal
@@ -116,6 +134,7 @@ type Service struct {
 	nowClock     func() time.Time
 }
 
+// NewService creates an in-memory service for unit tests.
 func NewService(ledger economy.Ledger) *Service {
 	s := &Service{
 		ledger:       ledger,
@@ -136,6 +155,67 @@ func NewService(ledger economy.Ledger) *Service {
 		},
 	}
 	return s
+}
+
+// NewServiceWithPG creates a production service whose Star Duel energy quota is
+// enforced from durable PostgreSQL state, shared across restarts and instances.
+func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {
+	s := NewService(ledger)
+	s.pool = pool
+	s.store = state.NewPGStore(pool)
+	return s
+}
+
+func (s *Service) localDateFor(tz string) string {
+	return timewindow.LocalDateString(s.nowClock(), tz)
+}
+
+// energyUsedFor reads the student's durable (or in-memory) energy usage for the
+// given local date.
+func (s *Service) energyUsedFor(ctx context.Context, studentID, localDate string) int {
+	if s.store != nil {
+		var doc duelEnergyDoc
+		if found, err := s.store.Load(ctx, studentID, duelEnergyModule(localDate), &doc); err == nil && found {
+			return doc.Used
+		}
+		return 0
+	}
+	return s.energyUsed[studentID+":"+localDate]
+}
+
+// consumeEnergy atomically consumes one energy cell for the local date. In
+// durable mode the row is locked and the quota check happens inside the
+// transaction, so concurrent requests and other instances cannot exceed the
+// daily maximum.
+func (s *Service) consumeEnergy(ctx context.Context, studentID, localDate string) error {
+	if s.store == nil {
+		key := studentID + ":" + localDate
+		if s.energyUsed[key] >= DailyEnergyMax {
+			return ErrNoEnergy
+		}
+		s.energyUsed[key]++
+		return nil
+	}
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if err := s.store.SaveMergedTx(ctx, tx, studentID, duelEnergyModule(localDate), func(current []byte) (any, error) {
+		var doc duelEnergyDoc
+		_ = json.Unmarshal(current, &doc)
+		if doc.Used >= DailyEnergyMax {
+			return nil, ErrNoEnergy
+		}
+		doc.Used++
+		return doc, nil
+	}); err != nil {
+		if errors.Is(err, ErrNoEnergy) {
+			return ErrNoEnergy
+		}
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func seedPeers() []OpponentProfile {
@@ -160,11 +240,6 @@ func (s *Service) SetClockForTest(fn func() time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.nowClock = fn
-}
-
-func (s *Service) energyKey(studentID, tz string) (string, string) {
-	localDate := timewindow.LocalDateString(s.nowClock(), tz)
-	return studentID + ":" + localDate, localDate
 }
 
 func templatesForGrade(grade int) []string {
@@ -247,15 +322,15 @@ func (s *Service) pickOpponentLocked(grade int, mode, opponentID string) Opponen
 	return s.peers[0]
 }
 
-func (s *Service) GetLobby(studentID string, grade int, tz, locale string) DuelLobby {
+func (s *Service) GetLobby(ctx context.Context, studentID string, grade int, tz, locale string) DuelLobby {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
 	s.ensureIncomingLocked(studentID, grade, locale)
-	eKey, localDate := s.energyKey(studentID, tz)
-	used := s.energyUsed[eKey]
+	localDate := s.localDateFor(tz)
+	used := s.energyUsedFor(ctx, studentID, localDate)
 	left := DailyEnergyMax - used
 	if left < 0 {
 		left = 0
@@ -310,14 +385,14 @@ func (s *Service) GetLobby(studentID string, grade int, tz, locale string) DuelL
 	}
 }
 
-func (s *Service) StartDuel(studentID string, grade int, tz, locale, mode, opponentID string) (DuelRecord, int, error) {
+func (s *Service) StartDuel(ctx context.Context, studentID string, grade int, tz, locale, mode, opponentID string) (DuelRecord, int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
-	eKey, _ := s.energyKey(studentID, tz)
-	if s.energyUsed[eKey] >= DailyEnergyMax {
+	localDate := s.localDateFor(tz)
+	if s.energyUsedFor(ctx, studentID, localDate) >= DailyEnergyMax {
 		return DuelRecord{}, 0, ErrNoEnergy
 	}
 
@@ -326,8 +401,10 @@ func (s *Service) StartDuel(studentID string, grade int, tz, locale, mode, oppon
 		mode = "RANDOM"
 	}
 	opp := s.pickOpponentLocked(grade, mode, opponentID)
-	s.energyUsed[eKey]++
-	energyLeft := DailyEnergyMax - s.energyUsed[eKey]
+	if err := s.consumeEnergy(ctx, studentID, localDate); err != nil {
+		return DuelRecord{}, 0, err
+	}
+	energyLeft := DailyEnergyMax - s.energyUsedFor(ctx, studentID, localDate)
 
 	s.seq++
 	id := fmt.Sprintf("duel-%d", s.seq)
@@ -361,7 +438,7 @@ func (s *Service) StartDuel(studentID string, grade int, tz, locale, mode, oppon
 	return rec, energyLeft, nil
 }
 
-func (s *Service) AcceptIncoming(studentID, duelID, locale string) (DuelRecord, error) {
+func (s *Service) AcceptIncoming(ctx context.Context, studentID, duelID, tz, locale string) (DuelRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d, ok := s.duels[duelID]
@@ -370,6 +447,14 @@ func (s *Service) AcceptIncoming(studentID, duelID, locale string) (DuelRecord, 
 	}
 	if d.record.Status == "COMPLETED" {
 		return DuelRecord{}, ErrDuelCompleted
+	}
+	if d.record.Status == "IN_PROGRESS" {
+		return DuelRecord{}, ErrDuelNotActive
+	}
+	// Accepting an incoming challenge consumes an energy cell under the same
+	// daily quota as launching a duel, enforced durably.
+	if err := s.consumeEnergy(ctx, studentID, s.localDateFor(tz)); err != nil {
+		return DuelRecord{}, err
 	}
 	d.record.Status = "IN_PROGRESS"
 	qs := make([]mathengine.RenderedQuestion, 0, len(d.templates))
@@ -395,6 +480,12 @@ func (s *Service) SubmitDuel(ctx context.Context, studentID, duelID, locale stri
 		s.mu.Unlock()
 		return rec, nil
 	}
+	// Only a duel this student accepted/launched (IN_PROGRESS) can be graded;
+	// pending incoming duels can no longer be submitted after energy runs out.
+	if d.record.Status != "IN_PROGRESS" {
+		s.mu.Unlock()
+		return DuelRecord{}, ErrDuelNotActive
+	}
 
 	score := 0
 	for i, tpl := range d.templates {
@@ -419,6 +510,23 @@ func (s *Service) SubmitDuel(ctx context.Context, studentID, duelID, locale stri
 		rewardSP = DuelDrawSP
 	}
 
+	// Apply the ledger BEFORE recording completion: a failed award leaves the
+	// duel IN_PROGRESS so the student can retry and still receive the reward
+	// (the idempotency key prevents double-awarding on success).
+	if s.ledger != nil && rewardSP > 0 {
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+			StudentID:      studentID,
+			Currency:       economy.CurrencySP,
+			Delta:          rewardSP,
+			SourceType:     "STAR_DUEL_" + outcome,
+			SourceID:       duelID,
+			IdempotencyKey: fmt.Sprintf("duel:%s:reward:%s", duelID, studentID),
+		}); err != nil {
+			s.mu.Unlock()
+			return DuelRecord{}, fmt.Errorf("%w: %v", ErrRewardPending, err)
+		}
+	}
+
 	now := s.nowClock()
 	d.record.PlayerScore = score
 	d.record.Outcome = outcome
@@ -428,17 +536,6 @@ func (s *Service) SubmitDuel(ctx context.Context, studentID, duelID, locale stri
 	out := d.record
 	out.Questions = nil
 	s.mu.Unlock()
-
-	if s.ledger != nil && rewardSP > 0 {
-		_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
-			StudentID:      studentID,
-			Currency:       economy.CurrencySP,
-			Delta:          rewardSP,
-			SourceType:     "STAR_DUEL_" + outcome,
-			SourceID:       duelID,
-			IdempotencyKey: fmt.Sprintf("duel:%s:reward:%s", duelID, studentID),
-		})
-	}
 	return out, nil
 }
 
@@ -636,7 +733,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		return &struct{ Body DuelLobby }{Body: h.svc.GetLobby(ident.ID, ident.Grade, ident.Timezone, locale)}, nil
+		return &struct{ Body DuelLobby }{Body: h.svc.GetLobby(ctx, ident.ID, ident.Grade, ident.Timezone, locale)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
@@ -661,7 +758,7 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		duel, left, err := h.svc.StartDuel(ident.ID, ident.Grade, ident.Timezone, locale, in.Body.Mode, in.Body.OpponentID)
+		duel, left, err := h.svc.StartDuel(ctx, ident.ID, ident.Grade, ident.Timezone, locale, in.Body.Mode, in.Body.OpponentID)
 		if err != nil {
 			if errors.Is(err, ErrNoEnergy) {
 				return nil, huma.Error429TooManyRequests(err.Error())
@@ -693,8 +790,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		duel, err := h.svc.AcceptIncoming(ident.ID, in.ID, locale)
+		duel, err := h.svc.AcceptIncoming(ctx, ident.ID, in.ID, ident.Timezone, locale)
 		if err != nil {
+			if errors.Is(err, ErrDuelNotActive) {
+				return nil, huma.Error409Conflict(err.Error())
+			}
+			if errors.Is(err, ErrNoEnergy) {
+				return nil, huma.Error429TooManyRequests(err.Error())
+			}
 			return nil, huma.Error404NotFound(err.Error())
 		}
 		return &struct{ Body DuelRecord }{Body: duel}, nil
@@ -719,6 +822,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		}
 		duel, err := h.svc.SubmitDuel(ctx, ident.ID, in.ID, locale, in.Body.Answers)
 		if err != nil {
+			if errors.Is(err, ErrDuelNotActive) {
+				return nil, huma.Error409Conflict(err.Error())
+			}
+			if errors.Is(err, ErrRewardPending) {
+				return nil, huma.Error503ServiceUnavailable(err.Error())
+			}
 			return nil, huma.Error404NotFound(err.Error())
 		}
 		return &struct{ Body DuelRecord }{Body: duel}, nil

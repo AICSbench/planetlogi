@@ -44,6 +44,12 @@ func TestBonusGiftIdempotencyAndEvents(t *testing.T) {
 	ledger := economy.NewMemoryLedger(economy.Wallet{StudentID: "stu-gift", AstroCoins: 10})
 	svc := NewService(ledger)
 
+	// Fix the clock inside the Sunday Meteor window (Sunday 10:00 Asia/Jakarta)
+	// so the window check is deterministic regardless of the real weekday.
+	svc.SetClockForTest(func() time.Time {
+		return time.Date(2026, 11, 29, 10, 0, 0, 0, time.FixedZone("WIB", 7*3600))
+	})
+
 	status, err := svc.ClaimBonusGift(ctx, "stu-gift", "Asia/Jakarta")
 	if err != nil || !status.Claimed {
 		t.Fatalf("first ClaimBonusGift failed: %v %+v", err, status)
@@ -63,16 +69,27 @@ func TestBonusGiftIdempotencyAndEvents(t *testing.T) {
 		t.Fatalf("expected ErrAlreadyClaimedToday on repeat claim, got %v", err)
 	}
 
-	mStart := svc.StartSundayMeteor("stu-gift", 2, "id")
+	mStart, err := svc.StartSundayMeteor(ctx, "stu-gift", 2, "Asia/Jakarta", "id")
+	if err != nil {
+		t.Fatalf("StartSundayMeteor: %v", err)
+	}
 	if len(mStart.Questions) != SundayMeteorCount {
 		t.Fatalf("expected %d meteor questions, got %d", SundayMeteorCount, len(mStart.Questions))
 	}
-	res, err := svc.SubmitSundayMeteor(ctx, "stu-gift", mStart.SessionID, "id", map[int]map[string]string{})
+	res, err := svc.SubmitSundayMeteor(ctx, "stu-gift", mStart.SessionID, "Asia/Jakarta", "id", map[int]map[string]string{})
 	if err != nil || res.Total != SundayMeteorCount {
 		t.Fatalf("SubmitSundayMeteor failed: %v %+v", err, res)
 	}
 
-	cr := svc.SubmitCreatorChallenge("stu-gift", "Raka Pratama", 2, "Orbit Cookies", "Share 12 space cookies equally among 4 astronauts!")
+	// The one-session-per-day limit must reject a second session the same day.
+	if _, err := svc.StartSundayMeteor(ctx, "stu-gift", 2, "Asia/Jakarta", "id"); err != ErrMeteorAlreadyDone {
+		t.Fatalf("expected ErrMeteorAlreadyDone on second meteor session, got %v", err)
+	}
+
+	cr, err := svc.SubmitCreatorChallenge(ctx, "stu-gift", "Raka Pratama", 2, "Orbit Cookies", "Share 12 space cookies equally among 4 astronauts!")
+	if err != nil {
+		t.Fatalf("SubmitCreatorChallenge: %v", err)
+	}
 	if cr.AuthorMask != "Raka P." {
 		t.Fatalf("expected masked author 'Raka P.', got %q", cr.AuthorMask)
 	}
@@ -85,5 +102,16 @@ func TestBonusGiftIdempotencyAndEvents(t *testing.T) {
 		if e.ID == cr.ID {
 			t.Fatalf("pending creator submission leaked into public creator entries")
 		}
+	}
+}
+
+func TestSundayMeteorWindowEnforced(t *testing.T) {
+	svc := NewService(economy.NewMemoryLedger())
+	// Saturday 10:00 Asia/Jakarta — outside the Sunday 06:00-22:00 window.
+	svc.SetClockForTest(func() time.Time {
+		return time.Date(2026, 11, 28, 10, 0, 0, 0, time.FixedZone("WIB", 7*3600))
+	})
+	if _, err := svc.StartSundayMeteor(context.Background(), "stu-x", 2, "Asia/Jakarta", "en"); err != ErrEventClosed {
+		t.Fatalf("expected ErrEventClosed outside the Sunday window, got %v", err)
 	}
 }

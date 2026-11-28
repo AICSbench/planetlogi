@@ -2,8 +2,10 @@ package leaderboards
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"net/http"
 	"sort"
 	"strings"
@@ -12,11 +14,13 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/state"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
 )
 
@@ -30,6 +34,11 @@ const (
 var (
 	ErrAlreadyClaimedToday = errors.New("daily bonus gift already claimed today")
 	ErrEventNotFound       = errors.New("sunday meteor session not found")
+	ErrEventClosed         = errors.New("sunday meteor challenge is only open during its scheduled window (Sunday 06:00-22:00)")
+	ErrMeteorAlreadyDone   = errors.New("sunday meteor challenge already completed today")
+	// ErrLedgerUnavailable signals the ledger could not be reached, so the
+	// reward or claim was not recorded; the client can safely retry.
+	ErrLedgerUnavailable = errors.New("reward ledger temporarily unavailable; try again")
 )
 
 type ChallengeMeta struct {
@@ -128,15 +137,39 @@ type meteorSession struct {
 	done      bool
 }
 
+// meteorDailyDoc is the durable one-session-per-local-day record for the
+// Sunday Meteor Challenge. Templates and seeds are stored so an interrupted
+// session can be resumed after a restart.
+type meteorDailyDoc struct {
+	LocalDate string   `json:"localDate"`
+	Templates []string `json:"templates"`
+	Seeds     []int64  `json:"seeds"`
+	Done      bool     `json:"done"`
+}
+
+// creatorQueueDoc is the durable moderation queue for a student's Creator
+// Challenge submissions; nothing here is public until a moderator approves.
+type creatorQueueDoc struct {
+	Pending []CreatorSubmission `json:"pending"`
+}
+
+const (
+	meteorDailyModule  = "sunday_meteor_v1"
+	creatorQueueModule = "creator_challenge_v1"
+)
+
 type Service struct {
 	mu              sync.Mutex
 	ledger          economy.Ledger
+	pool            *pgxpool.Pool
+	store           *state.PGStore
 	pilots          []LeaderboardEntry
 	bonusClaimed    map[string]bool // studentID:YYYY-MM-DD
 	notifications   map[string][]NotificationItem
 	creatorList     []CreatorSubmission            // approved entries only (public)
 	pendingCreators map[string][]CreatorSubmission // studentID -> moderation queue
 	meteorSess      map[string]*meteorSession
+	meteorDaily     map[string]string // studentID:YYYY-MM-DD -> active sessionID
 	seq             int
 	nowClock        func() time.Time
 }
@@ -149,6 +182,7 @@ func NewService(ledger economy.Ledger) *Service {
 		notifications:   make(map[string][]NotificationItem),
 		pendingCreators: make(map[string][]CreatorSubmission),
 		meteorSess:      make(map[string]*meteorSession),
+		meteorDaily:     make(map[string]string),
 		nowClock:        time.Now,
 	}
 	s.creatorList = []CreatorSubmission{
@@ -171,6 +205,16 @@ func NewService(ledger economy.Ledger) *Service {
 			SubmittedAt: time.Now().Add(-24 * time.Hour),
 		},
 	}
+	return s
+}
+
+// NewServiceWithPG wires the durable phase2_state store, so the daily
+// bonus-gift flag, Sunday Meteor session limit, and Creator moderation queue
+// survive restarts. The ledger stays as before.
+func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger) *Service {
+	s := NewService(ledger)
+	s.pool = pool
+	s.store = state.NewPGStore(pool)
 	return s
 }
 
@@ -395,15 +439,17 @@ func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (Bon
 	s.mu.Lock()
 	localDate := timewindow.LocalDateString(s.nowClock(), tz)
 	key := studentID + ":" + localDate
-	if s.bonusClaimed[key] {
-		s.mu.Unlock()
+	claimed := s.bonusClaimed[key]
+	s.mu.Unlock()
+	if claimed {
 		return BonusGiftStatus{LocalDate: localDate, Claimed: true, RewardAC: DailyBonusGiftAC}, ErrAlreadyClaimedToday
 	}
-	s.bonusClaimed[key] = true
-	s.mu.Unlock()
 
+	// Apply the ledger BEFORE marking the gift claimed: if the ledger fails,
+	// the flag stays unset so the student can retry and still receive the
+	// reward (the idempotency key prevents double-awarding on success).
 	if s.ledger != nil {
-		_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+		res, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
 			Currency:       economy.CurrencyAC,
 			Delta:          DailyBonusGiftAC,
@@ -411,7 +457,14 @@ func (s *Service) ClaimBonusGift(ctx context.Context, studentID, tz string) (Bon
 			SourceID:       localDate,
 			IdempotencyKey: fmt.Sprintf("bonus-gift:%s:%s", studentID, localDate),
 		})
+		if err != nil && !res.WasDuplicate {
+			return BonusGiftStatus{LocalDate: localDate, RewardAC: DailyBonusGiftAC}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+		}
 	}
+
+	s.mu.Lock()
+	s.bonusClaimed[key] = true
+	s.mu.Unlock()
 	return BonusGiftStatus{LocalDate: localDate, Claimed: true, RewardAC: DailyBonusGiftAC}, nil
 }
 
@@ -485,12 +538,74 @@ func (s *Service) GetEventsHub(tz, locale string) EventsHub {
 	}
 }
 
-func (s *Service) StartSundayMeteor(studentID string, grade int, locale string) SundayMeteorStart {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+// StartSundayMeteor enforces the scheduled window and a one-session-per-local-
+// day limit server-side, using the user's configured timezone. The session ID
+// and question seeds are derived from student+date, so the reward ledger key
+// stays stable across restarts and an interrupted session resumes in place.
+func (s *Service) StartSundayMeteor(ctx context.Context, studentID string, grade int, tz, locale string) (SundayMeteorStart, error) {
+	if eval := timewindow.Evaluate(s.nowClock(), tz, timewindow.SundayMeteorWindow); !eval.IsOpen {
+		return SundayMeteorStart{}, ErrEventClosed
+	}
 	if grade < 1 || grade > 6 {
 		grade = 1
 	}
+	localDate := timewindow.LocalDateString(s.nowClock(), tz)
+	sid := fmt.Sprintf("meteor-%s-%s", studentID, localDate)
+	dailyKey := studentID + ":" + localDate
+
+	s.mu.Lock()
+	if prev, ok := s.meteorDaily[dailyKey]; ok && prev == sid {
+		if sess := s.meteorSess[prev]; sess != nil {
+			if sess.done {
+				s.mu.Unlock()
+				return SundayMeteorStart{}, ErrMeteorAlreadyDone
+			}
+			qs := regenerateMeteorQuestions(sess.templates, sess.seeds, locale)
+			s.mu.Unlock()
+			return SundayMeteorStart{SessionID: prev, Questions: qs}, nil
+		}
+	}
+	s.mu.Unlock()
+
+	// PG mode: the per-day limit and session survive restarts.
+	if s.store != nil {
+		var doc meteorDailyDoc
+		found, err := s.store.Load(ctx, studentID, meteorDailyModule, &doc)
+		if err != nil {
+			return SundayMeteorStart{}, err
+		}
+		if found && doc.LocalDate == localDate {
+			if doc.Done {
+				return SundayMeteorStart{}, ErrMeteorAlreadyDone
+			}
+			sess := &meteorSession{id: sid, studentID: studentID, templates: doc.Templates, seeds: doc.Seeds}
+			s.mu.Lock()
+			s.meteorSess[sid] = sess
+			s.meteorDaily[dailyKey] = sid
+			s.mu.Unlock()
+			return SundayMeteorStart{SessionID: sid, Questions: regenerateMeteorQuestions(doc.Templates, doc.Seeds, locale)}, nil
+		}
+	}
+
+	tpls, seeds, qs := buildMeteorQuestions(sid, grade, locale)
+	s.mu.Lock()
+	s.meteorSess[sid] = &meteorSession{id: sid, studentID: studentID, templates: tpls, seeds: seeds}
+	s.meteorDaily[dailyKey] = sid
+	s.mu.Unlock()
+
+	if s.store != nil {
+		if err := s.store.Save(ctx, studentID, meteorDailyModule, meteorDailyDoc{
+			LocalDate: localDate,
+			Templates: tpls,
+			Seeds:     seeds,
+		}); err != nil {
+			return SundayMeteorStart{}, err
+		}
+	}
+	return SundayMeteorStart{SessionID: sid, Questions: qs}, nil
+}
+
+func buildMeteorQuestions(sid string, grade int, locale string) ([]string, []int64, []mathengine.RenderedQuestion) {
 	list := mathengine.TemplatesForGrade(grade)
 	codes := make([]string, 0, len(list))
 	for _, t := range list {
@@ -499,33 +614,44 @@ func (s *Service) StartSundayMeteor(studentID string, grade int, locale string) 
 	if len(codes) == 0 {
 		codes = []string{"g1_add_within_20", "g1_sub_within_20"}
 	}
-	s.seq++
-	sid := fmt.Sprintf("meteor-%d", s.seq)
 	tpls := make([]string, SundayMeteorCount)
 	seeds := make([]int64, SundayMeteorCount)
 	qs := make([]mathengine.RenderedQuestion, 0, SundayMeteorCount)
 	for i := 0; i < SundayMeteorCount; i++ {
 		tpls[i] = codes[i%len(codes)]
-		seeds[i] = int64(7000 + s.seq*41 + i*19)
+		seeds[i] = meteorSeed(sid, i)
 		if prob, ok := mathengine.GenerateByCode(tpls[i], seeds[i], locale); ok {
 			qs = append(qs, prob.Question)
 		}
 	}
-	s.meteorSess[sid] = &meteorSession{
-		id:        sid,
-		studentID: studentID,
-		templates: tpls,
-		seeds:     seeds,
-	}
-	return SundayMeteorStart{SessionID: sid, Questions: qs}
+	return tpls, seeds, qs
 }
 
-func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, locale string, answers map[int]map[string]string) (SundayMeteorResult, error) {
-	s.mu.Lock()
-	sess, ok := s.meteorSess[sessionID]
-	if !ok || sess.studentID != studentID {
-		s.mu.Unlock()
+func regenerateMeteorQuestions(tpls []string, seeds []int64, locale string) []mathengine.RenderedQuestion {
+	qs := make([]mathengine.RenderedQuestion, 0, len(tpls))
+	for i := range tpls {
+		if prob, ok := mathengine.GenerateByCode(tpls[i], seeds[i], locale); ok {
+			qs = append(qs, prob.Question)
+		}
+	}
+	return qs
+}
+
+func meteorSeed(sid string, i int) int64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(fmt.Sprintf("%s:%d", sid, i)))
+	return int64(h.Sum64() % 1_000_000)
+}
+
+func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, tz, locale string, answers map[int]map[string]string) (SundayMeteorResult, error) {
+	sess := s.findMeteorSession(ctx, studentID, sessionID)
+	if sess == nil {
 		return SundayMeteorResult{}, ErrEventNotFound
+	}
+	s.mu.Lock()
+	if sess.done {
+		s.mu.Unlock()
+		return SundayMeteorResult{}, ErrMeteorAlreadyDone
 	}
 	correct := 0
 	for i, tpl := range sess.templates {
@@ -537,35 +663,95 @@ func (s *Service) SubmitSundayMeteor(ctx context.Context, studentID, sessionID, 
 			}
 		}
 	}
-	sess.done = true
 	rewardSP := int64(correct * SundayMeteorSPPerQ)
-	s.mu.Unlock()
-
+	// Apply the ledger BEFORE recording completion: on ledger failure the
+	// session stays open so the student can retry (the idempotency key
+	// prevents double-awarding on success).
 	if s.ledger != nil && rewardSP > 0 {
-		_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+		if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 			StudentID:      studentID,
 			Currency:       economy.CurrencySP,
 			Delta:          rewardSP,
 			SourceType:     "SUNDAY_METEOR",
 			SourceID:       sessionID,
 			IdempotencyKey: fmt.Sprintf("sunday-meteor:%s:%s", sessionID, studentID),
-		})
+		}); err != nil {
+			s.mu.Unlock()
+			return SundayMeteorResult{}, fmt.Errorf("%w: %v", ErrLedgerUnavailable, err)
+		}
 	}
-	return SundayMeteorResult{
+	sess.done = true
+	out := SundayMeteorResult{
 		SessionID: sessionID,
 		Correct:   correct,
 		Total:     len(sess.templates),
 		RewardSP:  rewardSP,
-	}, nil
+	}
+	templates := sess.templates
+	seeds := sess.seeds
+	s.mu.Unlock()
+
+	// Persist the completed flag so the one-session-per-day limit holds
+	// across restarts (PG mode).
+	if s.store != nil {
+		localDate := timewindow.LocalDateString(s.nowClock(), tz)
+		if err := s.store.SaveMerged(ctx, studentID, meteorDailyModule, func(current []byte) (any, error) {
+			var doc meteorDailyDoc
+			if len(current) > 0 {
+				if err := json.Unmarshal(current, &doc); err != nil {
+					return nil, err
+				}
+			}
+			if doc.LocalDate != localDate && doc.LocalDate != "" && doc.Done {
+				return nil, ErrMeteorAlreadyDone
+			}
+			doc.LocalDate = localDate
+			doc.Templates = templates
+			doc.Seeds = seeds
+			doc.Done = true
+			return doc, nil
+		}); err != nil {
+			return out, err
+		}
+	}
+	return out, nil
+}
+
+// findMeteorSession returns the student's in-memory session, rebuilding it
+// from the durable document when the process lost it (restart).
+func (s *Service) findMeteorSession(ctx context.Context, studentID, sessionID string) *meteorSession {
+	s.mu.Lock()
+	if sess, ok := s.meteorSess[sessionID]; ok && sess.studentID == studentID {
+		s.mu.Unlock()
+		return sess
+	}
+	s.mu.Unlock()
+
+	if s.store == nil {
+		return nil
+	}
+	var doc meteorDailyDoc
+	found, err := s.store.Load(ctx, studentID, meteorDailyModule, &doc)
+	if err != nil || !found || doc.Done {
+		return nil
+	}
+	expected := fmt.Sprintf("meteor-%s-%s", studentID, doc.LocalDate)
+	if sessionID != expected {
+		return nil
+	}
+	sess := &meteorSession{id: sessionID, studentID: studentID, templates: doc.Templates, seeds: doc.Seeds}
+	s.mu.Lock()
+	s.meteorSess[sessionID] = sess
+	s.mu.Unlock()
+	return sess
 }
 
 // SubmitCreatorChallenge stores a child's submission in a private moderation
 // queue with status PENDING. Nothing is added to the public Creator Entries
 // list until a moderator approves it, so raw child-submitted text (phone
 // numbers, emails, unsafe content) never reaches other readers unreviewed.
-func (s *Service) SubmitCreatorChallenge(studentID, displayName string, grade int, title, summary string) CreatorSubmission {
+func (s *Service) SubmitCreatorChallenge(ctx context.Context, studentID, displayName string, grade int, title, summary string) (CreatorSubmission, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.seq++
 	entry := CreatorSubmission{
 		ID:          fmt.Sprintf("cr-%d", s.seq+10),
@@ -577,7 +763,25 @@ func (s *Service) SubmitCreatorChallenge(studentID, displayName string, grade in
 		SubmittedAt: s.nowClock(),
 	}
 	s.pendingCreators[studentID] = append(s.pendingCreators[studentID], entry)
-	return entry
+	s.mu.Unlock()
+
+	// Persist the moderation queue so submissions survive restarts (PG mode).
+	// The queue is never public: only approved entries reach GetEventsHub.
+	if s.store != nil {
+		if err := s.store.SaveMerged(ctx, studentID, creatorQueueModule, func(current []byte) (any, error) {
+			var doc creatorQueueDoc
+			if len(current) > 0 {
+				if err := json.Unmarshal(current, &doc); err != nil {
+					return nil, err
+				}
+			}
+			doc.Pending = append(doc.Pending, entry)
+			return doc, nil
+		}); err != nil {
+			return entry, err
+		}
+	}
+	return entry, nil
 }
 
 type Handler struct {
@@ -734,6 +938,9 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			if errors.Is(err, ErrAlreadyClaimedToday) {
 				return nil, huma.Error409Conflict(err.Error())
 			}
+			if errors.Is(err, ErrLedgerUnavailable) {
+				return nil, huma.Error503ServiceUnavailable(err.Error())
+			}
 			return nil, err
 		}
 		return &struct{ Body BonusGiftStatus }{Body: status}, nil
@@ -764,7 +971,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		start := h.svc.StartSundayMeteor(ident.ID, ident.Grade, locale)
+		start, err := h.svc.StartSundayMeteor(ctx, ident.ID, ident.Grade, ident.Timezone, locale)
+		if err != nil {
+			if errors.Is(err, ErrEventClosed) {
+				return nil, huma.Error403Forbidden(err.Error())
+			}
+			if errors.Is(err, ErrMeteorAlreadyDone) {
+				return nil, huma.Error409Conflict(err.Error())
+			}
+			return nil, huma.Error503ServiceUnavailable(err.Error())
+		}
 		return &struct{ Body SundayMeteorStart }{Body: start}, nil
 	})
 
@@ -785,8 +1001,14 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		res, err := h.svc.SubmitSundayMeteor(ctx, ident.ID, in.Body.SessionID, locale, in.Body.Answers)
+		res, err := h.svc.SubmitSundayMeteor(ctx, ident.ID, in.Body.SessionID, ident.Timezone, locale, in.Body.Answers)
 		if err != nil {
+			if errors.Is(err, ErrMeteorAlreadyDone) {
+				return nil, huma.Error409Conflict(err.Error())
+			}
+			if errors.Is(err, ErrLedgerUnavailable) {
+				return nil, huma.Error503ServiceUnavailable(err.Error())
+			}
 			return nil, huma.Error404NotFound(err.Error())
 		}
 		return &struct{ Body SundayMeteorResult }{Body: res}, nil
@@ -809,7 +1031,10 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		if err != nil {
 			return nil, err
 		}
-		entry := h.svc.SubmitCreatorChallenge(ident.ID, ident.DisplayName, ident.Grade, in.Body.Title, in.Body.Summary)
+		entry, err := h.svc.SubmitCreatorChallenge(ctx, ident.ID, ident.DisplayName, ident.Grade, in.Body.Title, in.Body.Summary)
+		if err != nil {
+			return nil, huma.Error503ServiceUnavailable(err.Error())
+		}
 		return &struct{ Body CreatorSubmission }{Body: entry}, nil
 	})
 }

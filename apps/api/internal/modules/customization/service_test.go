@@ -23,19 +23,19 @@ func TestAstroBuddyShowcaseAndBadgeRecovery(t *testing.T) {
 	}
 
 	// Safe 2-part name prevents arbitrary free text
-	saved := svc.SaveBuddy("stu-1", "Raka", AstroBuddyConfig{Adjective: "BadFreeText", BodyShape: "star", ColorHex: "#22D3EE"})
+	saved := svc.SaveBuddy(context.Background(), "stu-1", "Raka", AstroBuddyConfig{Adjective: "BadFreeText", BodyShape: "star", ColorHex: "#22D3EE"})
 	if saved.FullName != "Starry Raka" {
 		t.Fatalf("expected fallback safe name 'Starry Raka', got %q", saved.FullName)
 	}
 
 	// Recover missed badge deducts 20 AC idempotently
-	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "2026-11-10", "en"); err != nil {
+	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "Asia/Jakarta", "2026-11-10", "en"); err != nil {
 		t.Fatalf("expected recovery to succeed: %v", err)
 	}
-	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "2026-11-10", "en"); err != nil {
+	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "Asia/Jakarta", "2026-11-10", "en"); err != nil {
 		t.Fatalf("idempotent recovery failed: %v", err)
 	}
-	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "2026-11-11", "en"); err != economy.ErrInsufficientFunds {
+	if _, err := svc.RecoverMissedBadge(context.Background(), "stu-1", "Asia/Jakarta", "2026-11-11", "en"); err != economy.ErrInsufficientFunds {
 		t.Fatalf("expected ErrInsufficientFunds on 2nd recovery, got %v", err)
 	}
 
