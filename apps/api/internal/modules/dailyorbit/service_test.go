@@ -75,3 +75,34 @@ func TestDailyOrbitScoringLimitsAndLocks(t *testing.T) {
 		t.Fatalf("expected ErrTierLocked for Master, got %v", err)
 	}
 }
+
+type mockAttemptRecorder struct {
+	calls []string
+}
+
+func (m *mockAttemptRecorder) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) {
+	if isCorrect {
+		m.calls = append(m.calls, studentID+":"+skillCode+":ok")
+	} else {
+		m.calls = append(m.calls, studentID+":"+skillCode+":err")
+	}
+}
+
+func TestDailyOrbitRecordsSkillAttemptsForReports(t *testing.T) {
+	svc := NewService(economy.NewMemoryLedger(), streak.NewService())
+	loc := timewindow.LoadLocationSafe("Asia/Jakarta")
+	svc.nowClock = func() time.Time { return time.Date(2026, 11, 26, 10, 0, 0, 0, loc) }
+
+	rec := &mockAttemptRecorder{}
+	svc.SetAttemptRecorder(rec)
+
+	today := svc.GetToday("stu-2", 1, "Asia/Jakarta", "en")
+	sl := today.Slots[0]
+	prob, _ := mathengine.GenerateByCode(sl.Question.TemplateCode, sl.Question.Seed, "en")
+	if _, _, err := svc.SubmitAnswer(context.Background(), "stu-2", 1, "Asia/Jakarta", "en", sl.Index, prob.Solution.CorrectAnswers, sl.Question.TemplateCode, sl.Question.Seed); err != nil {
+		t.Fatalf("submit error: %v", err)
+	}
+	if len(rec.calls) != 1 || rec.calls[0] != "stu-2:"+sl.Question.SkillCode+":ok" {
+		t.Fatalf("expected attempt recorder to receive stu-2:%s:ok, got %v", sl.Question.SkillCode, rec.calls)
+	}
+}

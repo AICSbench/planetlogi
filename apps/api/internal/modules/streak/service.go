@@ -8,6 +8,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/timewindow"
@@ -45,14 +46,17 @@ type CalendarEntry struct {
 }
 
 type record struct {
-	status   Status
-	calendar map[string]DayStatus
+	status    Status
+	calendar  map[string]DayStatus
+	todayDate string
 }
 
 type Service struct {
-	mu       sync.Mutex
-	records  map[string]*record
-	nowClock func() time.Time
+	mu        sync.Mutex
+	records   map[string]*record
+	pool      *pgxpool.Pool
+	subjectID string
+	nowClock  func() time.Time
 }
 
 func NewService() *Service {
@@ -62,9 +66,21 @@ func NewService() *Service {
 	}
 }
 
+func NewServiceWithPG(pool *pgxpool.Pool) *Service {
+	return &Service{
+		records:  make(map[string]*record),
+		pool:     pool,
+		nowClock: time.Now,
+	}
+}
+
 func (s *Service) getOrCreateLocked(studentID string) *record {
 	r, ok := s.records[studentID]
 	if !ok {
+		if pgRec, loaded := s.loadRecordPG(context.Background(), studentID); loaded {
+			s.records[studentID] = pgRec
+			return pgRec
+		}
 		r = &record{
 			status: Status{
 				CurrentStreak:        3,
@@ -128,8 +144,10 @@ func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, 
 	defer s.mu.Unlock()
 	r := s.getOrCreateLocked(studentID)
 	localDate := timewindow.LocalDateString(now, tz)
+	r.todayDate = localDate
 	r.status.TodayCorrectCount = correctCount
 
+	changedDate := ""
 	if correctCount >= DailyStreakMilestone && r.status.LastCompletedDate != localDate {
 		r.status.CurrentStreak++
 		if r.status.CurrentStreak > r.status.LongestStreak {
@@ -138,7 +156,9 @@ func (s *Service) RecordDailyOrbitProgress(studentID, tz string, now time.Time, 
 		r.status.NovaPetStage = NovaPetStageForStreak(r.status.CurrentStreak)
 		r.status.LastCompletedDate = localDate
 		r.calendar[localDate] = DayCompleted
+		changedDate = localDate
 	}
+	s.saveRecordPG(context.Background(), studentID, r, changedDate)
 	return r.status
 }
 
@@ -151,7 +171,7 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 	loc := timewindow.LoadLocationSafe(tz)
 	yesterday := now.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
 
-	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen {
+	if r.calendar[yesterday] == DayCompleted || r.calendar[yesterday] == DayFrozen || r.calendar[yesterday] == DayMissed {
 		return r.status
 	}
 	if r.status.CurrentStreak > 0 {
@@ -165,6 +185,8 @@ func (s *Service) ReconcileMidnight(studentID, tz string, now time.Time) Status 
 		}
 	}
 	r.status.TodayCorrectCount = 0
+	r.todayDate = timewindow.LocalDateString(now, tz)
+	s.saveRecordPG(context.Background(), studentID, r, yesterday)
 	return r.status
 }
 
@@ -180,6 +202,7 @@ func (s *Service) GrantCryoShield(studentID string, count int) Status {
 	if r.status.CryoShields < 0 {
 		r.status.CryoShields = 0
 	}
+	s.saveRecordPG(context.Background(), studentID, r, "")
 	return r.status
 }
 
@@ -191,6 +214,7 @@ func (s *Service) SetReminder(studentID string, enabled bool, timeLocal string) 
 	if timeLocal != "" {
 		r.status.ReminderTimeLocal = timeLocal
 	}
+	s.saveRecordPG(context.Background(), studentID, r, "")
 	return r.status
 }
 

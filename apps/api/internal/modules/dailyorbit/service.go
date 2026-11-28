@@ -11,6 +11,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
@@ -135,10 +136,17 @@ type internalSession struct {
 	completionBonusAward bool
 }
 
+type SkillAttemptRecorder interface {
+	RecordSkillAttempt(studentID, skillCode string, isCorrect bool)
+}
+
 type Service struct {
 	mu          sync.Mutex
 	ledger      economy.Ledger
 	streakSvc   *streak.Service
+	attemptRec  SkillAttemptRecorder
+	pool        *pgxpool.Pool
+	subjectID   string
 	sessions    map[string]*internalSession // key: studentID + ":" + localDate
 	prefs       map[string]*studentPrefs
 	nowClock    func() time.Time
@@ -154,6 +162,18 @@ func NewService(ledger economy.Ledger, streakSvc *streak.Service) *Service {
 		nowClock:    time.Now,
 		enforceOpen: true,
 	}
+}
+
+func NewServiceWithPG(pool *pgxpool.Pool, ledger economy.Ledger, streakSvc *streak.Service) *Service {
+	svc := NewService(ledger, streakSvc)
+	svc.pool = pool
+	return svc
+}
+
+func (s *Service) SetAttemptRecorder(rec SkillAttemptRecorder) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.attemptRec = rec
 }
 
 func stageForIndex(idx int) (name, shape string, sp int) {
@@ -172,6 +192,13 @@ func stageForIndex(idx int) (name, shape string, sp int) {
 func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 	p, ok := s.prefs[studentID]
 	if !ok {
+		if pgPrefs, loaded := s.loadPrefsPG(context.Background(), studentID); loaded {
+			if grade >= 1 && grade <= 6 {
+				pgPrefs.grade = grade
+			}
+			s.prefs[studentID] = pgPrefs
+			return pgPrefs
+		}
 		if grade < 1 || grade > 6 {
 			grade = 1
 		}
@@ -182,6 +209,7 @@ func (s *Service) getPrefsLocked(studentID string, grade int) *studentPrefs {
 			totalSP:         12,
 		}
 		s.prefs[studentID] = p
+		s.savePrefsPG(context.Background(), studentID, p)
 	}
 	return p
 }
@@ -243,6 +271,10 @@ func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDat
 	if sess, ok := s.sessions[key]; ok {
 		return sess
 	}
+	if pgSess, loaded := s.loadSessionPG(context.Background(), studentID, localDate); loaded {
+		s.sessions[key] = pgSess
+		return pgSess
+	}
 	prefs := s.getPrefsLocked(studentID, grade)
 	gradePool := mathengine.TemplatesForGrade(prefs.grade)
 	if len(gradePool) == 0 {
@@ -272,6 +304,7 @@ func (s *Service) getOrCreateSessionLocked(studentID string, grade int, localDat
 		slots:     slots,
 	}
 	s.sessions[key] = sess
+	s.saveSessionPG(context.Background(), studentID, sess)
 	return sess
 }
 
@@ -369,6 +402,11 @@ func (s *Service) SubmitAnswer(ctx context.Context, studentID string, grade int,
 	} else {
 		slot.status = SlotWrong
 	}
+	if s.attemptRec != nil && prob.Question.SkillCode != "" {
+		s.attemptRec.RecordSkillAttempt(studentID, prob.Question.SkillCode, gradeRes.IsCorrect)
+	}
+	s.saveSessionPG(ctx, studentID, sess)
+	s.savePrefsPG(ctx, studentID, prefs)
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -410,6 +448,7 @@ func (s *Service) SkipSlot(ctx context.Context, studentID string, grade int, tz,
 			})
 		}
 	}
+	s.saveSessionPG(ctx, studentID, sess)
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -472,6 +511,7 @@ func (s *Service) ChangeQuestion(studentID string, grade int, tz, locale string,
 	slot.templateCode = picked.Code
 	slot.seed += 313
 	sess.changeQuestionUsed++
+	s.saveSessionPG(context.Background(), studentID, sess)
 
 	view := s.renderViewLocked(sess, prefs, eval, locale)
 	return view.Slots[slotIndex-1], view, nil
@@ -498,6 +538,8 @@ func (s *Service) SetTier(studentID string, grade int, tz, locale string, tier T
 			}
 		}
 	}
+	s.savePrefsPG(context.Background(), studentID, prefs)
+	s.saveSessionPG(context.Background(), studentID, sess)
 	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 
@@ -526,6 +568,8 @@ func (s *Service) SetCurricula(studentID string, grade int, tz, locale string, c
 			}
 		}
 	}
+	s.savePrefsPG(context.Background(), studentID, prefs)
+	s.saveSessionPG(context.Background(), studentID, sess)
 	return s.renderViewLocked(sess, prefs, eval, locale), nil
 }
 

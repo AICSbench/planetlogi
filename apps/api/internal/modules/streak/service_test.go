@@ -1,6 +1,7 @@
 package streak
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -52,5 +53,11 @@ func TestOrbitStreakAndCryoShieldTimeTravel(t *testing.T) {
 	st = svc.GrantCryoShield("stu-1", 10)
 	if st.CryoShields != MaxCryoShields {
 		t.Fatalf("expected Cryo Shield cap %d, got %d", MaxCryoShields, st.CryoShields)
+	}
+
+	// ReconcileAllMidnight runs across all active student records
+	n, err := svc.ReconcileAllMidnight(context.Background(), day5.AddDate(0, 0, 1))
+	if err != nil || n != 1 {
+		t.Fatalf("expected ReconcileAllMidnight to process 1 student, got n=%d err=%v", n, err)
 	}
 }

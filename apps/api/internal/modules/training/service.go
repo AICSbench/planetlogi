@@ -11,6 +11,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
@@ -105,12 +106,13 @@ type activePractice struct {
 }
 
 type Service struct {
-	mu        sync.Mutex
-	ledger    economy.Ledger
-	catalog   []skillCatalogEntry
-	stats     map[string]map[string]*skillStat // studentID -> skillCode -> stat
-	sessions  map[string]*activePractice
-	nextSeq   int64
+	mu       sync.Mutex
+	ledger   economy.Ledger
+	pool     *pgxpool.Pool
+	catalog  []skillCatalogEntry
+	stats    map[string]map[string]*skillStat // studentID -> skillCode -> stat
+	sessions map[string]*activePractice
+	nextSeq  int64
 }
 
 func NewService(ledger economy.Ledger) *Service {
@@ -195,7 +197,7 @@ func (s *Service) ListCurricula(locale string) []CurriculumSummary {
 func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale string) []SkillView {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	stMap := s.stats[studentID]
+	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
 
 	out := make([]SkillView, 0)
 	for _, entry := range s.catalog {
@@ -213,7 +215,7 @@ func (s *Service) ListSkills(studentID, curriculumCode string, grade int, locale
 func (s *Service) GetHOTSWheel(studentID, ageBand, locale string) []HOTSQuadrant {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	stMap := s.stats[studentID]
+	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
 
 	type hDef struct {
 		code string
@@ -314,7 +316,7 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 		questions[i] = prob.Question
 	}
 
-	s.sessions[sessID] = &activePractice{
+	sess := &activePractice{
 		sessionID:    sessID,
 		studentID:    studentID,
 		skillCode:    target.code,
@@ -322,6 +324,8 @@ func (s *Service) StartPracticeSession(studentID, skillCode, locale string) (Pra
 		seeds:        seeds,
 		answered:     make(map[int]bool),
 	}
+	s.sessions[sessID] = sess
+	s.saveSessionPG(context.Background(), sess, target.grade)
 
 	return PracticeSession{
 		SessionID: sessID,
@@ -336,6 +340,13 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 	defer s.mu.Unlock()
 
 	sess, ok := s.sessions[sessionID]
+	if !ok {
+		if pgSess, loaded := s.loadSessionPG(ctx, sessionID); loaded {
+			s.sessions[sessionID] = pgSess
+			sess = pgSess
+			ok = true
+		}
+	}
 	if !ok || sess.studentID != studentID {
 		return mathengine.GradeResult{}, PracticeSession{}, fmt.Errorf("practice session not found")
 	}
@@ -369,6 +380,7 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 			sess.correct++
 		}
 		s.recordSkillAttemptLocked(studentID, sess.skillCode, gradeRes.IsCorrect, sess.correct)
+		s.saveSessionPG(ctx, sess, 0)
 	}
 
 	view := PracticeSession{
@@ -381,14 +393,20 @@ func (s *Service) SubmitPracticeAnswer(ctx context.Context, studentID, sessionID
 	return gradeRes, view, nil
 }
 
+// RecordSkillAttempt records a single skill attempt from Daily Orbit or other modes
+// so Proficiency % reports aggregate cross-mode performance.
+func (s *Service) RecordSkillAttempt(studentID, skillCode string, isCorrect bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.recordSkillAttemptLocked(studentID, skillCode, isCorrect, 0)
+}
+
 func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrect bool, sessionScore int) {
-	if s.stats[studentID] == nil {
-		s.stats[studentID] = make(map[string]*skillStat)
-	}
-	st := s.stats[studentID][skillCode]
+	stMap := s.ensureStatsLoadedPG(context.Background(), studentID)
+	st := stMap[skillCode]
 	if st == nil {
 		st = &skillStat{}
-		s.stats[studentID][skillCode] = st
+		stMap[skillCode] = st
 	}
 	st.recentWindow = append(st.recentWindow, isCorrect)
 	if len(st.recentWindow) > 20 {
@@ -398,6 +416,7 @@ func (s *Service) recordSkillAttemptLocked(studentID, skillCode string, isCorrec
 		st.bestSessionScore = sessionScore
 		st.bestStars = StarsForScore(sessionScore)
 	}
+	s.saveSkillStatPG(context.Background(), studentID, skillCode, st)
 }
 
 func (s *Service) toSkillView(entry skillCatalogEntry, stMap map[string]*skillStat, locale string) SkillView {

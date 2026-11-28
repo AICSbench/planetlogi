@@ -56,9 +56,10 @@ func main() {
 
 	ledger := economy.NewPGLedger(pool)
 	authSvc := auth.NewService(cfg, auth.NewPGStore(pool), rdb, logger)
-	streakSvc := streak.NewService()
-	dailyOrbitSvc := dailyorbit.NewService(ledger, streakSvc)
-	trainingSvc := training.NewService(ledger)
+	streakSvc := streak.NewServiceWithPG(pool)
+	dailyOrbitSvc := dailyorbit.NewServiceWithPG(pool, ledger, streakSvc)
+	trainingSvc := training.NewServiceWithPG(pool, ledger)
+	dailyOrbitSvc.SetAttemptRecorder(trainingSvc)
 
 	app := server.New(server.Dependencies{
 		Config:     cfg,
