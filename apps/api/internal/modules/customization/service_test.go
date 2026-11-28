@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -96,6 +97,11 @@ func TestShowcasePersistAcrossRestartPG(t *testing.T) {
 	first := svc1.GetShowcase(ctx, 1)
 	if len(first) == 0 {
 		t.Fatalf("expected seeded showcase entries, got none")
+	}
+	var seeded []ShowcaseEntry
+	found, err := svc1.store.LoadShared(ctx, showcaseScope, showcaseKey, &seeded)
+	if err != nil || !found || !reflect.DeepEqual(seeded, svc1.showcase) {
+		t.Fatalf("showcase seed not persisted: found=%t err=%v entries=%+v", found, err, seeded)
 	}
 	fixture := []ShowcaseEntry{{MaskedName: "Fixture P.", Grade: 1, StarPoints: 987}}
 	if err := svc1.store.SaveShared(ctx, showcaseScope, showcaseKey, fixture); err != nil {

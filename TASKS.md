@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR6-SHOWCASE-SEED-ASSERTION** — Verify the initial showcase seed is durably written before replacing the test fixture. *(Owner: agent-pr6-fixer | Done: 2026-11-28T15:42Z)*
+  - **Depends On**: `P3-BE-03`
+  - **Spec**: `docs/02-features-student-portal.md` §12.2
+  - **Acceptance Criteria**: The PostgreSQL showcase test fails if seed-on-missing does not write its shared row; run only against a disposable isolated database.
+  - **Handoff**: Assert the stored row exists and matches the seed before writing the distinct fixture. The targeted PostgreSQL test passed on a newly created disposable database, and customization `go test` and `go vet` passed. Singleton-key concurrency remains tracked in issue #15.
+
 - [!] **PR6-REVIEW-ROUND4-EASY** — Address the owner-approved easy PR #6 findings, excluding the pending ID-format decision. *(Owner: agent-pr6-fixer | Blocked: #10 requires coordinated crew lookup error handling and creation semantics; defer with #11 rather than swallow a read error.)*
   - **Depends On**: `P3-BE-03`, `P3-BE-04`, `P3-BE-05`
   - **Spec**: `docs/02-features-student-portal.md` (showcase, Star Duels, Star Crew and events)
