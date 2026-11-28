@@ -420,6 +420,12 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [~] **P1-GOLINT-01** `[INFRA]` — Clear the 5 `golangci-lint` v2 findings in Phase 1 Go API code (spoofable `RealIP`, unchecked `tx.Rollback`, duplicated `isUUID` helpers) and gate CI on `golangci-lint`. *(Owner: agent-infra-lint | Started: 2026-11-28T09:40Z)*
+  - **Depends On**: `P1-BE-01`, `P1-BE-02`, `P1-BE-03`
+  - **Spec**: `AGENTS.md` §4 (Definition of Done: `golangci-lint run`)
+  - **Scope**: `apps/api/internal/server/`, `apps/api/internal/modules/{dailyorbit,streak,training}/`, `apps/api/internal/platform/reqguard/`, `.github/workflows/ci.yml`
+  - **Acceptance Criteria**: `golangci-lint run ./...` in `apps/api` reports 0 issues; `go vet ./...` and `go test -race ./...` pass; the `go-api` CI job runs `golangci-lint` built with Go 1.27.
+
 - [x] **PR3-REVIEW-ROUND3** — Remove the streak mutex/pool lock-order cycle found on `4876e87`. *(Owner: agent-pr3-integrity | Done: 2026-11-28T03:31Z)*
   - **Depends On**: `PR3-REVIEW-ROUND2`
   - **Spec**: `docs/02-features-student-portal.md` §4
