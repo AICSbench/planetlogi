@@ -3,7 +3,10 @@ package profile
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"regexp"
 	"sync"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -13,9 +16,20 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/reports"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/streak"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/training"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
 )
 
-var ErrOTPRequired = errors.New("parent OTP verification is required to update protected settings")
+var (
+	ErrOTPRequired  = errors.New("parent OTP verification is required to update protected settings")
+	ErrInvalidInput = errors.New("invalid input")
+)
+
+const (
+	maxCurricula      = 8
+	maxCurriculumCode = 32
+)
+
+var hhmmPattern = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
 
 type ParentProfile struct {
 	Name        string `json:"name"`
@@ -35,16 +49,16 @@ type ChildProfile struct {
 }
 
 type FamilySettings struct {
-	OTPEnabled               bool     `json:"otpEnabled"`
-	Language                 string   `json:"language"`
-	DailyOrbitCurricula      []string `json:"dailyOrbitCurricula"`
-	StarDuelCurricula        []string `json:"starDuelCurricula"`
-	BrainGalaxyDailyCapMin   int      `json:"brainGalaxyDailyCapMin"`
-	BrainGalaxyWindowStart   string   `json:"brainGalaxyWindowStart"`
-	BrainGalaxyWindowEnd     string   `json:"brainGalaxyWindowEnd"`
-	SubscriptionPlanName     string   `json:"subscriptionPlanName"`
-	SubscriptionValidUntil   string   `json:"subscriptionValidUntil"`
-	BillingEnabled           bool     `json:"billingEnabled"`
+	OTPEnabled             bool     `json:"otpEnabled"`
+	Language               string   `json:"language"`
+	DailyOrbitCurricula    []string `json:"dailyOrbitCurricula"`
+	StarDuelCurricula      []string `json:"starDuelCurricula"`
+	BrainGalaxyDailyCapMin int      `json:"brainGalaxyDailyCapMin"`
+	BrainGalaxyWindowStart string   `json:"brainGalaxyWindowStart"`
+	BrainGalaxyWindowEnd   string   `json:"brainGalaxyWindowEnd"`
+	SubscriptionPlanName   string   `json:"subscriptionPlanName"`
+	SubscriptionValidUntil string   `json:"subscriptionValidUntil"`
+	BillingEnabled         bool     `json:"billingEnabled"`
 }
 
 type ProfileBundle struct {
@@ -54,15 +68,15 @@ type ProfileBundle struct {
 }
 
 type ParentChildOverview struct {
-	Child             ChildProfile         `json:"child"`
-	StreakDays        int                  `json:"streakDays"`
-	CryoShields       int                  `json:"cryoShields"`
-	MasteryCount      int                  `json:"masteryCount"`
-	CompetentCount    int                  `json:"competentCount"`
-	BeginningCount    int                  `json:"beginningCount"`
-	IncompleteCount   int                  `json:"incompleteCount"`
-	FocusSkills       []training.SkillView `json:"focusSkills"`
-	StrengthSkills    []training.SkillView `json:"strengthSkills"`
+	Child           ChildProfile         `json:"child"`
+	StreakDays      int                  `json:"streakDays"`
+	CryoShields     int                  `json:"cryoShields"`
+	MasteryCount    int                  `json:"masteryCount"`
+	CompetentCount  int                  `json:"competentCount"`
+	BeginningCount  int                  `json:"beginningCount"`
+	IncompleteCount int                  `json:"incompleteCount"`
+	FocusSkills     []training.SkillView `json:"focusSkills"`
+	StrengthSkills  []training.SkillView `json:"strengthSkills"`
 }
 
 type Service struct {
@@ -141,17 +155,19 @@ type UpdateSettingsInput struct {
 func (s *Service) UpdateSettings(ctx context.Context, studentID string, actor auth.Principal, in UpdateSettingsInput) (ProfileBundle, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := validateSettingsInput(in); err != nil {
+		return ProfileBundle{}, err
+	}
 	b := s.getOrCreateLocked(studentID)
 
-	// Enforce Parent OTP gate when OTP security is enabled
+	// Enforce Parent OTP gate when OTP security is enabled. Fail closed: without an OTP
+	// verifier no code can be accepted.
 	if b.Settings.OTPEnabled {
-		if in.OTPCode == "" {
+		if in.OTPCode == "" || s.authSvc == nil {
 			return ProfileBundle{}, ErrOTPRequired
 		}
-		if s.authSvc != nil {
-			if err := s.authSvc.VerifyParentOTP(ctx, actor, in.OTPCode); err != nil {
-				return ProfileBundle{}, ErrOTPRequired
-			}
+		if err := s.authSvc.VerifyParentOTP(ctx, actor, in.OTPCode); err != nil {
+			return ProfileBundle{}, ErrOTPRequired
 		}
 	}
 
@@ -184,6 +200,28 @@ func (s *Service) UpdateSettings(ctx context.Context, studentID string, actor au
 		b.Settings.BrainGalaxyWindowEnd = in.BrainGalaxyWindowEnd
 	}
 	return *b, nil
+}
+
+func validateSettingsInput(in UpdateSettingsInput) error {
+	if in.Language != "" && in.Language != "en" && in.Language != "id" {
+		return fmt.Errorf("%w: language must be en or id", ErrInvalidInput)
+	}
+	for _, list := range [][]string{in.DailyOrbitCurricula, in.StarDuelCurricula} {
+		if len(list) > maxCurricula {
+			return fmt.Errorf("%w: at most %d curricula", ErrInvalidInput, maxCurricula)
+		}
+		for _, c := range list {
+			if c == "" || len(c) > maxCurriculumCode {
+				return fmt.Errorf("%w: curriculum code must be 1..%d characters", ErrInvalidInput, maxCurriculumCode)
+			}
+		}
+	}
+	for _, t := range []string{in.BrainGalaxyWindowStart, in.BrainGalaxyWindowEnd} {
+		if t != "" && !hhmmPattern.MatchString(t) {
+			return fmt.Errorf("%w: Brain Galaxy window times must be HH:MM", ErrInvalidInput)
+		}
+	}
+	return nil
 }
 
 func (s *Service) GetParentOverview(studentID, locale string) (ParentChildOverview, error) {
@@ -235,29 +273,26 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authIn struct {
-	CookieAccess  string `cookie:"pl_access"`
-	Authorization string `header:"Authorization"`
-	Locale        string `query:"locale" default:"en"`
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+func (h *Handler) resolve(ctx context.Context, c reqguard.Credentials, requireAuth bool) (auth.Principal, error) {
+	var r reqguard.PrincipalResolver
+	if h.authSvc != nil {
+		r = h.authSvc
+	}
+	return reqguard.Resolve(ctx, r, c, requireAuth)
 }
 
-func (h *Handler) resolvePrincipal(ctx context.Context, in authIn) (string, auth.Principal, string) {
-	locale := in.Locale
-	if locale != "id" {
-		locale = "en"
+// resolveParent requires an authenticated parent session (AGENTS.md guardrail #6).
+func (h *Handler) resolveParent(ctx context.Context, c reqguard.Credentials) (auth.Principal, error) {
+	p, err := h.resolve(ctx, c, true)
+	if err != nil {
+		return auth.Principal{}, huma.Error401Unauthorized("authentication required")
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, *p, locale
-			}
-		}
+	if p.Role != auth.RoleParent {
+		return auth.Principal{}, huma.Error403Forbidden("parent account required")
 	}
-	return "demo-pilot1", auth.Principal{ID: "demo-parent", Role: auth.RoleParent, DisplayName: "Budi Santoso"}, locale
+	return p, nil
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -267,28 +302,39 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/profile/bundle",
 		Summary:     "Get Parent & Child profile cards and family settings",
 		Tags:        []string{"Profile"},
-	}, func(ctx context.Context, in *authIn) (*struct{ Body ProfileBundle }, error) {
-		sid, _, _ := h.resolvePrincipal(ctx, *in)
-		return &struct{ Body ProfileBundle }{Body: h.svc.GetBundle(sid)}, nil
+	}, func(ctx context.Context, in *reqguard.Credentials) (*struct{ Body ProfileBundle }, error) {
+		p, err := h.resolve(ctx, *in, false)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("authentication required")
+		}
+		return &struct{ Body ProfileBundle }{Body: h.svc.GetBundle(p.ID)}, nil
 	})
 
 	huma.Register(api, huma.Operation{
 		OperationID: "profile-update-settings",
 		Method:      http.MethodPatch,
 		Path:        "/api/v1/profile/settings",
-		Summary:     "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits",
+		Summary:     "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits (parent only)",
 		Tags:        []string{"Profile"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
+		reqguard.Credentials
 		Body UpdateSettingsInput
 	}) (*struct{ Body ProfileBundle }, error) {
-		sid, actor, _ := h.resolvePrincipal(ctx, in.authIn)
-		updated, err := h.svc.UpdateSettings(ctx, sid, actor, in.Body)
+		actor, err := h.resolveParent(ctx, in.Credentials)
 		if err != nil {
-			if errors.Is(err, ErrOTPRequired) {
+			return nil, err
+		}
+		updated, err := h.svc.UpdateSettings(ctx, actor.ID, actor, in.Body)
+		if err != nil {
+			switch {
+			case errors.Is(err, ErrOTPRequired):
 				return nil, huma.Error403Forbidden(err.Error())
+			case errors.Is(err, ErrInvalidInput):
+				return nil, huma.Error400BadRequest(err.Error())
+			default:
+				return nil, huma.Error500InternalServerError("internal error")
 			}
-			return nil, huma.Error400BadRequest(err.Error())
 		}
 		return &struct{ Body ProfileBundle }{Body: updated}, nil
 	})
@@ -297,13 +343,18 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		OperationID: "parent-overview",
 		Method:      http.MethodGet,
 		Path:        "/api/v1/parent/overview",
-		Summary:     "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
+		Summary:     "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas; parent only)",
 		Tags:        []string{"Parent"},
-	}, func(ctx context.Context, in *authIn) (*struct{ Body ParentChildOverview }, error) {
-		sid, _, locale := h.resolvePrincipal(ctx, *in)
-		ov, err := h.svc.GetParentOverview(sid, locale)
+		Security:    authSecurity,
+	}, func(ctx context.Context, in *reqguard.Credentials) (*struct{ Body ParentChildOverview }, error) {
+		actor, err := h.resolveParent(ctx, *in)
 		if err != nil {
-			return nil, huma.Error500InternalServerError(err.Error())
+			return nil, err
+		}
+		ov, err := h.svc.GetParentOverview(actor.ID, in.NormalizedLocale())
+		if err != nil {
+			slog.ErrorContext(ctx, "parent overview failed", "err", err)
+			return nil, huma.Error500InternalServerError("internal error")
 		}
 		return &struct{ Body ParentChildOverview }{Body: ov}, nil
 	})

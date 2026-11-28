@@ -2,6 +2,7 @@ package academy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -12,6 +13,16 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+)
+
+const doLearnQuestionCount = 4
+
+var (
+	ErrLessonNotFound = errors.New("lesson not found")
+	ErrInvalidInput   = errors.New("invalid input")
+	// ErrRewardUnavailable means the Star Scroll could not be credited; the call is safe to retry.
+	ErrRewardUnavailable = errors.New("star scroll reward could not be credited; please retry")
 )
 
 type SelfCheckItem struct {
@@ -21,12 +32,12 @@ type SelfCheckItem struct {
 }
 
 type LessonSummary struct {
-	Code           string `json:"code"`
-	Title          string `json:"title"`
-	AgeBand        string `json:"ageBand"`
-	CompletionPct  int    `json:"completionPct"`
-	ScrollEarned   bool   `json:"scrollEarned"`
-	SkillCode      string `json:"skillCode"`
+	Code          string `json:"code"`
+	Title         string `json:"title"`
+	AgeBand       string `json:"ageBand"`
+	CompletionPct int    `json:"completionPct"`
+	ScrollEarned  bool   `json:"scrollEarned"`
+	SkillCode     string `json:"skillCode"`
 }
 
 type TopicSummary struct {
@@ -40,12 +51,12 @@ type TopicSummary struct {
 }
 
 type DoLearnQuestion struct {
-	Index           int                         `json:"index"`
-	Question        mathengine.RenderedQuestion `json:"question"`
-	DraftAnswer     map[string]string           `json:"draftAnswer,omitempty"`
-	Solved          bool                        `json:"solved"`
-	LastWrong       bool                        `json:"lastWrong"`
-	WorkedSolution  *mathengine.WorkedSolution  `json:"workedSolution,omitempty"`
+	Index          int                         `json:"index"`
+	Question       mathengine.RenderedQuestion `json:"question"`
+	DraftAnswer    map[string]string           `json:"draftAnswer,omitempty"`
+	Solved         bool                        `json:"solved"`
+	LastWrong      bool                        `json:"lastWrong"`
+	WorkedSolution *mathengine.WorkedSolution  `json:"workedSolution,omitempty"`
 }
 
 type LessonDetail struct {
@@ -128,6 +139,14 @@ func (s *Service) getProgLocked(studentID, lessonCode string) *lessonProgress {
 	return p
 }
 
+// peekProgLocked returns existing progress without allocating state for read-only requests.
+func (s *Service) peekProgLocked(studentID, lessonCode string) *lessonProgress {
+	if p := s.progress[studentID][lessonCode]; p != nil {
+		return p
+	}
+	return &lessonProgress{}
+}
+
 func completionPctFor(l lessonDef, p *lessonProgress) int {
 	solvedCount := len(p.solved)
 	checkedCount := 0
@@ -136,7 +155,7 @@ func completionPctFor(l lessonDef, p *lessonProgress) int {
 			checkedCount++
 		}
 	}
-	totalUnits := 4 + len(l.selfCheck)
+	totalUnits := doLearnQuestionCount + len(l.selfCheck)
 	if totalUnits == 0 {
 		return 0
 	}
@@ -161,7 +180,7 @@ func (s *Service) ListTopics(studentID string, grade int, locale string) []Topic
 			if l.topicCode != t.code {
 				continue
 			}
-			p := s.getProgLocked(studentID, l.code)
+			p := s.peekProgLocked(studentID, l.code)
 			if p.scrollEarned {
 				earned++
 			}
@@ -212,9 +231,9 @@ func (s *Service) GetLesson(studentID, lessonCode, locale string) (LessonDetail,
 	defer s.mu.Unlock()
 	l, ok := s.findLesson(lessonCode)
 	if !ok {
-		return LessonDetail{}, fmt.Errorf("lesson %q not found", lessonCode)
+		return LessonDetail{}, fmt.Errorf("%w: %q", ErrLessonNotFound, lessonCode)
 	}
-	p := s.getProgLocked(studentID, lessonCode)
+	p := s.peekProgLocked(studentID, lessonCode)
 	return s.buildLessonDetailLocked(l, p, locale), nil
 }
 
@@ -223,39 +242,45 @@ func (s *Service) SaveDraft(studentID, lessonCode, locale string, questionIndex 
 	defer s.mu.Unlock()
 	l, ok := s.findLesson(lessonCode)
 	if !ok {
-		return LessonDetail{}, fmt.Errorf("lesson %q not found", lessonCode)
+		return LessonDetail{}, fmt.Errorf("%w: %q", ErrLessonNotFound, lessonCode)
 	}
-	if questionIndex < 1 || questionIndex > 4 {
-		return LessonDetail{}, fmt.Errorf("questionIndex must be 1..4")
+	if questionIndex < 1 || questionIndex > doLearnQuestionCount {
+		return LessonDetail{}, fmt.Errorf("%w: questionIndex must be 1..%d", ErrInvalidInput, doLearnQuestionCount)
+	}
+	copied, err := reqguard.CopyAnswers(answers)
+	if err != nil {
+		return LessonDetail{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 	p := s.getProgLocked(studentID, lessonCode)
-	copied := make(map[string]string, len(answers))
-	for k, v := range answers {
-		copied[k] = v
-	}
 	p.drafts[questionIndex] = copied
 	return s.buildLessonDetailLocked(l, p, locale), nil
 }
 
 // CheckAnswer evaluates a Do & Learn answer; wrong answers allow unlimited Try Again retries
-// while solving all 4 questions atomically awards 1 Star Scroll.
+// while solving all 4 questions awards exactly 1 Star Scroll. The scroll is only marked earned
+// after the ledger credit succeeds, so a failed credit is retried on the next check.
 func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale string, questionIndex int, answers map[string]string) (mathengine.GradeResult, LessonDetail, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	l, ok := s.findLesson(lessonCode)
 	if !ok {
-		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("lesson %q not found", lessonCode)
+		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("%w: %q", ErrLessonNotFound, lessonCode)
 	}
-	if questionIndex < 1 || questionIndex > 4 {
-		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("questionIndex must be 1..4")
+	if questionIndex < 1 || questionIndex > doLearnQuestionCount {
+		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("%w: questionIndex must be 1..%d", ErrInvalidInput, doLearnQuestionCount)
 	}
+	copied, err := reqguard.CopyAnswers(answers)
+	if err != nil {
+		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+	prob, ok := mathengine.GenerateByCode(l.templateCode, seedForLessonQuestion(l.code, questionIndex), locale)
+	if !ok {
+		return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("lesson %q references unknown template %q", l.code, l.templateCode)
+	}
+
 	p := s.getProgLocked(studentID, lessonCode)
-	p.drafts[questionIndex] = answers
-
-	seed := seedForLessonQuestion(l.code, questionIndex)
-	prob, _ := mathengine.GenerateByCode(l.templateCode, seed, locale)
-	gradeRes := mathengine.Grade(prob, answers)
-
+	p.drafts[questionIndex] = copied
+	gradeRes := mathengine.Grade(prob, copied)
 	if gradeRes.IsCorrect {
 		p.solved[questionIndex] = true
 		p.lastWrong[questionIndex] = false
@@ -263,19 +288,20 @@ func (s *Service) CheckAnswer(ctx context.Context, studentID, lessonCode, locale
 		p.lastWrong[questionIndex] = true
 	}
 
-	// Award 1 Star Scroll atomically once all 4 guided Do & Learn questions are solved
-	if len(p.solved) == 4 && !p.scrollEarned {
-		p.scrollEarned = true
+	if len(p.solved) == doLearnQuestionCount && !p.scrollEarned {
 		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
+			if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
 				StudentID:      studentID,
 				Currency:       economy.CurrencyScroll,
 				Delta:          1,
 				SourceType:     "SPACE_ACADEMY",
 				SourceID:       l.code,
 				IdempotencyKey: fmt.Sprintf("academy_scroll:%s:%s", studentID, l.code),
-			})
+			}); err != nil {
+				return mathengine.GradeResult{}, LessonDetail{}, fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
+			}
 		}
+		p.scrollEarned = true
 	}
 
 	return gradeRes, s.buildLessonDetailLocked(l, p, locale), nil
@@ -286,7 +312,17 @@ func (s *Service) ToggleSelfCheck(studentID, lessonCode, itemKey string, checked
 	defer s.mu.Unlock()
 	l, ok := s.findLesson(lessonCode)
 	if !ok {
-		return LessonDetail{}, fmt.Errorf("lesson %q not found", lessonCode)
+		return LessonDetail{}, fmt.Errorf("%w: %q", ErrLessonNotFound, lessonCode)
+	}
+	known := false
+	for _, sc := range l.selfCheck {
+		if sc.key == itemKey {
+			known = true
+			break
+		}
+	}
+	if !known {
+		return LessonDetail{}, fmt.Errorf("%w: unknown self-check item %q", ErrInvalidInput, itemKey)
 	}
 	p := s.getProgLocked(studentID, lessonCode)
 	p.selfChecked[itemKey] = checked
@@ -294,8 +330,8 @@ func (s *Service) ToggleSelfCheck(studentID, lessonCode, itemKey string, checked
 }
 
 func (s *Service) buildLessonDetailLocked(l lessonDef, p *lessonProgress, locale string) LessonDetail {
-	qs := make([]DoLearnQuestion, 4)
-	for i := 0; i < 4; i++ {
+	qs := make([]DoLearnQuestion, doLearnQuestionCount)
+	for i := 0; i < doLearnQuestionCount; i++ {
 		idx := i + 1
 		seed := seedForLessonQuestion(l.code, idx)
 		prob, _ := mathengine.GenerateByCode(l.templateCode, seed, locale)
@@ -537,29 +573,46 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authIn struct {
-	CookieAccess  string `cookie:"pl_access"`
-	Authorization string `header:"Authorization"`
-	Locale        string `query:"locale" default:"en"`
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+// resolveCaller returns the caller's ID and locale. Mutations require an authenticated student;
+// anonymous reads fall back to the read-only guest identity.
+func (h *Handler) resolveCaller(ctx context.Context, c reqguard.Credentials, mutating bool) (string, string, error) {
+	var r reqguard.PrincipalResolver
+	if h.authSvc != nil {
+		r = h.authSvc
+	}
+	p, err := reqguard.Resolve(ctx, r, c, mutating)
+	if err != nil {
+		return "", "", err
+	}
+	if mutating && p.Role != auth.RoleStudent {
+		return "", "", auth.ErrForbidden
+	}
+	return p.ID, c.NormalizedLocale(), nil
 }
 
-func (h *Handler) resolveStudent(ctx context.Context, in authIn) (string, string) {
-	locale := in.Locale
-	if locale != "id" {
-		locale = "en"
+func toHTTPError(err error) error {
+	switch {
+	case errors.Is(err, reqguard.ErrUnauthenticated):
+		return huma.Error401Unauthorized("authentication required")
+	case errors.Is(err, auth.ErrForbidden):
+		return huma.Error403Forbidden("student account required")
+	case errors.Is(err, ErrLessonNotFound):
+		return huma.Error404NotFound(err.Error())
+	case errors.Is(err, ErrInvalidInput):
+		return huma.Error400BadRequest(err.Error())
+	case errors.Is(err, ErrRewardUnavailable):
+		return huma.Error503ServiceUnavailable(ErrRewardUnavailable.Error())
+	default:
+		return huma.Error500InternalServerError("internal error")
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, locale
-			}
-		}
-	}
-	return "demo-pilot1", locale
+}
+
+type doLearnBody struct {
+	LessonCode    string            `json:"lessonCode" minLength:"1" maxLength:"64"`
+	QuestionIndex int               `json:"questionIndex" minimum:"1" maximum:"4"`
+	Answers       map[string]string `json:"answers"`
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -570,14 +623,17 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "List Space Academy topics with Star Scroll progress",
 		Tags:        []string{"SpaceAcademy"},
 	}, func(ctx context.Context, in *struct {
-		authIn
-		Grade int `query:"grade" default:"1"`
+		reqguard.Credentials
+		Grade int `query:"grade" default:"1" minimum:"0" maximum:"6"`
 	}) (*struct {
 		Body struct {
 			Topics []TopicSummary `json:"topics"`
 		}
 	}, error) {
-		id, locale := h.resolveStudent(ctx, in.authIn)
+		id, locale, err := h.resolveCaller(ctx, in.Credentials, false)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		out := &struct {
 			Body struct {
 				Topics []TopicSummary `json:"topics"`
@@ -594,13 +650,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Get a Space Academy lesson timeline (Story, Watch, Do & Learn, Self-Check)",
 		Tags:        []string{"SpaceAcademy"},
 	}, func(ctx context.Context, in *struct {
-		authIn
-		Code string `path:"code"`
+		reqguard.Credentials
+		Code string `path:"code" maxLength:"64"`
 	}) (*struct{ Body LessonDetail }, error) {
-		id, locale := h.resolveStudent(ctx, in.authIn)
+		id, locale, err := h.resolveCaller(ctx, in.Credentials, false)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		detail, err := h.svc.GetLesson(id, in.Code, locale)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, toHTTPError(err)
 		}
 		return &struct{ Body LessonDetail }{Body: detail}, nil
 	})
@@ -611,18 +670,18 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/academy/do-learn/save",
 		Summary:     "Save a draft answer inside Space Academy Do & Learn",
 		Tags:        []string{"SpaceAcademy"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
-		Body struct {
-			LessonCode    string            `json:"lessonCode"`
-			QuestionIndex int               `json:"questionIndex" minimum:"1" maximum:"4"`
-			Answers       map[string]string `json:"answers"`
-		}
+		reqguard.Credentials
+		Body doLearnBody
 	}) (*struct{ Body LessonDetail }, error) {
-		id, locale := h.resolveStudent(ctx, in.authIn)
+		id, locale, err := h.resolveCaller(ctx, in.Credentials, true)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		detail, err := h.svc.SaveDraft(id, in.Body.LessonCode, locale, in.Body.QuestionIndex, in.Body.Answers)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(err)
 		}
 		return &struct{ Body LessonDetail }{Body: detail}, nil
 	})
@@ -633,23 +692,23 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/academy/do-learn/check",
 		Summary:     "Check a Do & Learn answer (supports Try Again & awards Star Scroll)",
 		Tags:        []string{"SpaceAcademy"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
-		Body struct {
-			LessonCode    string            `json:"lessonCode"`
-			QuestionIndex int               `json:"questionIndex" minimum:"1" maximum:"4"`
-			Answers       map[string]string `json:"answers"`
-		}
+		reqguard.Credentials
+		Body doLearnBody
 	}) (*struct {
 		Body struct {
 			Result mathengine.GradeResult `json:"result"`
 			Lesson LessonDetail           `json:"lesson"`
 		}
 	}, error) {
-		id, locale := h.resolveStudent(ctx, in.authIn)
+		id, locale, err := h.resolveCaller(ctx, in.Credentials, true)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		res, detail, err := h.svc.CheckAnswer(ctx, id, in.Body.LessonCode, locale, in.Body.QuestionIndex, in.Body.Answers)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(err)
 		}
 		out := &struct {
 			Body struct {
@@ -668,18 +727,22 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/academy/self-check",
 		Summary:     "Toggle a Space Academy Mission Self-Check learning objective",
 		Tags:        []string{"SpaceAcademy"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
+		reqguard.Credentials
 		Body struct {
-			LessonCode string `json:"lessonCode"`
-			ItemKey    string `json:"itemKey"`
+			LessonCode string `json:"lessonCode" minLength:"1" maxLength:"64"`
+			ItemKey    string `json:"itemKey" minLength:"1" maxLength:"64"`
 			Checked    bool   `json:"checked"`
 		}
 	}) (*struct{ Body LessonDetail }, error) {
-		id, locale := h.resolveStudent(ctx, in.authIn)
+		id, locale, err := h.resolveCaller(ctx, in.Credentials, true)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		detail, err := h.svc.ToggleSelfCheck(id, in.Body.LessonCode, in.Body.ItemKey, in.Body.Checked, locale)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(err)
 		}
 		return &struct{ Body LessonDetail }{Body: detail}, nil
 	})

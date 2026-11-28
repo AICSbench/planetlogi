@@ -11,6 +11,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const grade = user?.grade ?? 1;
+  const isParent = user?.role === "PARENT";
 
   const [statusTab, setStatusTab] = useState<"ALL" | "INCOMPLETE" | "COMPLETE">("ALL");
   const [assignedBy, setAssignedBy] = useState("ALL");
@@ -114,9 +115,11 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
             <h1 className="text-2xl font-extrabold text-white">📋 {t("portals:assignments.title")}</h1>
             <p className="text-sm text-slate-300">{t("portals:assignments.subtitle")}</p>
           </div>
-          <GalaxyButton variant="gold" onClick={() => setShowBuilder((v) => !v)}>
-            {t("portals:assignments.createCustomBtn")}
-          </GalaxyButton>
+          {isParent ? (
+            <GalaxyButton variant="gold" onClick={() => setShowBuilder((v) => !v)}>
+              {t("portals:assignments.createCustomBtn")}
+            </GalaxyButton>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -156,7 +159,7 @@ export function AssignmentsPage({ locale }: { locale: Locale }) {
       </GalaxyCard>
 
       {/* Parent Personalised Assignment Builder */}
-      {showBuilder ? (
+      {isParent && showBuilder ? (
         <GalaxyCard className="border-amber-400/40 space-y-4">
           <div>
             <h2 className="text-lg font-extrabold text-[#FBBF24]">

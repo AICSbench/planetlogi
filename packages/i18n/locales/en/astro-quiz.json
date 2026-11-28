@@ -23,6 +23,9 @@
     "scoreBox": "Score",
     "workingSpace": "Show your working:",
     "toggleAnswerKey": "Include Answer Key",
-    "printNow": "Print / Save as PDF"
+    "printNow": "Print / Save as PDF",
+    "answerLabel": "Answer",
+    "answerKeyHeading": "Answer Key ({{code}})",
+    "answerKeyLocked": "The answer key unlocks after this paper is submitted (parents and teachers can always print it)."
   }
 }

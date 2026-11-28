@@ -30,14 +30,18 @@ export function AstroQuizPrintPage({
     <div className="min-h-screen bg-white text-black p-6 sm:p-10 print:p-0">
       {/* Screen-only Print Toolbar */}
       <div className="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-300 bg-slate-100 p-3 print:hidden">
-        <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showKey}
-            onChange={(e) => setShowKey(e.target.checked)}
-          />
-          <span>{t("astro-quiz:print.toggleAnswerKey")}</span>
-        </label>
+        {paper.answerKeyAvailable ? (
+          <label className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-800 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showKey}
+              onChange={(e) => setShowKey(e.target.checked)}
+            />
+            <span>{t("astro-quiz:print.toggleAnswerKey")}</span>
+          </label>
+        ) : (
+          <p className="text-xs text-slate-600">{t("astro-quiz:print.answerKeyLocked")}</p>
+        )}
         <button
           type="button"
           onClick={() => window.print()}
@@ -92,14 +96,18 @@ export function AstroQuizPrintPage({
                 <p className="text-xs text-slate-500">{t("astro-quiz:print.workingSpace")}</p>
                 <div className="mt-2 h-20 border-b border-dashed border-slate-400" />
               </div>
-              <p className="text-right text-sm font-bold">Answer: ___________________</p>
+              <p className="text-right text-sm font-bold">
+                {t("astro-quiz:print.answerLabel")}: ___________________
+              </p>
             </li>
           ))}
         </ol>
 
-        {showKey ? (
+        {showKey && paper.answerKeyAvailable && paper.answerKeys ? (
           <section className="break-before-page border-t-2 border-black pt-4 space-y-2">
-            <h2 className="text-lg font-extrabold">Answer Key ({paper.paperCode})</h2>
+            <h2 className="text-lg font-extrabold">
+              {t("astro-quiz:print.answerKeyHeading", { code: paper.paperCode })}
+            </h2>
             <ol className="grid grid-cols-2 gap-2 text-sm">
               {paper.answerKeys.map((ans, idx) => (
                 <li key={idx}>

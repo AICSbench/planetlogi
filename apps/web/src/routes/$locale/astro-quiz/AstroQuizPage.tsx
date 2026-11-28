@@ -79,15 +79,18 @@ export function AstroQuizPage({ locale }: { locale: Locale }) {
               {formatTimer(submitted ? attempt.elapsedSec : elapsedSec)}
             </span>
 
-            <Link
-              to="/$locale/astro-quiz/print/$paperCode"
-              params={{ locale, paperCode: attempt.paperCode }}
-            >
-              <GalaxyButton variant="secondary">
-                <Printer className="h-4 w-4" aria-hidden="true" />
-                <span>{t("astro-quiz:printWorksheet")}</span>
-              </GalaxyButton>
-            </Link>
+            {/* Printing (and its answer key) is only offered once the paper is submitted. */}
+            {submitted ? (
+              <Link
+                to="/$locale/astro-quiz/print/$paperCode"
+                params={{ locale, paperCode: attempt.paperCode }}
+              >
+                <GalaxyButton variant="secondary">
+                  <Printer className="h-4 w-4" aria-hidden="true" />
+                  <span>{t("astro-quiz:printWorksheet")}</span>
+                </GalaxyButton>
+              </Link>
+            ) : null}
 
             {!submitted ? (
               <>

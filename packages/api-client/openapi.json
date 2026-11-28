@@ -1,41 +1,6 @@
 {
   "components": {
     "schemas": {
-      "Academy-do-learn-checkRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/Academy-do-learn-checkRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "answers": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
-          },
-          "lessonCode": {
-            "type": "string"
-          },
-          "questionIndex": {
-            "format": "int64",
-            "maximum": 4,
-            "minimum": 1,
-            "type": "integer"
-          }
-        },
-        "required": [
-          "lessonCode",
-          "questionIndex",
-          "answers"
-        ],
-        "type": "object"
-      },
       "Academy-do-learn-checkResponse": {
         "additionalProperties": false,
         "properties": {
@@ -61,41 +26,6 @@
         ],
         "type": "object"
       },
-      "Academy-do-learn-saveRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/Academy-do-learn-saveRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "answers": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
-          },
-          "lessonCode": {
-            "type": "string"
-          },
-          "questionIndex": {
-            "format": "int64",
-            "maximum": 4,
-            "minimum": 1,
-            "type": "integer"
-          }
-        },
-        "required": [
-          "lessonCode",
-          "questionIndex",
-          "answers"
-        ],
-        "type": "object"
-      },
       "Academy-self-checkRequest": {
         "additionalProperties": false,
         "properties": {
@@ -112,9 +42,13 @@
             "type": "boolean"
           },
           "itemKey": {
+            "maxLength": 64,
+            "minLength": 1,
             "type": "string"
           },
           "lessonCode": {
+            "maxLength": 64,
+            "minLength": 1,
             "type": "string"
           }
         },
@@ -291,16 +225,19 @@
             "type": "string"
           },
           "dueDate": {
+            "format": "date",
             "type": "string"
           },
           "studentId": {
-            "default": "demo-pilot1",
+            "maxLength": 64,
+            "minLength": 1,
             "type": "string"
           },
           "templateCodes": {
             "items": {
               "type": "string"
             },
+            "maxItems": 20,
             "minItems": 1,
             "type": [
               "array",
@@ -308,6 +245,7 @@
             ]
           },
           "title": {
+            "maxLength": 120,
             "minLength": 1,
             "type": "string"
           }
@@ -366,6 +304,7 @@
           },
           "questionIndex": {
             "format": "int64",
+            "maximum": 20,
             "minimum": 1,
             "type": "integer"
           }
@@ -429,70 +368,6 @@
         "required": [
           "papers",
           "supplyPodClaimedThisWeek"
-        ],
-        "type": "object"
-      },
-      "Astroquiz-saveRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/Astroquiz-saveRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "drafts": {
-            "additionalProperties": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "type": "object"
-          },
-          "elapsedSec": {
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "elapsedSec",
-          "drafts"
-        ],
-        "type": "object"
-      },
-      "Astroquiz-submitRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "$schema": {
-            "description": "A URL to the JSON Schema for this object.",
-            "examples": [
-              "https://example.com/schemas/Astroquiz-submitRequest.json"
-            ],
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          },
-          "drafts": {
-            "additionalProperties": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            },
-            "type": "object"
-          },
-          "elapsedSec": {
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "elapsedSec",
-          "drafts"
         ],
         "type": "object"
       },
@@ -838,6 +713,43 @@
         "required": [
           "type",
           "params"
+        ],
+        "type": "object"
+      },
+      "DoLearnBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/DoLearnBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "answers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "lessonCode": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "questionIndex": {
+            "format": "int64",
+            "maximum": 4,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lessonCode",
+          "questionIndex",
+          "answers"
         ],
         "type": "object"
       },
@@ -1564,6 +1476,40 @@
         ],
         "type": "object"
       },
+      "PaperProgressBody": {
+        "additionalProperties": false,
+        "properties": {
+          "$schema": {
+            "description": "A URL to the JSON Schema for this object.",
+            "examples": [
+              "https://example.com/schemas/PaperProgressBody.json"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          },
+          "drafts": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "elapsedSec": {
+            "format": "int64",
+            "maximum": 86400,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "elapsedSec",
+          "drafts"
+        ],
+        "type": "object"
+      },
       "PaperQuestion": {
         "additionalProperties": false,
         "properties": {
@@ -1850,6 +1796,9 @@
             "readOnly": true,
             "type": "string"
           },
+          "answerKeyAvailable": {
+            "type": "boolean"
+          },
           "answerKeys": {
             "items": {
               "additionalProperties": {
@@ -1891,7 +1840,7 @@
           "grade",
           "category",
           "questions",
-          "answerKeys"
+          "answerKeyAvailable"
         ],
         "type": "object"
       },
@@ -2788,11 +2737,36 @@
     "/api/v1/academy/do-learn/check": {
       "post": {
         "operationId": "academy-do-learn-check",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Academy-do-learn-checkRequest"
+                "$ref": "#/components/schemas/DoLearnBody"
               }
             }
           },
@@ -2820,6 +2794,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Check a Do \u0026 Learn answer (supports Try Again \u0026 awards Star Scroll)",
         "tags": [
           "SpaceAcademy"
@@ -2829,11 +2811,36 @@
     "/api/v1/academy/do-learn/save": {
       "post": {
         "operationId": "academy-do-learn-save",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Academy-do-learn-saveRequest"
+                "$ref": "#/components/schemas/DoLearnBody"
               }
             }
           },
@@ -2861,6 +2868,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Save a draft answer inside Space Academy Do \u0026 Learn",
         "tags": [
           "SpaceAcademy"
@@ -2872,10 +2887,34 @@
         "operationId": "academy-lesson-detail",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
             "schema": {
+              "maxLength": 64,
               "type": "string"
             }
           }
@@ -2911,6 +2950,31 @@
     "/api/v1/academy/self-check": {
       "patch": {
         "operationId": "academy-self-check",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2943,6 +3007,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Toggle a Space Academy Mission Self-Check learning objective",
         "tags": [
           "SpaceAcademy"
@@ -2954,12 +3026,37 @@
         "operationId": "academy-topics",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "explode": false,
             "in": "query",
             "name": "grade",
             "schema": {
               "default": 1,
               "format": "int64",
+              "maximum": 6,
+              "minimum": 0,
               "type": "integer"
             }
           }
@@ -2997,11 +3094,39 @@
         "operationId": "assignments-list",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "explode": false,
             "in": "query",
             "name": "status",
             "schema": {
               "default": "ALL",
+              "enum": [
+                "ALL",
+                "INCOMPLETE",
+                "COMPLETE"
+              ],
               "type": "string"
             }
           },
@@ -3011,6 +3136,12 @@
             "name": "assignedBy",
             "schema": {
               "default": "ALL",
+              "enum": [
+                "ALL",
+                "SYSTEM",
+                "PARENT",
+                "TEACHER"
+              ],
               "type": "string"
             }
           },
@@ -3021,6 +3152,7 @@
             "schema": {
               "default": 0,
               "format": "int64",
+              "minimum": 0,
               "type": "integer"
             }
           }
@@ -3056,6 +3188,31 @@
     "/api/v1/assignments/custom": {
       "post": {
         "operationId": "assignments-create-custom",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3088,6 +3245,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Parent Personalised Assignment Builder — create targeted homework for a linked child",
         "tags": [
           "Assignments"
@@ -3099,10 +3264,34 @@
         "operationId": "assignments-detail",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "maxLength": 64,
               "type": "string"
             }
           }
@@ -3140,10 +3329,34 @@
         "operationId": "assignments-submit",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "maxLength": 64,
               "type": "string"
             }
           }
@@ -3180,6 +3393,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Submit an assignment question answer and award AC upon full completion",
         "tags": [
           "Assignments"
@@ -3191,12 +3412,37 @@
         "operationId": "astroquiz-list",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "explode": false,
             "in": "query",
             "name": "grade",
             "schema": {
               "default": 1,
               "format": "int64",
+              "maximum": 6,
+              "minimum": 0,
               "type": "integer"
             }
           },
@@ -3206,6 +3452,12 @@
             "name": "category",
             "schema": {
               "default": "ALL",
+              "enum": [
+                "ALL",
+                "ESSENTIAL",
+                "TOP_SCHOOL",
+                "HOTS"
+              ],
               "type": "string"
             }
           }
@@ -3243,10 +3495,34 @@
         "operationId": "astroquiz-open",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
             "schema": {
+              "maxLength": 32,
               "type": "string"
             }
           }
@@ -3273,6 +3549,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Open or resume an AstroQuiz paper attempt",
         "tags": [
           "AstroQuiz"
@@ -3284,9 +3568,15 @@
         "operationId": "astroquiz-print",
         "parameters": [
           {
-            "in": "path",
-            "name": "code",
-            "required": true,
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
             "schema": {
               "type": "string"
             }
@@ -3297,6 +3587,15 @@
             "name": "locale",
             "schema": {
               "default": "en",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
               "type": "string"
             }
           }
@@ -3323,7 +3622,7 @@
             "description": "Error"
           }
         },
-        "summary": "Get ink-friendly A4 printable payload for an AstroQuiz paper",
+        "summary": "Get ink-friendly A4 printable payload for an AstroQuiz paper (answer keys only for adults or after submission)",
         "tags": [
           "AstroQuiz"
         ]
@@ -3334,10 +3633,34 @@
         "operationId": "astroquiz-save",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
             "schema": {
+              "maxLength": 32,
               "type": "string"
             }
           }
@@ -3346,7 +3669,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Astroquiz-saveRequest"
+                "$ref": "#/components/schemas/PaperProgressBody"
               }
             }
           },
@@ -3374,6 +3697,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Save in-progress AstroQuiz answers and elapsed timer",
         "tags": [
           "AstroQuiz"
@@ -3385,10 +3716,34 @@
         "operationId": "astroquiz-submit",
         "parameters": [
           {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          },
+          {
             "in": "path",
             "name": "code",
             "required": true,
             "schema": {
+              "maxLength": 32,
               "type": "string"
             }
           }
@@ -3397,7 +3752,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Astroquiz-submitRequest"
+                "$ref": "#/components/schemas/PaperProgressBody"
               }
             }
           },
@@ -3425,6 +3780,14 @@
             "description": "Error"
           }
         },
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Submit full AstroQuiz paper to reveal solutions and claim Weekly Supply Pod",
         "tags": [
           "AstroQuiz"
@@ -4327,7 +4690,15 @@
             "description": "Error"
           }
         },
-        "summary": "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas)",
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas; parent only)",
         "tags": [
           "Parent"
         ]
@@ -4392,6 +4763,31 @@
     "/api/v1/profile/settings": {
       "patch": {
         "operationId": "profile-update-settings",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "pl_access",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "locale",
+            "schema": {
+              "default": "en",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4424,7 +4820,15 @@
             "description": "Error"
           }
         },
-        "summary": "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits",
+        "security": [
+          {
+            "accessCookie": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits (parent only)",
         "tags": [
           "Profile"
         ]

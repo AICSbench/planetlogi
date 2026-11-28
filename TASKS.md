@@ -420,6 +420,11 @@
 
 ## Section 7 — Handoff & Activity Log
 
+- [x] **PR5-REVIEW-ROUND1** — Fix the authentication, authorization, answer-key and reward-integrity findings on PR #5 (Phase 2). *(Owner: agent-pr5-security | Done: 2026-11-28T06:03Z)*
+  - **Depends On**: `P2-BE-01`, `P2-BE-02`, `P2-BE-03`, `P2-BE-04`
+  - **Spec**: `AGENTS.md` §3 guardrails #5–#6; `docs/07-i18n-multilanguage-architecture.md`
+  - **Acceptance Criteria**: Phase 2 handlers bind cookie/Authorization/locale; invalid tokens get 401 and mutations require a real principal; assignments are only readable/answerable by their owner (or linked parent) and AC goes to the owner; students cannot create assignments, change family settings or open the parent overview; printable answer keys are withheld until submission (adults excepted); failed ledger credits are retryable and never reported as awarded; request payloads are bounded; the React Query cache is cleared on account change.
+
 - [x] **PR3-REVIEW-ROUND3** — Remove the streak mutex/pool lock-order cycle found on `4876e87`. *(Owner: agent-pr3-integrity | Done: 2026-11-28T03:31Z)*
   - **Depends On**: `PR3-REVIEW-ROUND2`
   - **Spec**: `docs/02-features-student-portal.md` §4
@@ -449,6 +454,7 @@
 
 | UTC Timestamp | Agent ID | Task ID | Status | Summary / Handoff Notes |
 |---|---|---|---|---|
+| 2026-11-28T06:03Z | `agent-pr5-security` | `PR5-REVIEW-ROUND1` | `[x]` | Added `internal/platform/reqguard` (exported `Credentials` + `Resolve` + `CopyAnswers`): the unexported embedded `authIn` was skipped by Huma, so every Academy/AstroQuiz/Assignments request ran as `demo-pilot1` in `en`. Mutations now need an authenticated student (parent for builder/settings/overview); assignments enforce ownership, pay AC to the owner, and reject answer overwrites; print returns `answerKeys` only to adults or after submit; Star Scroll/Supply Pod/assignment credits are marked only after `ledger.Apply` succeeds (503 + retry otherwise); OTP fails closed. Web: shared `lib/queryClient.ts` cleared on account change, print/builder/settings gated by state/role, new `en`/`id` keys. Verified: `go vet`, `go test -race ./...`, OpenAPI + `pnpm api:gen`, `i18n:check`, `typecheck`, `lint`, `test`, `build` green. `golangci-lint` not run (installed binary built with go1.25 < go1.27 target). Still open: persistence, parent–child links (builder still targets `demo-pilot1`), server-side timer/timezone. |
 | 2026-11-28T03:31Z | `agent-pr3-integrity` | `PR3-REVIEW-ROUND3` | `[x]` | Streak PostgreSQL paths no longer take the in-memory mutex: reads copy under the lock, mutations use `mutateRecord`, and the Daily Orbit transaction path is lock-free. Added a `MaxConns=1` regression that submits while `GetStatus` loops. Full race suite, vet, build, and unchanged OpenAPI pass. |
 | 2026-11-28T03:02Z | `agent-pr3-integrity` | `PR3-REVIEW-ROUND2` | `[x]` | Streak now commits inside the Daily Orbit transaction, eliminating the second pool connection; PostgreSQL session/prefs caches are no longer populated, request contexts reach all lock waits, and midnight resets update only the dated count. Tests now assert rolled-back receipts/stats and both persisted answered slots; High Score stars update only after 10 answers. A one-connection pool regression passes, and the old split path was confirmed to hang. Full race suite, vet, build, and unchanged OpenAPI pass. |
 | 2026-11-28T02:35Z | `agent-pr3-integrity` | `PR3-SESSION-RECOVERY` | `[x]` | Daily Orbit mutations now hold a per-student advisory lock and commit session, prefs, wallet, and proficiency together; no partially accepted answer survives a rollover. Training loads sessions with `FOR UPDATE` and commits XP, stats, and the answered slot atomically. Streak midnight reconciliation clears only a stale date's count. Verified with PostgreSQL restart and concurrent-instance regressions (both fail with the locks removed), full race suite, vet, build, and unchanged OpenAPI. |

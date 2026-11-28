@@ -285,7 +285,9 @@ export interface PrintablePaper {
   grade: number;
   category: string;
   questions: RenderedQuestion[];
-  answerKeys: Array<Record<string, string>>;
+  /** True only for adults, or for a student whose attempt on this paper is SUBMITTED. */
+  answerKeyAvailable: boolean;
+  answerKeys?: Array<Record<string, string>>;
 }
 
 export interface AssignmentSummary {

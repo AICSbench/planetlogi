@@ -3,14 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Locale } from "@planetlogi/i18n";
 import { GalaxyButton, GalaxyCard, ProficiencyPill } from "@planetlogi/ui";
-import { apiClient } from "../../../store/authStore";
+import { apiClient, useAuthStore } from "../../../store/authStore";
 
 export function ParentPortalPage({ locale }: { locale: Locale }) {
   const { t } = useTranslation(["portals", "common"]);
+  const isParent = useAuthStore((s) => s.user?.role === "PARENT");
 
   const overviewQuery = useQuery({
     queryKey: ["parent-overview", locale],
     queryFn: () => apiClient.getParentOverview(locale),
+    enabled: isParent,
   });
 
   const ov = overviewQuery.data;
@@ -26,6 +28,12 @@ export function ParentPortalPage({ locale }: { locale: Locale }) {
           <GalaxyButton variant="gold">{t("portals:parentPortal.quickAssignFocus")} →</GalaxyButton>
         </Link>
       </GalaxyCard>
+
+      {!isParent ? (
+        <GalaxyCard>
+          <p className="text-sm font-semibold text-amber-200">{t("portals:parentOnlyNotice")}</p>
+        </GalaxyCard>
+      ) : null}
 
       {ov ? (
         <>

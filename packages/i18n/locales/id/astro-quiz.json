@@ -23,6 +23,9 @@
     "scoreBox": "Nilai",
     "workingSpace": "Tulis cara pengerjaanmu:",
     "toggleAnswerKey": "Sertakan Kunci Jawaban",
-    "printNow": "Cetak / Simpan PDF"
+    "printNow": "Cetak / Simpan PDF",
+    "answerLabel": "Jawaban",
+    "answerKeyHeading": "Kunci Jawaban ({{code}})",
+    "answerKeyLocked": "Kunci jawaban terbuka setelah kertas ini dikumpulkan (orang tua dan guru selalu dapat mencetaknya)."
   }
 }

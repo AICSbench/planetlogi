@@ -198,7 +198,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get ink-friendly A4 printable payload for an AstroQuiz paper */
+        /** Get ink-friendly A4 printable payload for an AstroQuiz paper (answer keys only for adults or after submission) */
         get: operations["astroquiz-print"];
         put?: never;
         post?: never;
@@ -470,7 +470,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas) */
+        /** Parent Portal family dashboard snapshot (streaks, mastery counts, top focus areas; parent only) */
         get: operations["parent-overview"];
         put?: never;
         post?: never;
@@ -510,7 +510,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits */
+        /** Update OTP-protected family language, curricula, and Brain Galaxy screen-time limits (parent only) */
         patch: operations["profile-update-settings"];
         trace?: never;
     };
@@ -688,20 +688,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        "Academy-do-learn-checkRequest": {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/Academy-do-learn-checkRequest.json
-             */
-            readonly $schema?: string;
-            answers: {
-                [key: string]: string;
-            };
-            lessonCode: string;
-            /** Format: int64 */
-            questionIndex: number;
-        };
         "Academy-do-learn-checkResponse": {
             /**
              * Format: uri
@@ -711,20 +697,6 @@ export interface components {
             readonly $schema?: string;
             lesson: components["schemas"]["LessonDetail"];
             result: components["schemas"]["GradeResult"];
-        };
-        "Academy-do-learn-saveRequest": {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/Academy-do-learn-saveRequest.json
-             */
-            readonly $schema?: string;
-            answers: {
-                [key: string]: string;
-            };
-            lessonCode: string;
-            /** Format: int64 */
-            questionIndex: number;
         };
         "Academy-self-checkRequest": {
             /**
@@ -797,8 +769,8 @@ export interface components {
              * @example https://example.com/schemas/Assignments-create-customRequest.json
              */
             readonly $schema?: string;
+            /** Format: date */
             dueDate?: string;
-            /** @default demo-pilot1 */
             studentId: string;
             templateCodes: string[] | null;
             title: string;
@@ -844,36 +816,6 @@ export interface components {
             readonly $schema?: string;
             papers: components["schemas"]["PaperSummary"][] | null;
             supplyPodClaimedThisWeek: boolean;
-        };
-        "Astroquiz-saveRequest": {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/Astroquiz-saveRequest.json
-             */
-            readonly $schema?: string;
-            drafts: {
-                [key: string]: {
-                    [key: string]: string;
-                };
-            };
-            /** Format: int64 */
-            elapsedSec: number;
-        };
-        "Astroquiz-submitRequest": {
-            /**
-             * Format: uri
-             * @description A URL to the JSON Schema for this object.
-             * @example https://example.com/schemas/Astroquiz-submitRequest.json
-             */
-            readonly $schema?: string;
-            drafts: {
-                [key: string]: {
-                    [key: string]: string;
-                };
-            };
-            /** Format: int64 */
-            elapsedSec: number;
         };
         AuthOutputBody: {
             /**
@@ -998,6 +940,20 @@ export interface components {
                 [key: string]: unknown;
             };
             type: string;
+        };
+        DoLearnBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/DoLearnBody.json
+             */
+            readonly $schema?: string;
+            answers: {
+                [key: string]: string;
+            };
+            lessonCode: string;
+            /** Format: int64 */
+            questionIndex: number;
         };
         DoLearnQuestion: {
             draftAnswer?: {
@@ -1235,6 +1191,21 @@ export interface components {
             /** Format: int64 */
             totalQuestions: number;
         };
+        PaperProgressBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/PaperProgressBody.json
+             */
+            readonly $schema?: string;
+            drafts: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            };
+            /** Format: int64 */
+            elapsedSec: number;
+        };
         PaperQuestion: {
             draftAnswer?: {
                 [key: string]: string;
@@ -1330,7 +1301,8 @@ export interface components {
              * @example https://example.com/schemas/PrintablePaper.json
              */
             readonly $schema?: string;
-            answerKeys: {
+            answerKeyAvailable: boolean;
+            answerKeys?: {
                 [key: string]: string;
             }[] | null;
             category: string;
@@ -1630,14 +1602,20 @@ export type $defs = Record<string, never>;
 export interface operations {
     "academy-do-learn-check": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Academy-do-learn-checkRequest"];
+                "application/json": components["schemas"]["DoLearnBody"];
             };
         };
         responses: {
@@ -1663,14 +1641,20 @@ export interface operations {
     };
     "academy-do-learn-save": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Academy-do-learn-saveRequest"];
+                "application/json": components["schemas"]["DoLearnBody"];
             };
         };
         responses: {
@@ -1696,12 +1680,18 @@ export interface operations {
     };
     "academy-lesson-detail": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1727,10 +1717,16 @@ export interface operations {
     };
     "academy-self-check": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1761,11 +1757,16 @@ export interface operations {
     "academy-topics": {
         parameters: {
             query?: {
+                locale?: string;
                 grade?: number;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1792,13 +1793,18 @@ export interface operations {
     "assignments-list": {
         parameters: {
             query?: {
-                status?: string;
-                assignedBy?: string;
+                locale?: string;
+                status?: "ALL" | "INCOMPLETE" | "COMPLETE";
+                assignedBy?: "ALL" | "SYSTEM" | "PARENT" | "TEACHER";
                 year?: number;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1824,10 +1830,16 @@ export interface operations {
     };
     "assignments-create-custom": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1857,12 +1869,18 @@ export interface operations {
     };
     "assignments-detail": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 id: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1888,12 +1906,18 @@ export interface operations {
     };
     "assignments-submit": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 id: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
@@ -1924,12 +1948,17 @@ export interface operations {
     "astroquiz-list": {
         parameters: {
             query?: {
+                locale?: string;
                 grade?: number;
-                category?: string;
+                category?: "ALL" | "ESSENTIAL" | "TOP_SCHOOL" | "HOTS";
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1955,12 +1984,18 @@ export interface operations {
     };
     "astroquiz-open": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1989,11 +2024,15 @@ export interface operations {
             query?: {
                 locale?: string;
             };
-            header?: never;
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody?: never;
         responses: {
@@ -2019,16 +2058,22 @@ export interface operations {
     };
     "astroquiz-save": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Astroquiz-saveRequest"];
+                "application/json": components["schemas"]["PaperProgressBody"];
             };
         };
         responses: {
@@ -2054,16 +2099,22 @@ export interface operations {
     };
     "astroquiz-submit": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path: {
                 code: string;
             };
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Astroquiz-submitRequest"];
+                "application/json": components["schemas"]["PaperProgressBody"];
             };
         };
         responses: {
@@ -2626,10 +2677,16 @@ export interface operations {
     };
     "profile-update-settings": {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                Authorization?: string;
+            };
             path?: never;
-            cookie?: never;
+            cookie?: {
+                pl_access?: string;
+            };
         };
         requestBody: {
             content: {

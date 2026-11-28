@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -14,11 +15,22 @@ import (
 	"github.com/AICSbench/planetlogi/apps/api/internal/mathengine"
 	"github.com/AICSbench/planetlogi/apps/api/internal/modules/auth"
 	"github.com/AICSbench/planetlogi/apps/api/internal/platform/economy"
+	"github.com/AICSbench/planetlogi/apps/api/internal/platform/reqguard"
+)
+
+const (
+	maxTitleLen       = 120
+	maxTemplatesPerAs = 20
 )
 
 var (
+	// ErrAssignmentNotFound is also returned when the caller is not allowed to see the record,
+	// so assignment IDs cannot be probed.
 	ErrAssignmentNotFound = errors.New("assignment not found")
 	ErrNotLinkedChild     = errors.New("parent can only assign to linked children")
+	ErrInvalidInput       = errors.New("invalid input")
+	// ErrRewardUnavailable means the completion AC could not be credited; re-submitting retries it.
+	ErrRewardUnavailable = errors.New("assignment reward could not be credited; please retry")
 )
 
 type AssignedByRole string
@@ -74,14 +86,15 @@ type assignmentRecord struct {
 	submitted      map[int]map[string]string
 	correct        map[int]bool
 	completed      bool
+	rewardPaid     bool
 }
 
 type Service struct {
-	mu           sync.Mutex
-	ledger       economy.Ledger
-	records      map[string]*assignmentRecord
-	parentLinks  map[string][]string // parentID -> []studentID
-	nextID       int
+	mu          sync.Mutex
+	ledger      economy.Ledger
+	records     map[string]*assignmentRecord
+	parentLinks map[string][]string // parentID -> []studentID
+	nextID      int
 }
 
 func NewService(ledger economy.Ledger) *Service {
@@ -125,9 +138,6 @@ func (s *Service) LinkParentChild(parentID, studentID string) {
 }
 
 func (s *Service) isLinkedLocked(parentID, studentID string) bool {
-	if parentID == "demo-parent" && studentID == "demo-pilot1" {
-		return true
-	}
 	for _, cid := range s.parentLinks[parentID] {
 		if cid == studentID {
 			return true
@@ -142,7 +152,7 @@ func (s *Service) ListForStudent(studentID, statusFilter, assignedByFilter strin
 
 	out := make([]AssignmentSummary, 0)
 	for _, r := range s.records {
-		if r.studentID != studentID && studentID != "demo-pilot1" {
+		if r.studentID != studentID {
 			continue
 		}
 		st := "INCOMPLETE"
@@ -160,6 +170,12 @@ func (s *Service) ListForStudent(studentID, statusFilter, assignedByFilter strin
 		}
 		out = append(out, toSummary(r))
 	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].DueDate != out[j].DueDate {
+			return out[i].DueDate < out[j].DueDate
+		}
+		return out[i].ID < out[j].ID
+	})
 	return out
 }
 
@@ -169,16 +185,26 @@ func (s *Service) CreateParentCustomAssignment(parentID, parentName, studentID, 
 	if !s.isLinkedLocked(parentID, studentID) {
 		return AssignmentSummary{}, ErrNotLinkedChild
 	}
-	if len(templateCodes) == 0 {
-		return AssignmentSummary{}, fmt.Errorf("at least one question template is required")
+	if title == "" || len(title) > maxTitleLen {
+		return AssignmentSummary{}, fmt.Errorf("%w: title must be 1..%d characters", ErrInvalidInput, maxTitleLen)
+	}
+	if len(templateCodes) == 0 || len(templateCodes) > maxTemplatesPerAs {
+		return AssignmentSummary{}, fmt.Errorf("%w: between 1 and %d question templates are required", ErrInvalidInput, maxTemplatesPerAs)
+	}
+	if dueDate != "" {
+		if _, err := time.Parse("2006-01-02", dueDate); err != nil {
+			return AssignmentSummary{}, fmt.Errorf("%w: dueDate must be YYYY-MM-DD", ErrInvalidInput)
+		}
+	}
+	for _, code := range templateCodes {
+		if _, ok := mathengine.GenerateByCode(code, 1, "en"); !ok {
+			return AssignmentSummary{}, fmt.Errorf("%w: unknown question template %q", ErrInvalidInput, code)
+		}
 	}
 	s.nextID++
 	id := fmt.Sprintf("asgn-%d", s.nextID)
 	items := make([]itemSpec, 0, len(templateCodes))
 	for i, code := range templateCodes {
-		if _, ok := mathengine.GenerateByCode(code, int64(1000+i), "en"); !ok {
-			return AssignmentSummary{}, fmt.Errorf("unknown question template %q", code)
-		}
 		items = append(items, itemSpec{templateCode: code, seed: int64(s.nextID*100 + i + 1)})
 	}
 	if dueDate == "" {
@@ -201,43 +227,73 @@ func (s *Service) CreateParentCustomAssignment(parentID, parentName, studentID, 
 	return toSummary(rec), nil
 }
 
-func (s *Service) GetDetail(assignmentID, locale string) (AssignmentDetail, error) {
+// GetDetail returns an assignment to its student or to a parent linked to that student.
+func (s *Service) GetDetail(viewer auth.Principal, assignmentID, locale string) (AssignmentDetail, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	rec, ok := s.records[assignmentID]
-	if !ok {
+	if !ok || !s.canViewLocked(viewer, rec) {
 		return AssignmentDetail{}, ErrAssignmentNotFound
 	}
 	return renderDetail(rec, locale), nil
 }
 
+func (s *Service) canViewLocked(viewer auth.Principal, rec *assignmentRecord) bool {
+	if viewer.ID == rec.studentID {
+		return true
+	}
+	return viewer.Role == auth.RoleParent && s.isLinkedLocked(viewer.ID, rec.studentID)
+}
+
+// SubmitQuestion records the owning student's answer for one question. A question can only be
+// answered once (its worked solution is revealed afterwards); re-submitting returns the stored
+// result unchanged. The completion AC goes to the record owner and is only marked paid after the
+// ledger credit succeeds, so a failed credit is retried by the next submit call.
 func (s *Service) SubmitQuestion(ctx context.Context, studentID, assignmentID string, qIndex int, answers map[string]string, locale string) (mathengine.GradeResult, AssignmentDetail, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	rec, ok := s.records[assignmentID]
-	if !ok {
+	if !ok || rec.studentID != studentID {
 		return mathengine.GradeResult{}, AssignmentDetail{}, ErrAssignmentNotFound
 	}
 	if qIndex < 1 || qIndex > len(rec.items) {
-		return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("invalid question index")
+		return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("%w: invalid question index", ErrInvalidInput)
 	}
 	item := rec.items[qIndex-1]
-	prob, _ := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
-	res := mathengine.Grade(prob, answers)
-	rec.submitted[qIndex] = answers
-	rec.correct[qIndex] = res.IsCorrect
+	prob, ok := mathengine.GenerateByCode(item.templateCode, item.seed, locale)
+	if !ok {
+		return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("assignment %q references unknown template %q", rec.id, item.templateCode)
+	}
 
-	if len(rec.submitted) == len(rec.items) && !rec.completed {
+	var res mathengine.GradeResult
+	if prev, answered := rec.submitted[qIndex]; answered {
+		res = mathengine.Grade(prob, prev)
+	} else {
+		copied, err := reqguard.CopyAnswers(answers)
+		if err != nil {
+			return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+		}
+		res = mathengine.Grade(prob, copied)
+		rec.submitted[qIndex] = copied
+		rec.correct[qIndex] = res.IsCorrect
+	}
+
+	if len(rec.submitted) == len(rec.items) {
 		rec.completed = true
-		if s.ledger != nil {
-			_, _ = s.ledger.Apply(ctx, economy.MutationRequest{
-				StudentID:      studentID,
-				Currency:       economy.CurrencyAC,
-				Delta:          int64(rec.rewardAC),
-				SourceType:     "ASSIGNMENT_COMPLETE",
-				SourceID:       rec.id,
-				IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rec.id, studentID),
-			})
+		if !rec.rewardPaid {
+			if s.ledger != nil {
+				if _, err := s.ledger.Apply(ctx, economy.MutationRequest{
+					StudentID:      rec.studentID,
+					Currency:       economy.CurrencyAC,
+					Delta:          int64(rec.rewardAC),
+					SourceType:     "ASSIGNMENT_COMPLETE",
+					SourceID:       rec.id,
+					IdempotencyKey: fmt.Sprintf("asgn:%s:%s", rec.id, rec.studentID),
+				}); err != nil {
+					return mathengine.GradeResult{}, AssignmentDetail{}, fmt.Errorf("%w: %v", ErrRewardUnavailable, err)
+				}
+			}
+			rec.rewardPaid = true
 		}
 	}
 	return res, renderDetail(rec, locale), nil
@@ -299,29 +355,33 @@ func NewHandler(svc *Service, authSvc *auth.Service) *Handler {
 	return &Handler{svc: svc, authSvc: authSvc}
 }
 
-type authIn struct {
-	CookieAccess  string `cookie:"pl_access"`
-	Authorization string `header:"Authorization"`
-	Locale        string `query:"locale" default:"en"`
+var authSecurity = []map[string][]string{{"accessCookie": {}}, {"bearerAuth": {}}}
+
+// resolve returns the caller. With requireAuth=false an anonymous request becomes the
+// read-only guest student, which only ever sees the guest's own records.
+func (h *Handler) resolve(ctx context.Context, c reqguard.Credentials, requireAuth bool) (auth.Principal, error) {
+	var r reqguard.PrincipalResolver
+	if h.authSvc != nil {
+		r = h.authSvc
+	}
+	return reqguard.Resolve(ctx, r, c, requireAuth)
 }
 
-func (h *Handler) resolveUser(ctx context.Context, in authIn) (string, string, auth.Role, string) {
-	locale := in.Locale
-	if locale != "id" {
-		locale = "en"
+func toHTTPError(err error) error {
+	switch {
+	case errors.Is(err, reqguard.ErrUnauthenticated):
+		return huma.Error401Unauthorized("authentication required")
+	case errors.Is(err, auth.ErrForbidden), errors.Is(err, ErrNotLinkedChild):
+		return huma.Error403Forbidden(err.Error())
+	case errors.Is(err, ErrAssignmentNotFound):
+		return huma.Error404NotFound(err.Error())
+	case errors.Is(err, ErrInvalidInput):
+		return huma.Error400BadRequest(err.Error())
+	case errors.Is(err, ErrRewardUnavailable):
+		return huma.Error503ServiceUnavailable(ErrRewardUnavailable.Error())
+	default:
+		return huma.Error500InternalServerError("internal error")
 	}
-	if h.authSvc != nil {
-		tok := in.CookieAccess
-		if tok == "" && len(in.Authorization) > 7 {
-			tok = in.Authorization[7:]
-		}
-		if tok != "" {
-			if p, err := h.authSvc.ResolvePrincipal(ctx, tok); err == nil {
-				return p.ID, p.DisplayName, p.Role, locale
-			}
-		}
-	}
-	return "demo-pilot1", "Budi Santoso", auth.RoleParent, locale
 }
 
 func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
@@ -332,22 +392,25 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "List student assignments with status, year, and assigned-by filters",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
-		Status     string `query:"status" default:"ALL"`
-		AssignedBy string `query:"assignedBy" default:"ALL"`
-		Year       int    `query:"year" default:"0"`
+		reqguard.Credentials
+		Status     string `query:"status" default:"ALL" enum:"ALL,INCOMPLETE,COMPLETE"`
+		AssignedBy string `query:"assignedBy" default:"ALL" enum:"ALL,SYSTEM,PARENT,TEACHER"`
+		Year       int    `query:"year" default:"0" minimum:"0"`
 	}) (*struct {
 		Body struct {
 			Assignments []AssignmentSummary `json:"assignments"`
 		}
 	}, error) {
-		id, _, _, _ := h.resolveUser(ctx, in.authIn)
+		p, err := h.resolve(ctx, in.Credentials, false)
+		if err != nil {
+			return nil, toHTTPError(err)
+		}
 		out := &struct {
 			Body struct {
 				Assignments []AssignmentSummary `json:"assignments"`
 			}
 		}{}
-		out.Body.Assignments = h.svc.ListForStudent(id, in.Status, in.AssignedBy, in.Year)
+		out.Body.Assignments = h.svc.ListForStudent(p.ID, in.Status, in.AssignedBy, in.Year)
 		return out, nil
 	})
 
@@ -357,27 +420,26 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments/custom",
 		Summary:     "Parent Personalised Assignment Builder — create targeted homework for a linked child",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
+		reqguard.Credentials
 		Body struct {
-			StudentID     string   `json:"studentId" default:"demo-pilot1"`
-			Title         string   `json:"title" minLength:"1"`
-			DueDate       string   `json:"dueDate,omitempty"`
-			TemplateCodes []string `json:"templateCodes" minItems:"1"`
+			StudentID     string   `json:"studentId" minLength:"1" maxLength:"64"`
+			Title         string   `json:"title" minLength:"1" maxLength:"120"`
+			DueDate       string   `json:"dueDate,omitempty" format:"date"`
+			TemplateCodes []string `json:"templateCodes" minItems:"1" maxItems:"20"`
 		}
 	}) (*struct{ Body AssignmentSummary }, error) {
-		uid, name, role, _ := h.resolveUser(ctx, in.authIn)
-		parentID := uid
-		if role == auth.RoleStudent {
-			// In demo mode without separate parent login, allow builder preview only when explicitly linked
-			parentID = "demo-parent"
-		}
-		summary, err := h.svc.CreateParentCustomAssignment(parentID, name, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes)
+		p, err := h.resolve(ctx, in.Credentials, true)
 		if err != nil {
-			if errors.Is(err, ErrNotLinkedChild) {
-				return nil, huma.Error403Forbidden(err.Error())
-			}
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(err)
+		}
+		if p.Role != auth.RoleParent {
+			return nil, huma.Error403Forbidden("parent account required")
+		}
+		summary, err := h.svc.CreateParentCustomAssignment(p.ID, p.DisplayName, in.Body.StudentID, in.Body.Title, in.Body.DueDate, in.Body.TemplateCodes)
+		if err != nil {
+			return nil, toHTTPError(err)
 		}
 		return &struct{ Body AssignmentSummary }{Body: summary}, nil
 	})
@@ -389,13 +451,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Summary:     "Open an assignment and inspect its questions",
 		Tags:        []string{"Assignments"},
 	}, func(ctx context.Context, in *struct {
-		authIn
-		ID string `path:"id"`
+		reqguard.Credentials
+		ID string `path:"id" maxLength:"64"`
 	}) (*struct{ Body AssignmentDetail }, error) {
-		_, _, _, locale := h.resolveUser(ctx, in.authIn)
-		detail, err := h.svc.GetDetail(in.ID, locale)
+		p, err := h.resolve(ctx, in.Credentials, false)
 		if err != nil {
-			return nil, huma.Error404NotFound(err.Error())
+			return nil, toHTTPError(err)
+		}
+		detail, err := h.svc.GetDetail(p, in.ID, in.NormalizedLocale())
+		if err != nil {
+			return nil, toHTTPError(err)
 		}
 		return &struct{ Body AssignmentDetail }{Body: detail}, nil
 	})
@@ -406,11 +471,12 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 		Path:        "/api/v1/assignments/{id}/submit",
 		Summary:     "Submit an assignment question answer and award AC upon full completion",
 		Tags:        []string{"Assignments"},
+		Security:    authSecurity,
 	}, func(ctx context.Context, in *struct {
-		authIn
-		ID   string `path:"id"`
+		reqguard.Credentials
+		ID   string `path:"id" maxLength:"64"`
 		Body struct {
-			QuestionIndex int               `json:"questionIndex" minimum:"1"`
+			QuestionIndex int               `json:"questionIndex" minimum:"1" maximum:"20"`
 			Answers       map[string]string `json:"answers"`
 		}
 	}) (*struct {
@@ -419,10 +485,16 @@ func (h *Handler) RegisterRoutes(_ chi.Router, api huma.API) {
 			Assignment AssignmentDetail       `json:"assignment"`
 		}
 	}, error) {
-		uid, _, _, locale := h.resolveUser(ctx, in.authIn)
-		res, detail, err := h.svc.SubmitQuestion(ctx, uid, in.ID, in.Body.QuestionIndex, in.Body.Answers, locale)
+		p, err := h.resolve(ctx, in.Credentials, true)
 		if err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
+			return nil, toHTTPError(err)
+		}
+		if p.Role != auth.RoleStudent {
+			return nil, huma.Error403Forbidden("student account required")
+		}
+		res, detail, err := h.svc.SubmitQuestion(ctx, p.ID, in.ID, in.Body.QuestionIndex, in.Body.Answers, in.NormalizedLocale())
+		if err != nil {
+			return nil, toHTTPError(err)
 		}
 		out := &struct {
 			Body struct {
